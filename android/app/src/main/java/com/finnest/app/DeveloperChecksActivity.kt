@@ -2,6 +2,7 @@ package com.finnest.app
 
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.content.Intent
 import android.text.InputType
 import android.view.View
 import android.widget.ArrayAdapter
@@ -37,11 +38,7 @@ class DeveloperChecksActivity : AppCompatActivity() {
             override fun handleOnBackPressed() { leaveWhenSaved() }
         })
         binding.next.setOnClickListener {
-            afterSaves {
-                AlertDialog.Builder(this).setTitle("Draft saved on this device")
-                    .setMessage("The next New Property step is not available yet. You can return to this draft later.")
-                    .setPositiveButton("OK") { _, _ -> finish() }.show()
-            }
+            afterSaves { startActivity(Intent(this, ProjectsActivity::class.java)) }
         }
         DraftRepository.load(this, journey) { result ->
             runOnUiThread {
