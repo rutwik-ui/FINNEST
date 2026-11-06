@@ -1,0 +1,11 @@
+.gradle/
+**/build/
+local.properties
+.idea/
+*.iml
+google_drive/
+node_modules/
+dist/
+.env
+.env.*
+!.env.example
