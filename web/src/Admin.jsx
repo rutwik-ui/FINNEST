@@ -56,7 +56,7 @@ export default function Admin({go,session,authLoading}) {
       const query=editing ? supabase.from('finnest_guidance').update(payload).eq('id',editing.id).eq('updated_at',editing.updated_at).select('id') : supabase.from('finnest_guidance').insert(payload).select('id');
       const {data,error}=await query;if(error)throw error;
       if(!data?.length)throw new Error('This item changed or access was removed. Reload the list before editing again.');
-      setForm(empty());setEditing(null);setMessage('Guidance saved. Published items are public and appear in the website guidance library; Android does not show them yet.');
+      setForm(empty());setEditing(null);setMessage('Guidance saved. Published items are public and appear in the website and Android guidance libraries.');
       await refresh();
     }catch(e){setError(e?.message || 'Could not save guidance.')}finally{setBusy(false)}
   }

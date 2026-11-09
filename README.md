@@ -4,16 +4,16 @@ FINNEST is an Indian home-buying guidance product, delivered in small, reviewabl
 
 ## Current Android scope
 
-`android/` is a native Kotlin/XML guest application. The New Property flow currently includes a dashboard, locally saved requirements, developer checks, a shortlist of project names, visit observations, resident feedback, an illustrative loan guide, legal and financial due diligence, final review, journey summary, and in-app dated reminders. Checklist status labels are provisional because the references show closed menus. These are user entries, not independently verified findings or professional advice.
+`android/` is a native Kotlin/XML guest application. The New Property flow currently includes a dashboard, locally saved requirements, developer checks, a shortlist of project names, visit observations, resident feedback, an illustrative loan guide, legal and financial due diligence, final review, journey summary, in-app dated reminders, and an online published-guidance library. Checklist status labels are provisional because the references show closed menus. These are user entries, not independently verified findings or professional advice.
 
 The app is incomplete: Android authentication, cloud sync, the Resale journey, comparison details, personalization, real notifications, expert referrals and several shared screens are not yet implemented. Emulator checks cover selected persistence and navigation scenarios; visual, accessibility and real-device testing remain necessary.
 ### Run
 
-Open `android/` in Android Studio, install Android SDK 35 and JDK 17, sync Gradle and run the `app` configuration on an API 24+ emulator or device. Or run `cd android && ./gradlew assembleDebug` with a configured Android SDK and JDK 17. Run the Room instrumentation test with `./gradlew connectedDebugAndroidTest` on an emulator or device. No Supabase or Firebase credentials are required.
+Open `android/` in Android Studio, install Android SDK 35 and JDK 17, sync Gradle and run the `app` configuration on an API 24+ emulator or device. Or run `cd android && ./gradlew assembleDebug` with a configured Android SDK and JDK 17. Run the Room instrumentation test with `./gradlew connectedDebugAndroidTest` on an emulator or device. The Android guidance library uses the bundled public Supabase project key; no service-role credentials are required.
 
 ### Storage and limitations
 
-Onboarding completion and the selected journey use private Android preferences. Journey draft fields use a local Room database scoped to New Property; reminder notes use a separate device-local scope. Nothing is uploaded. Uninstalling the app removes local data; device backup is disabled. Account migration and cloud sync require future work. Android does not yet use Supabase; the connected Supabase project now contains a private draft table and document bucket prepared for a future sync phase.
+Onboarding completion and the selected journey use private Android preferences. Journey draft fields use a local Room database scoped to New Property; reminder notes use a separate device-local scope. Nothing is uploaded. Uninstalling the app removes local data; device backup is disabled. Account migration and cloud sync require future work. Android reads published guidance from Supabase, but does not upload buyer drafts; the private draft table and document bucket are prepared for a future sync phase.
 
 ## Website foundation
 
@@ -40,7 +40,7 @@ This is a debug-signed, incomplete test build, not a Play Store release. It does
 
 ## Early administrator content editor
 
-`/Adminlogin` uses Supabase email/password authentication. Only accounts with a server-assigned `super_admin` or `content_manager` role can create or edit guidance. The database enforces these permissions with RLS; regular users cannot grant roles. An append-only-to-clients audit records content create/update metadata. Drafts are editor-only; **published guidance is publicly readable**. Do not enter personal information or secrets. Published guidance appears in the website guidance library; it does not yet appear in the Android app.
+`/Adminlogin` uses Supabase email/password authentication. Only accounts with a server-assigned `super_admin` or `content_manager` role can create or edit guidance. The database enforces these permissions with RLS; regular users cannot grant roles. An append-only-to-clients audit records content create/update metadata. Drafts are editor-only; **published guidance is publicly readable**. Do not enter personal information or secrets. Published guidance appears in the website and Android guidance libraries. Android uses the public project key, requests only published content and needs internet; no offline cache is provided. Live end-to-end authorization and pagination testing remain outstanding.
 
 No account has automatically been made an administrator. To bootstrap a trusted account, first create and confirm that account through Supabase Auth, then a project owner can use the Supabase SQL editor to insert its verified `auth.users.id` and role into `public.finnest_admin_roles`. Do not grant access to an unverified account. No service-role key belongs in the web app. The migration is `20261109092048_finnest_admin_content_foundation.sql`.
 

@@ -47,3 +47,6 @@ See `requirements-traceability.md` for the detailed requirements review and prod
 
 ### Published guidance pagination
 - Buyer-facing website loads published guidance in pages of 50 using updated-at and UUID keyset order. The category and published filters apply on every page; errors preserve existing results and can be retried. Category switches invalidate stale responses. Content changes during browsing may change ordering, so users can refresh for the latest view. UI tests use mocked Supabase; live PostgREST pagination and authorization need end-to-end tests with real roles and non-sensitive data.
+
+### Android published guidance
+- Android uses the public Supabase project key over HTTPS to fetch published guidance only, with category filtering and 50-item keyset pagination. It sends no buyer draft and uses no admin credential; database RLS is the authorization boundary. No offline cache is provided, so an offline/error state offers retry. Unit and emulator tests use fixtures/fakes; live Android publishing, pagination and authorization are not yet verified end to end.
