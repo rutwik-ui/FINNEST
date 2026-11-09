@@ -1,0 +1,40 @@
+# Prototype review: screens 12–32
+
+Reviewed the supplied Drive images visually. This is an overview and ambiguity log, not a complete extraction of every field, interaction or hidden menu. The screenshot is the primary reference; where it is ambiguous, do not silently substitute content from the supporting document.
+
+## New Property
+
+| Image | Visible screen | Notes / implementation concerns |
+|---|---|---|
+| 12 | Step 4B: Resident feedback notes | Topic dropdown (closed; options not visible), optional date and context, what was shared, concern/question, follow-up, add note, notes entered, and a disclaimer. The screenshot does not show expanded options, added-note editing/deletion behavior, or field validation. |
+| 13 | Step 6: Legal due diligence | Checklist status, note/source/date for title, documents, encumbrances, plans, RERA, approvals, agreement, payment schedule and possession/cancellation/refund clauses; lawyer guidance. Status options are not expanded. |
+| 14 | Step 5: Home loan guide | Loan amount, interest rate, tenure, optional lender and planning context, illustrative EMI, lender questions and document prompts. Formula and input limits require verification before implementation; the estimate is not loan approval. |
+| 15 | Step 8: Final review and next actions | Aggregates statuses, budget/loan assumptions, saved projects and notes, pending items, concerns, professional review and user actions. This must reflect real data without implying independent verification. |
+| 16 | Step 7: Financial due diligence | One-time and recurring estimates, cost/document prompts and loan comparison. Empty values remain unknown. Some controls have closed dropdowns. |
+
+File order is not journey-step order: images 13–16 show steps 6, 5, 8 and 7 respectively.
+
+## Resale and shared screens
+
+| Image | Visible screen | Notes / implementation concerns |
+|---|---|---|
+| 17 | Resale journey overview | Six confirmed subject areas; explicitly says the prototype does not define a complete resale journey. This conflicts with the supporting document's separate 12-step tracker; confirm how they map. |
+| 18 | Resale requirements and location | Optional budget/cost estimates, configuration/practical needs and location priorities. |
+| 19 | Condition inspection | Checklist observations with status, notes, source and date; not a technical inspection. |
+| 20 | Seller, ownership and title | Seller authority, ownership records, loan/encumbrance, co-owner consent and property identifiers. |
+| 21 | Society documents and dues | Membership records, maintenance/property dues, transfer, parking, repairs and disputes; unknowns must not become zero. |
+| 22 | Legal review | Lawyer discussion prompts and review status; dropdown options are closed. |
+| 23 | Agreement and handover | Agreement, promises, payment, possession, registration, loan release, keys, utilities and handover prompts; dropdown options are closed. |
+| 24 | Experts directory | Informational categories and filters; no configured expert profiles or contact details in the prototype. |
+| 25 | Expert detail | No configured expert; contact request disabled, no booking/payment service connected in the prototype. |
+| 26 | Journey summary | Journey type, user-entered progress, filter, journey screens and projects. |
+| 27 | Reminders | User-entered reminder/date/optional note; prototype does not schedule OS notifications. |
+| 28 | Privacy and consent | Device-save choice and separate optional contact, marketing and analytics choices; prototype-only statements must not be copied as claims about the actual backend. |
+| 29 | About and disclaimer | Decision-support limits and prototype data notice. |
+| 30 | Profile and settings | Profile, device save, notification preferences, links and reset/delete journey data. |
+| 31 | Risk detail | Illustrative verbal-promise concern, questions and related checklist item; no finding or verification claim. |
+| 32 | Helpful states | Empty, loading, error and success copy examples; success must only follow confirmed persistence. |
+
+## Blocker for the next Android screen
+
+Screen 12's Topic selector is closed. Neither its choices nor the exact required-field/added-note rules are specified by this image. The supporting content lists example questions for residents, but does not establish the selector's exact choices. The master brief says to ask when a screenshot is unclear and not invent missing options. The next step therefore cannot be faithfully completed and tested without the expanded menu or an explicit decision to use a different input. No changes were made to live databases or guest data as part of this review.

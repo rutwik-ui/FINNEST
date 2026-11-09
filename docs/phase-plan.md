@@ -17,7 +17,7 @@
 - Screen 10: step 3, shortlist empty state (up to five projects); expanded project form is not shown.
 - Screen 11: step 4A, visit observations.
 - Screen 12: step 4B, resident feedback notes; topic dropdown options are not visible.
-- Screens 13–16 and Resale/common screens 17–32 still need individual review before implementation. The supplied content document describes a 12-step resale tracker while references may group steps differently; resolve mapping during inventory instead of inventing fields.
+- Screens 13–16 and Resale/common screens 17–32 were visually reviewed at overview level; see `screen-review-12-32.md`. Detailed field extraction and all hidden menu states remain outstanding. The six resale subject areas in screen 17 are explicitly incomplete and differ from the supporting document’s 12-step tracker; confirm mapping before implementing it.
 
 ## Proposed next increments
 1. Confirm the expanded developer-check status dropdown and confirm expanded project form fields and resident-feedback topic options, and review remaining New Buy references.
