@@ -2,6 +2,7 @@ package com.finnest.app
 
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.content.Intent
 import android.text.InputType
 import android.view.View
 import android.widget.AdapterView
@@ -23,21 +24,25 @@ class ResaleConditionActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDeveloperChecksBinding
     private val scope = "resale_property"
     private var loaded = false
+    private val section by lazy { ResaleChecklists.find(intent.getStringExtra("resale_section") ?: "condition") }
     private fun dp(n: Int) = (n * resources.displayMetrics.density).toInt()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater); setContentView(binding.root)
+        val current = section ?: run { finish(); return }
         binding.stepLabel.text = "RESALE PROPERTY · YOUR REVIEW"
-        binding.screenTitle.text = "Condition inspection"
-        binding.screenDescription.text = "Record what you observe; arrange a qualified technical inspection for concerns. This checklist cannot assess structural safety."
-        binding.screenNotice.text = "Keep your observations, information shared by a seller, evidence reviewed and professional advice distinct. Status choices are provisional."
+        binding.screenTitle.text = current.title
+        binding.screenDescription.text = current.description
+        binding.screenNotice.text = if (current.freeTextStatus) "Keep observations, seller statements and professional advice distinct. Status is free text because the reference choices are not visible."
+            else "Keep observations, seller statements and professional advice distinct. Status choices are provisional."
         binding.back.setOnClickListener { leave { finish() } }; binding.backBottom.setOnClickListener { leave { finish() } }
         binding.saveLater.setOnClickListener { leave { ResaleOverviewActivity.show(this) } }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) { override fun handleOnBackPressed() { leave { finish() } } })
+        if (current.id == "handover") binding.next.text = "View journey summary  →"
         binding.next.setOnClickListener { leave {
-            AlertDialog.Builder(this).setTitle("Saved on this device")
-                .setMessage("Seller, ownership and title is not available yet. You can return to your resale overview.")
-                .setPositiveButton("Overview") { _, _ -> ResaleOverviewActivity.show(this) }.show()
+            val index = ResaleChecklists.sections.indexOf(current)
+            if (index + 1 < ResaleChecklists.sections.size) startActivity(Intent(this, ResaleConditionActivity::class.java).putExtra("resale_section", ResaleChecklists.sections[index + 1].id))
+            else startActivity(Intent(this, ResaleSummaryActivity::class.java))
         } }
         DraftRepository.load(this, scope) { result -> runOnUiThread {
             if (isFinishing || isDestroyed) return@runOnUiThread
@@ -64,25 +69,44 @@ class ResaleConditionActivity : AppCompatActivity() {
     }
     private fun buildForm(draft: Map<String, String>) {
         val statuses = listOf("Not checked", "Checked by you", "Information provided", "Pending / unknown", "Professional review")
-        ResaleCondition.checks.forEach { (id, title) ->
+        val current = requireNotNull(section)
+        current.checks.forEach { (id, title) ->
             val card = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(16)); setBackgroundResource(R.drawable.card) }
             binding.form.addView(card, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) })
             label(card, title, true)
-            val prefix = "condition_$id"
+            val prefix = "${current.id}_$id"
             val key = "${prefix}_status"
-            val saved = draft[key] ?: "Not checked"
-            val choices = if (saved in statuses) statuses else listOf(saved) + statuses
-            val spinner = Spinner(this).apply {
-                adapter = ArrayAdapter(this@ResaleConditionActivity, android.R.layout.simple_spinner_dropdown_item, choices)
-                setSelection(choices.indexOf(saved)); contentDescription = "$title status"
-            }
-            card.addView(spinner, LinearLayout.LayoutParams(-1, dp(48)))
-            var last = saved
-            spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
-                override fun onNothingSelected(parent: AdapterView<*>?) = Unit
-                override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, itemId: Long) {
-                    val selected = choices[position]; if (selected != last) { last = selected; save(key, selected) }
+            if (current.freeTextStatus) {
+                label(card, "Status (optional)")
+                card.addView(EditText(this).apply {
+                    hint = current.defaultStatus; textSize = 16f; contentDescription = "$title status"
+                    inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                    setText(draft[key].orEmpty()); doAfterTextChanged { save(key, it?.toString().orEmpty()) }
+                }, LinearLayout.LayoutParams(-1, -2))
+            } else {
+                val saved = draft[key] ?: current.defaultStatus
+                val choices = if (saved in statuses) statuses else listOf(saved) + statuses
+                val spinner = Spinner(this).apply {
+                    adapter = ArrayAdapter(this@ResaleConditionActivity, android.R.layout.simple_spinner_dropdown_item, choices)
+                    setSelection(choices.indexOf(saved)); contentDescription = "$title status"
                 }
+                card.addView(spinner, LinearLayout.LayoutParams(-1, dp(48)))
+                var last = saved
+                spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onNothingSelected(parent: AdapterView<*>?) = Unit
+                    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, itemId: Long) {
+                        val selected = choices[position]; if (selected != last) { last = selected; save(key, selected) }
+                    }
+                }
+            }
+            if (current.hasAmount) {
+                label(card, "Amount, if relevant (₹)")
+                val amountKey = "${prefix}_amount"
+                card.addView(EditText(this).apply {
+                    hint = "Unknown / not provided"; textSize = 16f; contentDescription = "$title amount"
+                    inputType = InputType.TYPE_CLASS_NUMBER or InputType.TYPE_NUMBER_FLAG_DECIMAL
+                    setText(draft[amountKey].orEmpty()); doAfterTextChanged { save(amountKey, it?.toString().orEmpty()) }
+                }, LinearLayout.LayoutParams(-1, -2))
             }
             fun input(suffix: String, caption: String, hintText: String) {
                 label(card, caption)
@@ -111,6 +135,17 @@ class ResaleConditionActivity : AppCompatActivity() {
             }
             card.addView(button, LinearLayout.LayoutParams(-1, -2))
             card.addView(Button(this).apply { text = "Clear date"; isAllCaps = false; contentDescription = "Clear $title date"; setOnClickListener { date = ""; update(); save(dateKey, "") } })
+        }
+        if (current.id == "legal") {
+            val card = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(16)); setBackgroundResource(R.drawable.card) }
+            binding.form.addView(card, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) })
+            label(card, "Lawyer review status", true)
+            label(card, "A received document is not the same as a completed legal review. Enter your own status; the reference choices are not visible.")
+            card.addView(EditText(this).apply {
+                hint = "Not started"; textSize = 16f; contentDescription = "Lawyer review status"
+                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                setText(draft["legal_lawyer_status"].orEmpty()); doAfterTextChanged { save("legal_lawyer_status", it?.toString().orEmpty()) }
+            }, LinearLayout.LayoutParams(-1, -2))
         }
     }
 }

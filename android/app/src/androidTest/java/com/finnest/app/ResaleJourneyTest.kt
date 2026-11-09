@@ -46,6 +46,29 @@ class ResaleJourneyTest {
             onView(withContentDescription("Walls / ceilings / leaks Note / observation")).perform(scrollTo()).check(matches(withText(value)))
         }
     }
+    @Test fun resaleSectionsSaveAndSummaryShowsEntries() {
+        val unique = "Follow up " + System.currentTimeMillis()
+        ActivityScenario.launch(ResaleOverviewActivity::class.java).use {
+            onView(withText("Seller, ownership & title  →")).perform(scrollTo(), click())
+            waitReady(ResaleConditionActivity::class.java)
+            onView(withContentDescription("Seller identity & authority Note / observation")).perform(scrollTo(), replaceText(unique), closeSoftKeyboard())
+            onView(withId(R.id.next)).perform(click())
+            waitReady(ResaleConditionActivity::class.java)
+            onView(withContentDescription("Maintenance dues amount")).perform(scrollTo(), replaceText("1250"), closeSoftKeyboard())
+            onView(withId(R.id.next)).perform(click())
+            waitReady(ResaleConditionActivity::class.java)
+            onView(withContentDescription("Lawyer review status")).perform(scrollTo(), replaceText("Appointment needed"), closeSoftKeyboard())
+            onView(withId(R.id.next)).perform(click())
+            waitReady(ResaleConditionActivity::class.java)
+            onView(withContentDescription("Written promises status")).perform(scrollTo(), replaceText("Discuss"), closeSoftKeyboard())
+            onView(withId(R.id.next)).perform(click())
+            waitReady(ResaleSummaryActivity::class.java)
+            onView(withText("Note: $unique")).perform(scrollTo()).check(matches(isDisplayed()))
+            onView(withText("Amount (₹): 1250")).perform(scrollTo()).check(matches(isDisplayed()))
+            onView(withText("Lawyer review status: Appointment needed")).perform(scrollTo()).check(matches(isDisplayed()))
+            onView(withText("Status: Discuss")).perform(scrollTo()).check(matches(isDisplayed()))
+        }
+    }
     @Test fun resaleRequirementsReopenWithoutOverwritingNewProperty() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext
         val latch = CountDownLatch(1)

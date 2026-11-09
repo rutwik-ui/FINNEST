@@ -20,7 +20,7 @@ class ResaleOverviewActivity : AppCompatActivity() {
         binding.stepLabel.text = "A SEPARATE HOME-BUYING JOURNEY"
         binding.screenTitle.text = "Resale Property Journey"
         binding.screenDescription.text = "Explore key areas when considering a resale home, at your own pace."
-        binding.screenNotice.text = "These are the subject areas defined in the prototype, not a complete resale journey. Requirements and condition notes are available; other areas are coming later."
+        binding.screenNotice.text = "These are the subject areas defined in the prototype, not a complete resale journey. These six areas are available as locally saved notes, not a complete resale journey."
         binding.loading.visibility = View.GONE
         binding.back.setOnClickListener { changeJourney() }
         binding.backBottom.text = "Change journey"; binding.backBottom.setOnClickListener { changeJourney() }
@@ -31,12 +31,11 @@ class ResaleOverviewActivity : AppCompatActivity() {
         binding.form.addView(card, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) })
         card.addView(TextView(this).apply { text = "Confirmed subject areas"; textSize = 20f; setTextColor(getColor(R.color.navy)); setTypeface(null, android.graphics.Typeface.BOLD) })
         card.addView(Button(this).apply { text = "Requirements & location  →"; isAllCaps = false; setOnClickListener { openRequirements() } }, LinearLayout.LayoutParams(-1, -2))
-        card.addView(Button(this).apply { text = "Property condition  →"; isAllCaps = false; setOnClickListener { startActivity(Intent(this@ResaleOverviewActivity, ResaleConditionActivity::class.java)) } }, LinearLayout.LayoutParams(-1, -2))
-        listOf("Seller, ownership & title", "Society documents & dues", "Legal review", "Agreement, registration & handover").forEach { title ->
-            card.addView(TextView(this).apply {
-                text = "$title · coming later"; textSize = 15f; setTextColor(getColor(R.color.muted)); setPadding(0, dp(12), 0, dp(12))
-            })
+        ResaleChecklists.sections.forEach { section ->
+            val label = when (section.id) { "condition" -> "Property condition"; "handover" -> "Agreement, registration & handover"; else -> section.title }
+            card.addView(Button(this).apply { text = "$label  →"; isAllCaps = false; setOnClickListener { startActivity(Intent(this@ResaleOverviewActivity, ResaleConditionActivity::class.java).putExtra("resale_section", section.id)) } }, LinearLayout.LayoutParams(-1, -2))
         }
+        card.addView(Button(this).apply { text = "View resale summary  →"; isAllCaps = false; setOnClickListener { startActivity(Intent(this@ResaleOverviewActivity, ResaleSummaryActivity::class.java)) } }, LinearLayout.LayoutParams(-1, -2))
         binding.form.addView(TextView(this).apply {
             text = "FINNEST does not inspect a property, verify documents or provide legal advice."; textSize = 14f; setTextColor(getColor(R.color.muted)); setPadding(0, dp(14), 0, 0)
         })
