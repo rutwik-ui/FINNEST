@@ -27,6 +27,7 @@ class DeveloperChecksActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDeveloperChecksBinding
     private val journey = "new_property"
     private var loaded = false
+    private val isLegal by lazy { intent.getBooleanExtra("legal_due_diligence", false) }
     private val isFeedback by lazy { intent.getBooleanExtra("resident_feedback", false) }
     private val isVisit by lazy { intent.getBooleanExtra("visit_observations", false) }
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
@@ -35,7 +36,12 @@ class DeveloperChecksActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        if (isFeedback) {
+        if (isLegal) {
+            binding.stepLabel.text = "STEP 6 OF 8 · NEW PROPERTY"
+            binding.screenTitle.text = "Legal due diligence"
+            binding.screenDescription.text = "Questions for an appropriately qualified local lawyer. Document relevance and requirements vary by location."
+            binding.screenNotice.text = "FINNEST does not determine title, legal clearance or whether a property is safe to buy. Status choices are provisional."
+        } else if (isFeedback) {
             binding.stepLabel.text = "STEP 4B · NEW PROPERTY"
             binding.screenTitle.text = "Resident feedback notes"
             binding.screenDescription.text = "Record what residents share in your own words. Your notes stay on this device. Avoid sensitive personal information."
@@ -54,7 +60,11 @@ class DeveloperChecksActivity : AppCompatActivity() {
         })
         binding.next.setOnClickListener {
             afterSaves {
-                if (isFeedback) {
+                if (isLegal) {
+                    AlertDialog.Builder(this).setTitle("Draft saved on this device")
+                        .setMessage("Financial due diligence is not available yet. You can return to your legal notes later.")
+                        .setPositiveButton("OK") { _, _ -> finish() }.show()
+                } else if (isFeedback) {
                     startActivity(Intent(this, LoanGuideActivity::class.java))
                 } else if (isVisit) {
                     startActivity(Intent(this, DeveloperChecksActivity::class.java).putExtra("resident_feedback", true))
@@ -187,7 +197,7 @@ class DeveloperChecksActivity : AppCompatActivity() {
         renderNotes()
     }
     private fun buildForm(draft: Map<String, String>) {
-        val checks = if (isVisit) VisitObservations.checks else listOf(
+        val checks = if (isLegal) LegalDueDiligence.checks else if (isVisit) VisitObservations.checks else listOf(
             "track_record" to "Track record / delivery",
             "rera" to "Project RERA registration / disclosures",
             "land_title" to "Land ownership / title",
@@ -202,20 +212,22 @@ class DeveloperChecksActivity : AppCompatActivity() {
             val card = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(16)); setBackgroundResource(R.drawable.card) }
             binding.form.addView(card, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) })
             label(card, title, true)
-            val prefix = if (isVisit) "visit" else "developer"
+            val prefix = if (isLegal) "legal" else if (isVisit) "visit" else "developer"
             val key = "${prefix}_${id}_status"
+            val saved = draft[key] ?: "Not checked"
+            val choices = if (saved in statuses) statuses else listOf(saved) + statuses
             val spinner = Spinner(this).apply {
-                adapter = ArrayAdapter(this@DeveloperChecksActivity, android.R.layout.simple_spinner_dropdown_item, statuses)
-                setSelection(statuses.indexOf(draft[key] ?: "Not checked").coerceAtLeast(0))
+                adapter = ArrayAdapter(this@DeveloperChecksActivity, android.R.layout.simple_spinner_dropdown_item, choices)
+                setSelection(choices.indexOf(saved))
                 contentDescription = "$title status"
             }
             card.addView(spinner, LinearLayout.LayoutParams(-1, dp(48)))
-            var lastSelected = statuses[statuses.indexOf(draft[key] ?: "Not checked").coerceAtLeast(0)]
+            var lastSelected = saved
             spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
                 override fun onNothingSelected(parent: AdapterView<*>?) = Unit
                 override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, itemId: Long) {
                     // Do not write the displayed default merely because the screen was opened.
-                    val selected = statuses[position]
+                    val selected = choices[position]
                     if (selected != lastSelected) {
                         lastSelected = selected
                         save(key, selected)
@@ -225,6 +237,12 @@ class DeveloperChecksActivity : AppCompatActivity() {
             input(card, draft, "${prefix}_${id}_note", "Note / observation", "Optional")
             input(card, draft, "${prefix}_${id}_source", "Source / context", "Who provided this?")
             date(card, draft, "${prefix}_${id}_date", title)
+        }
+        if (isLegal) {
+            val guidance = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(16)); setBackgroundResource(R.drawable.card) }
+            binding.form.addView(guidance, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) })
+            label(guidance, "Want legal guidance?", true)
+            label(guidance, "Consider when independent advice from an appropriately qualified local property lawyer may help. No expert profiles are configured; FINNEST cannot connect you to a lawyer yet.")
         }
     }
 }

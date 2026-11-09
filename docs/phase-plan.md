@@ -4,6 +4,7 @@
 - Native Android entry foundation, introductory screens and journey selection.
 - New Property step 1, Requirements & Budget: optional budget fields, location and configuration selections, carpet area and accessibility needs, stored locally in Room.
 - Step 4A provides 14 visit-observation prompts on Android and web, with local status, notes, source and date. Step 4B provides device-local resident feedback notes on Android using a free-text topic; web support is not yet implemented.
+- Step 6 provides nine legal due diligence prompts on Android, with locally saved status, notes, source and follow-up date. Status labels are provisional, and no expert referral service is connected.
 - Step 5 provides an Android-only illustrative fixed-rate EMI calculator and lender prompts. Input limits and lender-document status labels are explicit implementation choices; status labels are provisional because the prototype menu is closed. No eligibility or approval is implied. Device UI testing remains outstanding.
 - Step 3 offers a local shortlist of up to five project names, with rename and removal, on Android and web. Comparison fields remain unimplemented because the expanded project form is not visible in the supplied screenshot.
 - Step 2 developer checks include the six screenshot prompts, optional status, note, source and follow-up date, saved locally. Neither step claims independent verification. Step-one priority tiers are not implemented yet.

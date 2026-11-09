@@ -1,6 +1,7 @@
 package com.finnest.app
 
 import android.os.Bundle
+import android.content.Intent
 import android.text.InputType
 import android.view.View
 import android.widget.AdapterView
@@ -37,9 +38,7 @@ class LoanGuideActivity : AppCompatActivity() {
             override fun handleOnBackPressed() { leave() }
         })
         binding.next.setOnClickListener { afterSaves {
-            AlertDialog.Builder(this).setTitle("Draft saved on this device")
-                .setMessage("Legal due diligence is not available yet. You can return to this guide later.")
-                .setPositiveButton("OK") { _, _ -> finish() }.show()
+            startActivity(Intent(this, DeveloperChecksActivity::class.java).putExtra("legal_due_diligence", true))
         } }
         DraftRepository.load(this, journey) { result -> runOnUiThread {
             if (!isFinishing && !isDestroyed) result.fold(onSuccess = {
