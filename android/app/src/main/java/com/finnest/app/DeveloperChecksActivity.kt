@@ -25,12 +25,19 @@ class DeveloperChecksActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDeveloperChecksBinding
     private val journey = "new_property"
     private var loaded = false
+    private val isVisit by lazy { intent.getBooleanExtra("visit_observations", false) }
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        if (isVisit) {
+            binding.stepLabel.text = "STEP 4A · NEW PROPERTY"
+            binding.screenTitle.text = "What to notice on a visit"
+            binding.screenDescription.text = "Record your own observations during a visit. A visual visit is not a technical inspection."
+            binding.screenNotice.text = "A visit is not an inspection. Do not enter restricted areas or rely on a visual check for safety."
+        }
         binding.back.setOnClickListener { leaveWhenSaved() }
         binding.backBottom.setOnClickListener { leaveWhenSaved() }
         binding.saveLater.setOnClickListener { leaveWhenSaved() }
@@ -38,7 +45,13 @@ class DeveloperChecksActivity : AppCompatActivity() {
             override fun handleOnBackPressed() { leaveWhenSaved() }
         })
         binding.next.setOnClickListener {
-            afterSaves { startActivity(Intent(this, ProjectsActivity::class.java)) }
+            afterSaves {
+                if (isVisit) {
+                    AlertDialog.Builder(this).setTitle("Draft saved on this device")
+                        .setMessage("Resident feedback notes are not available yet. You can return to your visit observations later.")
+                        .setPositiveButton("OK") { _, _ -> finish() }.show()
+                } else startActivity(Intent(this, ProjectsActivity::class.java))
+            }
         }
         DraftRepository.load(this, journey) { result ->
             runOnUiThread {
@@ -101,7 +114,7 @@ class DeveloperChecksActivity : AppCompatActivity() {
         parent.addView(clear, LinearLayout.LayoutParams(-1, -2))
     }
     private fun buildForm(draft: Map<String, String>) {
-        val checks = listOf(
+        val checks = if (isVisit) VisitObservations.checks else listOf(
             "track_record" to "Track record / delivery",
             "rera" to "Project RERA registration / disclosures",
             "land_title" to "Land ownership / title",
@@ -116,7 +129,8 @@ class DeveloperChecksActivity : AppCompatActivity() {
             val card = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(16)); setBackgroundResource(R.drawable.card) }
             binding.form.addView(card, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) })
             label(card, title, true)
-            val key = "developer_${id}_status"
+            val prefix = if (isVisit) "visit" else "developer"
+            val key = "${prefix}_${id}_status"
             val spinner = Spinner(this).apply {
                 adapter = ArrayAdapter(this@DeveloperChecksActivity, android.R.layout.simple_spinner_dropdown_item, statuses)
                 setSelection(statuses.indexOf(draft[key] ?: "Not checked").coerceAtLeast(0))
@@ -135,9 +149,9 @@ class DeveloperChecksActivity : AppCompatActivity() {
                     }
                 }
             }
-            input(card, draft, "developer_${id}_note", "Note / observation", "Optional")
-            input(card, draft, "developer_${id}_source", "Source / context", "Who provided this?")
-            date(card, draft, "developer_${id}_date", title)
+            input(card, draft, "${prefix}_${id}_note", "Note / observation", "Optional")
+            input(card, draft, "${prefix}_${id}_source", "Source / context", "Who provided this?")
+            date(card, draft, "${prefix}_${id}_date", title)
         }
     }
 }

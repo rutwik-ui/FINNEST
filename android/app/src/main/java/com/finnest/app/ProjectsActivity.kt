@@ -1,6 +1,7 @@
 package com.finnest.app
 
 import android.os.Bundle
+import android.content.Intent
 import android.text.InputFilter
 import android.widget.EditText
 import android.widget.LinearLayout
@@ -37,9 +38,7 @@ class ProjectsActivity : AppCompatActivity() {
         binding.add.setOnClickListener { editName(null) }
         binding.next.setOnClickListener {
             afterSaves {
-                AlertDialog.Builder(this).setTitle("Shortlist saved on this device")
-                    .setMessage("The next New Property step and comparison details are not available yet. You can return to your shortlist later.")
-                    .setPositiveButton("OK") { _, _ -> finish() }.show()
+                startActivity(Intent(this, DeveloperChecksActivity::class.java).putExtra("visit_observations", true))
             }
         }
         DraftRepository.load(this, journey) { result ->
