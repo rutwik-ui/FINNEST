@@ -113,7 +113,7 @@ class LoanGuideActivity : AppCompatActivity() {
         label(documents, "Documents to ask the lender about", true)
         label(documents, "Requirements vary by lender and location. Track the conversation without uploading personal documents here. Status choices are provisional.")
         val statuses = listOf("Not checked", "Checked by you", "Information provided", "Pending / unknown", "Professional review")
-        listOf("identity" to "Identity and address requirements", "income_docs" to "Income documentation requirements", "bank" to "Bank statement period requested", "property" to "Property documents required", "fees" to "Processing and legal fee schedule").forEach { (id, title) ->
+        ReviewData.lenderChecks.forEach { (id, title) ->
             label(documents, title, true)
             val key = "loan_${id}_status"
             val saved = draft[key] ?: statuses.first()

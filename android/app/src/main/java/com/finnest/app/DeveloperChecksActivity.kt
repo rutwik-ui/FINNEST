@@ -195,14 +195,7 @@ class DeveloperChecksActivity : AppCompatActivity() {
         renderNotes()
     }
     private fun buildForm(draft: Map<String, String>) {
-        val checks = if (isLegal) LegalDueDiligence.checks else if (isVisit) VisitObservations.checks else listOf(
-            "track_record" to "Track record / delivery",
-            "rera" to "Project RERA registration / disclosures",
-            "land_title" to "Land ownership / title",
-            "approvals" to "Approvals / sanctioned plans",
-            "legal_history" to "Credible legal history",
-            "financial_stability" to "Financial stability where evidence exists"
-        )
+        val checks = if (isLegal) LegalDueDiligence.checks else if (isVisit) VisitObservations.checks else ReviewData.developerChecks
         // Only "Not checked" is visible in the dropdown screenshot. Other labels come from the
         // introductory status legend and remain provisional until the expanded dropdown is supplied.
         val statuses = listOf("Not checked", "Checked by you", "Information provided", "Pending / unknown", "Professional review")

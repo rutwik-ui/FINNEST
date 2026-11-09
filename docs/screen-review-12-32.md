@@ -53,4 +53,8 @@ Android uses nine screenshot prompts and the same provisional status labels as e
 
 ## Step 7 implementation decisions
 
-Android stores separate one-time and monthly amounts, ten cost/document prompts and one set of lender terms locally. Totals include only entered values and display the entered count; no entries means not available, while malformed values prevent a total. Amounts accept up to two decimal places and ₹1 trillion per field; these are implementation limits, not financial advice. Status options are provisional. The screenshot shows one lender-term record, not a multi-offer comparison; no lender offers are supplied. Final review remains unavailable.
+Android stores separate one-time and monthly amounts, ten cost/document prompts and one set of lender terms locally. Totals include only entered values and display the entered count; no entries means not available, while malformed values prevent a total. Amounts accept up to two decimal places and ₹1 trillion per field; these are implementation limits, not financial advice. Status options are provisional. The screenshot shows one lender-term record, not a multi-offer comparison; no lender offers are supplied. Final review follows this step.
+
+## Step 8 implementation decisions
+
+The Android review derives checklist status counts and pending entries from existing local draft keys, shows buyer-entered notes, project names, loan assumptions and partial initial cost total, and autosaves next actions. It does not conflate provisional “Professional review” with verified evidence or claim project comparisons exist when only names are recorded. Concern detection and standalone journey summary, risk detail, expert directory/referrals and navigation shortcuts are not yet implemented; the screen says so rather than presenting nonfunctional controls. Unreadable lists are reported without overwriting their stored data.

@@ -2,6 +2,7 @@ package com.finnest.app
 
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.content.Intent
 import android.text.InputType
 import android.view.View
 import android.widget.AdapterView
@@ -40,9 +41,7 @@ class FinancialDueDiligenceActivity : AppCompatActivity() {
             override fun handleOnBackPressed() { leave() }
         })
         binding.next.setOnClickListener { afterSaves {
-            AlertDialog.Builder(this).setTitle("Draft saved on this device")
-                .setMessage("Final review is not available yet. You can return to these estimates later.")
-                .setPositiveButton("OK") { _, _ -> finish() }.show()
+            startActivity(Intent(this, FinalReviewActivity::class.java))
         } }
         DraftRepository.load(this, journey) { result -> runOnUiThread {
             if (!isFinishing && !isDestroyed) result.fold(onSuccess = {
