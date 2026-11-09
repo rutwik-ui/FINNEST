@@ -32,3 +32,9 @@ The website supports Supabase email/password sign-in and registration on the Pro
 ## Supabase foundation
 
 Migration `supabase/migrations/20261109073922_finnest_private_foundation.sql` was applied to the connected project. It creates an RLS-protected per-user/per-device draft table and a private document bucket restricted to each authenticated user's UUID folder, PDF/JPEG/PNG files and 10 MiB per file. There is no application upload, download, draft backup, migration, Android integration or admin access yet. Never put a service-role/secret key in the app or browser. Before enabling data sync, implement and test account ownership, conflict handling, explicit guest migration and two-user RLS isolation.
+
+### Download a test APK from GitHub Actions
+
+The repository's **Android debug APK** workflow builds an Android-only debug APK when Android code changes, and can also be run manually from the Actions tab using **Run workflow**. Open a successful run and download the **FINNEST-android-debug** artifact; unzip it to get `app-debug.apk`. GitHub artifacts require GitHub sign-in and expire after 14 days. Install it only on a test device you trust, enabling installation from your chosen source if Android asks.
+
+This is a debug-signed, incomplete test build, not a Play Store release. It does not include cloud sync, Android login, the full dashboard or the resale journey. GitHub's build runs JVM unit tests, not emulator/instrumentation tests; the app still needs device testing. If the workflow is unavailable, open `android/` in Android Studio and build a debug APK locally as described above.
