@@ -4,7 +4,7 @@ import org.junit.Assert.*
 import org.junit.Test
 
 class LoanEstimateTest {
-    @Test fun fixedRateExample() { assertEquals(8997.26, LoanEstimate.monthly("1000000", "8", "20")!!, 0.01) }
+    @Test fun fixedRateExample() { assertEquals(8364.40, LoanEstimate.monthly("1000000", "8", "20")!!, 0.01) }
     @Test fun zeroInterest() { assertEquals(1000.0, LoanEstimate.monthly("12000", "0", "1")!!, 0.0001) }
     @Test fun rejectsMissingInvalidAndOutOfBounds() {
         listOf(Triple("", "8", "20"), Triple("0", "8", "20"), Triple("NaN", "8", "20"),
