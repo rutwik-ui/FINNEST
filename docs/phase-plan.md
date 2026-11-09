@@ -25,9 +25,9 @@
 4. Introduce secure authentication and idempotent guest-to-account migration after the data model and authorization policies are reviewed.
 5. Add admin, website, notifications, testing and production hardening in later increments.
 
-Supabase inspection found one healthy project, but the public schema had no base tables visible to the connected account. Confirm the intended project/schema before implementing cloud integration. Do not put service-role credentials in the app or modify the live database without a reviewed design.
+Supabase inspection found one healthy project with no application tables. Migration `20261109073922_finnest_private_foundation` adds a user-scoped draft table and private document bucket. Website Profile now offers Supabase email/password authentication, but no drafts or documents are uploaded. The project requires email confirmation and its Auth Site URL is still localhost; configure real site and redirect URLs before production/testing confirmation links. RLS and bucket settings were inspected, but full two-user isolation and upload/download tests remain required. Android auth, guest migration and sync remain future phases. Never put service-role credentials in an app.
 
 ## Website and admin foundation
 - A responsive React/Vite guest-facing website now covers a dashboard, the first two New Property screens, local project names, expert categories, and profile information. Browser drafts are separate from Android Room data.
 - `/Adminlogin` deliberately provides no authentication or administrative actions. Secure administrator identity, server-enforced roles, audit logging and management APIs are prerequisites to enabling it.
-- The current frontend is not the Laravel website/backend specified as the recommended stack in the brief. The shared backend, API contracts, schema and Android/web synchronization remain to be designed and implemented; nothing has been deployed to Supabase.
+- The current frontend is not the Laravel website/backend specified as the recommended stack in the brief. The broader shared backend, API contracts, admin system and Android/web synchronization remain to be designed and implemented; only the private Supabase foundation and website authentication have been added.

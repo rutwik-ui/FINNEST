@@ -14,7 +14,7 @@ Open `android/` in Android Studio, install Android SDK 35 and JDK 17, sync Gradl
 
 ### Storage and limitations
 
-Onboarding completion and the selected journey use private Android preferences. Step-one, step-two, and shortlist draft fields use a local Room database and are scoped to New Property. Nothing is uploaded. Uninstalling the app removes local data; device backup is disabled. Account migration and cloud sync require future work. The connected Supabase project's public schema returned no visible base tables at inspection time; no database changes have been made.
+Onboarding completion and the selected journey use private Android preferences. Step-one, step-two, and shortlist draft fields use a local Room database and are scoped to New Property. Nothing is uploaded. Uninstalling the app removes local data; device backup is disabled. Account migration and cloud sync require future work. Android does not yet use Supabase; the connected Supabase project now contains a private draft table and document bucket prepared for a future sync phase.
 
 ## Website foundation
 
@@ -23,7 +23,12 @@ Onboarding completion and the selected journey use private Android preferences. 
 ```sh
 cd web
 npm install
+cp .env.example .env.local
 npm run dev
 ```
 
-The website currently stores guest data only in browser localStorage. It does not sync with Android or Supabase and clearing browser data removes it. Project comparison details and cross-device synchronization are not implemented. The `/Adminlogin` route is an intentionally locked placeholder: no admin login, role checks, content editing, database access or management functionality has been implemented. Do not deploy this as a production administration system. The web frontend is React/Vite; the master brief's proposed Laravel backend/admin and a shared API remain future work. The roadmap artwork is AI-generated, based on the supplied dashboard reference.
+The website supports Supabase email/password sign-in and registration on the Profile page. Guest data still stays only in browser localStorage: signing in does not upload or sync it, and clearing browser data removes it. The connected project requires email confirmation and currently has its Auth Site URL set to localhost. Configure the real site URL and allowed redirect URLs in Supabase Auth before testing email confirmation; do not set a production URL to a temporary preview. The client configuration in `.env.example` is a publishable key, not a service-role key. Project comparison details and cross-device synchronization are not implemented. The `/Adminlogin` route is an intentionally locked placeholder: no admin login, role checks, content editing, database access or management functionality has been implemented. Do not deploy this as a production administration system. The web frontend is React/Vite; the master brief's proposed Laravel backend/admin and a shared API remain future work. The roadmap artwork is AI-generated, based on the supplied dashboard reference.
+
+## Supabase foundation
+
+Migration `supabase/migrations/20261109073922_finnest_private_foundation.sql` was applied to the connected project. It creates an RLS-protected per-user/per-device draft table and a private document bucket restricted to each authenticated user's UUID folder, PDF/JPEG/PNG files and 10 MiB per file. There is no application upload, download, draft backup, migration, Android integration or admin access yet. Never put a service-role/secret key in the app or browser. Before enabling data sync, implement and test account ownership, conflict handling, explicit guest migration and two-user RLS isolation.
