@@ -51,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         val params = android.widget.LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 10 }
         binding.details.addView(row, params)
     }
-    private fun render() = with(binding) {
+    private fun render(): Unit = with(binding) {
         details.removeAllViews()
         back.isEnabled = model.page > 0
         back.alpha = if (back.isEnabled) 1f else .35f
