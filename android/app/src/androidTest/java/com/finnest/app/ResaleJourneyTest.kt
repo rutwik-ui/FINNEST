@@ -20,19 +20,31 @@ import java.util.concurrent.atomic.AtomicReference
 
 @RunWith(AndroidJUnit4::class)
 class ResaleJourneyTest {
-    private fun waitReady() {
+    private fun waitReady(type: Class<out Activity> = ResaleRequirementsActivity::class.java) {
         val instrumentation = InstrumentationRegistry.getInstrumentation()
         val deadline = SystemClock.elapsedRealtime() + 15000
         while (SystemClock.elapsedRealtime() < deadline) {
             val ready = AtomicReference(false)
             instrumentation.runOnMainSync {
                 val activity: Activity? = ActivityLifecycleMonitorRegistry.getInstance().getActivitiesInStage(Stage.RESUMED).firstOrNull()
-                ready.set(activity is ResaleRequirementsActivity && activity.findViewById<View>(R.id.next)?.isEnabled == true)
+                ready.set(type.isInstance(activity) && activity?.findViewById<View>(R.id.next)?.isEnabled == true)
             }
             if (ready.get()) return
             SystemClock.sleep(100)
         }
         throw AssertionError("Resale draft did not load")
+    }
+    @Test fun conditionNotePersistsAcrossReturnToOverview() {
+        val value = "Ask about leak " + System.currentTimeMillis()
+        ActivityScenario.launch(ResaleOverviewActivity::class.java).use {
+            onView(withText("Property condition  →")).perform(scrollTo(), click())
+            waitReady(ResaleConditionActivity::class.java)
+            onView(withContentDescription("Walls / ceilings / leaks Note / observation")).perform(scrollTo(), replaceText(value), closeSoftKeyboard())
+            onView(withId(R.id.save_later)).perform(click())
+            onView(withText("Property condition  →")).perform(scrollTo(), click())
+            waitReady(ResaleConditionActivity::class.java)
+            onView(withContentDescription("Walls / ceilings / leaks Note / observation")).perform(scrollTo()).check(matches(withText(value)))
+        }
     }
     @Test fun resaleRequirementsReopenWithoutOverwritingNewProperty() {
         val context = InstrumentationRegistry.getInstrumentation().targetContext

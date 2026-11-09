@@ -1,6 +1,7 @@
 package com.finnest.app
 
 import android.os.Bundle
+import android.content.Intent
 import android.text.InputType
 import android.view.View
 import android.widget.CheckBox
@@ -28,11 +29,7 @@ class ResaleRequirementsActivity : AppCompatActivity() {
         binding.back.setOnClickListener { leave { finish() } }; binding.backBottom.setOnClickListener { leave { finish() } }
         binding.saveLater.setOnClickListener { leave { ResaleOverviewActivity.show(this) } }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) { override fun handleOnBackPressed() { leave { finish() } } })
-        binding.next.setOnClickListener { leave {
-            AlertDialog.Builder(this).setTitle("Saved on this device")
-                .setMessage("Property condition is not available yet. Return to your resale overview to review your planning notes.")
-                .setPositiveButton("Overview") { _, _ -> ResaleOverviewActivity.show(this) }.show()
-        } }
+        binding.next.setOnClickListener { leave { startActivity(Intent(this, ResaleConditionActivity::class.java)) } }
         DraftRepository.load(this, scope) { result -> runOnUiThread {
             if (isFinishing || isDestroyed) return@runOnUiThread
             result.fold(onSuccess = { buildForm(it); loaded = true; binding.loading.visibility = View.GONE; binding.next.isEnabled = true },

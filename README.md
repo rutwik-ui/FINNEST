@@ -6,7 +6,7 @@ FINNEST is an Indian home-buying guidance product, delivered in small, reviewabl
 
 `android/` is a native Kotlin/XML guest application. The New Property flow currently includes a dashboard, locally saved requirements, developer checks, a shortlist of project names, visit observations, resident feedback, an illustrative loan guide, legal and financial due diligence, final review, journey summary, in-app dated reminders, and an online published-guidance library. Checklist status labels are provisional because the references show closed menus. These are user entries, not independently verified findings or professional advice.
 
-The separate Resale overview and requirements/location planning screen are also available locally. Its other subject areas remain unimplemented; the six prototype areas are not a complete resale journey.
+The separate Resale overview, requirements/location planning and condition-observation screens are also available locally. Its other subject areas remain unimplemented; the six prototype areas are not a complete resale journey.
 
 The app is incomplete: Android authentication, cloud sync, the remaining Resale journey, comparison details, personalization, real notifications, expert referrals and several shared screens are not yet implemented. Emulator checks cover selected persistence and navigation scenarios; visual, accessibility and real-device testing remain necessary.
 ### Run
