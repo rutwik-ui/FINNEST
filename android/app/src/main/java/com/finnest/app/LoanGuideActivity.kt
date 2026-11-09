@@ -33,7 +33,7 @@ class LoanGuideActivity : AppCompatActivity() {
         binding.screenNotice.text = "This estimate is not a lender offer, eligibility check or promise of approval. Actual terms, fees and rates vary."
         binding.back.setOnClickListener { leave() }
         binding.backBottom.setOnClickListener { leave() }
-        binding.saveLater.setOnClickListener { leave() }
+        binding.saveLater.setOnClickListener { if (loaded) afterSaves { DashboardActivity.show(this) } else DashboardActivity.show(this) }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { leave() }
         })

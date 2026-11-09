@@ -31,7 +31,7 @@ class ProjectsActivity : AppCompatActivity() {
         setContentView(binding.root)
         binding.back.setOnClickListener { leaveWhenSaved() }
         binding.backBottom.setOnClickListener { leaveWhenSaved() }
-        binding.saveLater.setOnClickListener { leaveWhenSaved() }
+        binding.saveLater.setOnClickListener { if (loaded) afterSaves { DashboardActivity.show(this) } else DashboardActivity.show(this) }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { leaveWhenSaved() }
         })

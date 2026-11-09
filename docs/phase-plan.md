@@ -1,5 +1,10 @@
 # Phase plan and reference inventory
 
+## Current Android dashboard increment
+- New Property now has a local home dashboard with direct links to each implemented step. Existing users with that journey selected land there on launch; Save & Home and the final review return there only after pending saves succeed. No completion percentage is inferred.
+- Bundled Inter is the default font and Montserrat is used for major headings. These changes improve consistency but are not a claim that every screen is production-polished or visually validated on a device.
+- Dashboard data is local; missing common tabs, separate journey summary, profile, resale journey, cloud synchronization and production accessibility/device testing remain open.
+
 ## Delivered so far
 - Native Android entry foundation, introductory screens and journey selection.
 - New Property step 1, Requirements & Budget: optional budget fields, location and configuration selections, carpet area and accessibility needs, stored locally in Room.

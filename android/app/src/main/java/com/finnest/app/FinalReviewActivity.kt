@@ -29,15 +29,13 @@ class FinalReviewActivity : AppCompatActivity() {
         binding.screenTitle.text = "Final review & next actions"
         binding.screenDescription.text = "A summary of what you recorded—not an approval or recommendation to proceed."
         binding.screenNotice.text = "Pause on unresolved material questions. Consider qualified legal, financial and technical advice before making commitments."
-        binding.next.text = "Save & finish"
+        binding.next.text = "Save & go to dashboard  →"
         binding.back.setOnClickListener { leave() }
         binding.backBottom.setOnClickListener { leave() }
-        binding.saveLater.setOnClickListener { leave() }
+        binding.saveLater.setOnClickListener { if (loaded) afterSaves { DashboardActivity.show(this) } else DashboardActivity.show(this) }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) { override fun handleOnBackPressed() { leave() } })
         binding.next.setOnClickListener { afterSaves {
-            AlertDialog.Builder(this).setTitle("Saved on this device")
-                .setMessage("Your next actions are saved locally. A separate journey summary is not available yet.")
-                .setPositiveButton("OK") { _, _ -> finish() }.show()
+            DashboardActivity.show(this)
         } }
         DraftRepository.load(this, journey) { result -> runOnUiThread {
             if (!isFinishing && !isDestroyed) result.fold(onSuccess = {

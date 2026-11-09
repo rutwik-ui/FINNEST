@@ -26,14 +26,21 @@ class MainActivity : AppCompatActivity() {
         model = ViewModelProvider(this)[EntryViewModel::class.java]
         if (savedInstanceState == null && prefs.getBoolean("intro_complete", false)) model.page = 3
         model.selected = model.selected ?: prefs.getString("journey", null)
+        if (savedInstanceState == null && !intent.getBooleanExtra("change_journey", false) &&
+            prefs.getBoolean("intro_complete", false) && model.selected == "New Property") {
+            DashboardActivity.show(this)
+        }
         binding.back.setOnClickListener { goBack() }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { if (model.page > 0) goBack() else finish() }
         })
         binding.primary.setOnClickListener {
             if (model.page < 2) model.page++ else if (model.page == 2) finishIntro()
-            else if (model.page == 3 && model.selected != null) { prefs.edit().putString("journey", model.selected).apply(); model.page = 4 }
-            else if (model.page == 4 && model.selected == "New Property") { startActivity(Intent(this, RequirementsActivity::class.java)) }
+            else if (model.page == 3 && model.selected != null) {
+                prefs.edit().putString("journey", model.selected).apply()
+                if (model.selected == "New Property") DashboardActivity.show(this) else model.page = 4
+            }
+            else if (model.page == 4 && model.selected == "New Property") { DashboardActivity.show(this) }
             else if (model.page == 4) model.page = 3
             render()
         }

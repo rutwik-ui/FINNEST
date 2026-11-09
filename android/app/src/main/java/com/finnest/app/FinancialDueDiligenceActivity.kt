@@ -36,7 +36,7 @@ class FinancialDueDiligenceActivity : AppCompatActivity() {
         binding.screenNotice.text = "Rates and fees are not supplied here. This section is only for your notes and questions."
         binding.back.setOnClickListener { leave() }
         binding.backBottom.setOnClickListener { leave() }
-        binding.saveLater.setOnClickListener { leave() }
+        binding.saveLater.setOnClickListener { if (loaded) afterSaves { DashboardActivity.show(this) } else DashboardActivity.show(this) }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() { leave() }
         })
