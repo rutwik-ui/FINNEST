@@ -38,6 +38,7 @@ class DashboardActivity : AppCompatActivity() {
         val review = Button(this).apply { text = "Open final review  →"; isAllCaps = false; setOnClickListener { open("review") } }
         overview.addView(review, LinearLayout.LayoutParams(-1, dp(54)).apply { topMargin = dp(14) })
         overview.addView(Button(this).apply { text = "View my journey  →"; isAllCaps = false; setOnClickListener { startActivity(Intent(this@DashboardActivity, JourneySummaryActivity::class.java)) } }, LinearLayout.LayoutParams(-1, dp(54)).apply { topMargin = dp(4) })
+        overview.addView(Button(this).apply { text = "Open reminders  →"; isAllCaps = false; setOnClickListener { startActivity(Intent(this@DashboardActivity, RemindersActivity::class.java)) } }, LinearLayout.LayoutParams(-1, dp(54)).apply { topMargin = dp(4) })
         addText(page, "Your journey steps", 21f, R.color.navy, true, 26, true)
         addText(page, "Choose a section to continue. A checklist is not a property approval.", 14f, R.color.muted, false, 5)
         DashboardSteps.all.forEach { step ->

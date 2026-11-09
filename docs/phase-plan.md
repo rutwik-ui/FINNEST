@@ -2,6 +2,7 @@
 
 ## Current Android dashboard increment
 - New Property now has a local home dashboard with direct links to each implemented step. Existing users with that journey selected land there on launch; Save & Home and the final review return there only after pending saves succeed. No completion percentage is inferred.
+- Reminders are device-local dated notes, accessible from the dashboard. Adding and deleting notes updates one local draft atomically. No OS notifications, notification preferences or cloud sync are implemented.
 - Bundled Inter is the default font and Montserrat is used for major headings. These changes improve consistency but are not a claim that every screen is production-polished or visually validated on a device.
 - Android 14 emulator CI now runs Room instrumentation and a dashboard → final review → save → dashboard → reopen persistence scenario. This is not full journey, visual, accessibility, real-device or upgrade testing. Dashboard data is local; missing common tabs, profile, resale journey and cloud synchronization remain open. The New Property journey summary now displays local status counts, a checklist filter, project names and direct step links; its statuses are user entries, not verified progress.
 

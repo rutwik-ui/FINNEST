@@ -62,3 +62,7 @@ The Android review derives checklist status counts and pending entries from exis
 ## Journey summary implementation
 
 Android My Journey shows New Property local checklist status counts, a filter, project names and links to the current journey screens. Pending includes unselected statuses; other saved statuses remain distinct. Counts describe user-entered statuses rather than completed steps or verified evidence. Resale, cross-device sync and shared tab navigation are not implemented.
+
+## Reminders implementation
+
+Android supports dated local reminder notes, an optional note, sorted display and confirmed deletion. The unfinished form and list are saved together in one local draft field. Past dates are allowed; no notification is scheduled or implied. There is no edit-in-place, OS notification setting or synchronization yet.
