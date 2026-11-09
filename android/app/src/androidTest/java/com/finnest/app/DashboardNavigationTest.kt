@@ -3,7 +3,6 @@ package com.finnest.app
 import android.app.Activity
 import android.os.SystemClock
 import android.view.View
-import android.view.ViewGroup
 import android.widget.EditText
 import androidx.test.core.app.ActivityScenario
 import androidx.test.espresso.Espresso.onView
@@ -44,18 +43,20 @@ class DashboardNavigationTest {
     @Test fun dashboardReviewSaveReturnAndReopenPreservesNextActions() {
         val value = "Follow up on title " + System.currentTimeMillis()
         ActivityScenario.launch(DashboardActivity::class.java).use {
-            onView(withText("Open final review  →")).perform(click())
+            onView(withText("Open final review  →")).perform(scrollTo(), click())
             waitForReview()
             onView(allOf(isAssignableFrom(EditText::class.java), withContentDescription("Your next actions")))
                 .perform(scrollTo(), replaceText(value))
             onView(withId(R.id.next)).perform(click())
-            onView(withText("Your journey steps")).check(matches(isDisplayed()))
-            onView(withText("Open final review  →")).perform(click())
+            onView(withText("My Journey")).check(matches(isDisplayed()))
+            onView(withId(R.id.back_bottom)).perform(click())
+            onView(withText("Your journey steps")).perform(scrollTo()).check(matches(isDisplayed()))
+            onView(withText("Open final review  →")).perform(scrollTo(), click())
             waitForReview()
             onView(allOf(isAssignableFrom(EditText::class.java), withContentDescription("Your next actions")))
                 .perform(scrollTo()).check(matches(withText(value)))
             onView(withId(R.id.save_later)).perform(click())
-            onView(withText("Your journey steps")).check(matches(isDisplayed()))
+            onView(withText("Your journey steps")).perform(scrollTo()).check(matches(isDisplayed()))
         }
     }
 }

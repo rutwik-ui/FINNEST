@@ -57,4 +57,8 @@ Android stores separate one-time and monthly amounts, ten cost/document prompts 
 
 ## Step 8 implementation decisions
 
-The Android review derives checklist status counts and pending entries from existing local draft keys, shows buyer-entered notes, project names, loan assumptions and partial initial cost total, and autosaves next actions. It does not conflate provisional “Professional review” with verified evidence or claim project comparisons exist when only names are recorded. Concern detection and standalone journey summary, risk detail, expert directory/referrals and navigation shortcuts are not yet implemented; the screen says so rather than presenting nonfunctional controls. Unreadable lists are reported without overwriting their stored data.
+The Android review derives checklist status counts and pending entries from existing local draft keys, shows buyer-entered notes, project names, loan assumptions and partial initial cost total, and autosaves next actions. It does not conflate provisional “Professional review” with verified evidence or claim project comparisons exist when only names are recorded. Concern detection, risk detail and expert directory/referrals are not yet implemented; the screen says so rather than presenting nonfunctional controls. Unreadable lists are reported without overwriting their stored data.
+
+## Journey summary implementation
+
+Android My Journey shows New Property local checklist status counts, a filter, project names and links to the current journey screens. Pending includes unselected statuses; other saved statuses remain distinct. Counts describe user-entered statuses rather than completed steps or verified evidence. Resale, cross-device sync and shared tab navigation are not implemented.

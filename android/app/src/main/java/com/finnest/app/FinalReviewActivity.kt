@@ -1,6 +1,7 @@
 package com.finnest.app
 
 import android.os.Bundle
+import android.content.Intent
 import android.text.InputType
 import android.view.View
 import android.widget.Button
@@ -29,13 +30,13 @@ class FinalReviewActivity : AppCompatActivity() {
         binding.screenTitle.text = "Final review & next actions"
         binding.screenDescription.text = "A summary of what you recorded—not an approval or recommendation to proceed."
         binding.screenNotice.text = "Pause on unresolved material questions. Consider qualified legal, financial and technical advice before making commitments."
-        binding.next.text = "Save & go to dashboard  →"
+        binding.next.text = "View journey summary  →"
         binding.back.setOnClickListener { leave() }
         binding.backBottom.setOnClickListener { leave() }
         binding.saveLater.setOnClickListener { if (loaded) afterSaves { DashboardActivity.show(this) } else DashboardActivity.show(this) }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) { override fun handleOnBackPressed() { leave() } })
         binding.next.setOnClickListener { afterSaves {
-            DashboardActivity.show(this)
+            startActivity(Intent(this, JourneySummaryActivity::class.java))
         } }
         DraftRepository.load(this, journey) { result -> runOnUiThread {
             if (!isFinishing && !isDestroyed) result.fold(onSuccess = {

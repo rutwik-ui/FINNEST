@@ -3,13 +3,13 @@
 ## Current Android dashboard increment
 - New Property now has a local home dashboard with direct links to each implemented step. Existing users with that journey selected land there on launch; Save & Home and the final review return there only after pending saves succeed. No completion percentage is inferred.
 - Bundled Inter is the default font and Montserrat is used for major headings. These changes improve consistency but are not a claim that every screen is production-polished or visually validated on a device.
-- Android 14 emulator CI now runs Room instrumentation and a dashboard → final review → save → dashboard → reopen persistence scenario. This is not full journey, visual, accessibility, real-device or upgrade testing. Dashboard data is local; missing common tabs, separate journey summary, profile, resale journey and cloud synchronization remain open.
+- Android 14 emulator CI now runs Room instrumentation and a dashboard → final review → save → dashboard → reopen persistence scenario. This is not full journey, visual, accessibility, real-device or upgrade testing. Dashboard data is local; missing common tabs, profile, resale journey and cloud synchronization remain open. The New Property journey summary now displays local status counts, a checklist filter, project names and direct step links; its statuses are user entries, not verified progress.
 
 ## Delivered so far
 - Native Android entry foundation, introductory screens and journey selection.
 - New Property step 1, Requirements & Budget: optional budget fields, location and configuration selections, carpet area and accessibility needs, stored locally in Room.
 - Step 4A provides 14 visit-observation prompts on Android and web, with local status, notes, source and date. Step 4B provides device-local resident feedback notes on Android using a free-text topic; web support is not yet implemented.
-- Step 8 provides an Android-only review of saved checklist statuses, notes, project names, assumptions, pending items and locally saved next actions. It does not verify entries or provide the separate journey summary or expert referrals; device testing is outstanding.
+- Step 8 provides an Android-only review of saved checklist statuses, notes, project names, assumptions, pending items and locally saved next actions. It does not verify entries or provide expert referrals; device testing is outstanding.
 - Step 7 provides Android-only initial and recurring cost estimates, cost prompts and one lender-term record. Totals sum entered amounts only and identify missing inputs; status labels are provisional. Device testing remains outstanding.
 - Step 6 provides nine legal due diligence prompts on Android, with locally saved status, notes, source and follow-up date. Status labels are provisional, and no expert referral service is connected.
 - Step 5 provides an Android-only illustrative fixed-rate EMI calculator and lender prompts. Input limits and lender-document status labels are explicit implementation choices; status labels are provisional because the prototype menu is closed. No eligibility or approval is implied. Device UI testing remains outstanding.

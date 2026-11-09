@@ -37,6 +37,7 @@ class DashboardActivity : AppCompatActivity() {
         addText(overview, "Your notes and estimates stay on this device. Open any step to review or update them.", 15f, R.color.muted, false, 8)
         val review = Button(this).apply { text = "Open final review  →"; isAllCaps = false; setOnClickListener { open("review") } }
         overview.addView(review, LinearLayout.LayoutParams(-1, dp(54)).apply { topMargin = dp(14) })
+        overview.addView(Button(this).apply { text = "View my journey  →"; isAllCaps = false; setOnClickListener { startActivity(Intent(this@DashboardActivity, JourneySummaryActivity::class.java)) } }, LinearLayout.LayoutParams(-1, dp(54)).apply { topMargin = dp(4) })
         addText(page, "Your journey steps", 21f, R.color.navy, true, 26, true)
         addText(page, "Choose a section to continue. A checklist is not a property approval.", 14f, R.color.muted, false, 5)
         DashboardSteps.all.forEach { step ->
@@ -70,19 +71,7 @@ class DashboardActivity : AppCompatActivity() {
         parent.addView(this, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
     }
     private fun open(id: String) {
-        val intent = when (id) {
-            "requirements" -> Intent(this, RequirementsActivity::class.java)
-            "developer" -> Intent(this, DeveloperChecksActivity::class.java)
-            "projects" -> Intent(this, ProjectsActivity::class.java)
-            "visit" -> Intent(this, DeveloperChecksActivity::class.java).putExtra("visit_observations", true)
-            "feedback" -> Intent(this, DeveloperChecksActivity::class.java).putExtra("resident_feedback", true)
-            "loan" -> Intent(this, LoanGuideActivity::class.java)
-            "legal" -> Intent(this, DeveloperChecksActivity::class.java).putExtra("legal_due_diligence", true)
-            "financial" -> Intent(this, FinancialDueDiligenceActivity::class.java)
-            "review" -> Intent(this, FinalReviewActivity::class.java)
-            else -> return
-        }
-        startActivity(intent)
+        JourneyNavigation.intent(this, id)?.let { startActivity(it) }
     }
     private fun greeting(): String = when (java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)) {
         in 5..11 -> "Good morning"; in 12..16 -> "Good afternoon"; else -> "Good evening"
