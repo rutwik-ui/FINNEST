@@ -41,4 +41,8 @@ Screen 12's Topic selector is closed. Neither its choices nor the exact required
 
 ## Decision for Step 4B
 
-The user authorized discretion on the missing menu. Android uses a free-text topic instead of invented dropdown options. Topic and what was shared are required to add a note; the other fields are optional. These are explicit implementation choices, not claims about hidden prototype behavior. The current form autosaves unfinished input locally, permits deletion of added notes after confirmation, and stops before the unimplemented loan guide. Cloud sync and device-level validation remain outstanding.
+The user authorized discretion on the missing menu. Android uses a free-text topic instead of invented dropdown options. Topic and what was shared are required to add a note; the other fields are optional. These are explicit implementation choices, not claims about hidden prototype behavior. The current form autosaves unfinished input locally, permits deletion of added notes after confirmation, and leads to the loan guide. Cloud sync and device-level validation remain outstanding.
+
+## Step 5 implementation decisions
+
+Android uses a fixed-rate monthly amortization formula including a zero-interest case. Amount must be positive and at most ₹1 trillion, annual rate 0–100%, and tenure a whole number from 1–50 years; these are safety limits, not lender criteria. Income and obligations are optional context and do not affect the calculation. The closed lender-document status menu uses the same provisional labels already used in earlier screens, not verified prototype options. Inputs stay on device; no lender offer, eligibility check, fee estimate or document upload is provided.

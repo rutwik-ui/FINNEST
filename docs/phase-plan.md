@@ -3,7 +3,8 @@
 ## Delivered so far
 - Native Android entry foundation, introductory screens and journey selection.
 - New Property step 1, Requirements & Budget: optional budget fields, location and configuration selections, carpet area and accessibility needs, stored locally in Room.
-- Step 4A provides 14 visit-observation prompts on Android and web, with local status, notes, source and date. Step 4B resident feedback is not implemented yet.
+- Step 4A provides 14 visit-observation prompts on Android and web, with local status, notes, source and date. Step 4B provides device-local resident feedback notes on Android using a free-text topic; web support is not yet implemented.
+- Step 5 provides an Android-only illustrative fixed-rate EMI calculator and lender prompts. Input limits and lender-document status labels are explicit implementation choices; status labels are provisional because the prototype menu is closed. No eligibility or approval is implied. Device UI testing remains outstanding.
 - Step 3 offers a local shortlist of up to five project names, with rename and removal, on Android and web. Comparison fields remain unimplemented because the expanded project form is not visible in the supplied screenshot.
 - Step 2 developer checks include the six screenshot prompts, optional status, note, source and follow-up date, saved locally. Neither step claims independent verification. Step-one priority tiers are not implemented yet.
 - The screen 8 screenshot does not expose the expanded status menu. The non-default labels are provisional and use the introductory legend from screen 4; confirm them with the user before treating these as the final prototype options.
@@ -20,7 +21,7 @@
 - Screens 13–16 and Resale/common screens 17–32 were visually reviewed at overview level; see `screen-review-12-32.md`. Detailed field extraction and all hidden menu states remain outstanding. The six resale subject areas in screen 17 are explicitly incomplete and differ from the supporting document’s 12-step tracker; confirm mapping before implementing it.
 
 ## Proposed next increments
-1. Confirm the expanded developer-check status dropdown and confirm expanded project form fields and resident-feedback topic options, and review remaining New Buy references.
+1. Confirm the expanded developer-check status dropdown and confirm expanded project form fields and the remaining closed dropdowns; resident feedback uses free text by user authorization.
 2. Complete missing step-one priority tiers and personalization once their expected options/interaction are confirmed.
 3. Continue other New Buy steps in small slices; then review and implement Resale, dashboard and common tabs.
 4. Introduce secure authentication and idempotent guest-to-account migration after the data model and authorization policies are reviewed.

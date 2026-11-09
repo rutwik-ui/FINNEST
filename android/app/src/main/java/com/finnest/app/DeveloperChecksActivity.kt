@@ -55,9 +55,7 @@ class DeveloperChecksActivity : AppCompatActivity() {
         binding.next.setOnClickListener {
             afterSaves {
                 if (isFeedback) {
-                    AlertDialog.Builder(this).setTitle("Draft saved on this device")
-                        .setMessage("The home loan guide is not available yet. You can return to these notes later.")
-                        .setPositiveButton("OK") { _, _ -> finish() }.show()
+                    startActivity(Intent(this, LoanGuideActivity::class.java))
                 } else if (isVisit) {
                     startActivity(Intent(this, DeveloperChecksActivity::class.java).putExtra("resident_feedback", true))
                 } else startActivity(Intent(this, ProjectsActivity::class.java))
