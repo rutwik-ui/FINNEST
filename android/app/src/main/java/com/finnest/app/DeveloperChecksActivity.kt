@@ -61,9 +61,7 @@ class DeveloperChecksActivity : AppCompatActivity() {
         binding.next.setOnClickListener {
             afterSaves {
                 if (isLegal) {
-                    AlertDialog.Builder(this).setTitle("Draft saved on this device")
-                        .setMessage("Financial due diligence is not available yet. You can return to your legal notes later.")
-                        .setPositiveButton("OK") { _, _ -> finish() }.show()
+                    startActivity(Intent(this, FinancialDueDiligenceActivity::class.java))
                 } else if (isFeedback) {
                     startActivity(Intent(this, LoanGuideActivity::class.java))
                 } else if (isVisit) {

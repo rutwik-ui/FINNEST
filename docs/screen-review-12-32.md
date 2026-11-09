@@ -9,10 +9,10 @@ Reviewed the supplied Drive images visually. This is an overview and ambiguity l
 | 12 | Step 4B: Resident feedback notes | Topic dropdown (closed; options not visible), optional date and context, what was shared, concern/question, follow-up, add note, notes entered, and a disclaimer. The screenshot does not show expanded options, added-note editing/deletion behavior, or field validation. |
 | 14 | Step 6: Legal due diligence | Checklist status, note/source/date for title, documents, encumbrances, plans, RERA, approvals, agreement, payment schedule and possession/cancellation/refund clauses; lawyer guidance. Status options are not expanded. |
 | 13 | Step 5: Home loan guide | Loan amount, interest rate, tenure, optional lender and planning context, illustrative EMI, lender questions and document prompts. Formula and input limits require verification before implementation; the estimate is not loan approval. |
-| 15 | Step 8: Final review and next actions | Aggregates statuses, budget/loan assumptions, saved projects and notes, pending items, concerns, professional review and user actions. This must reflect real data without implying independent verification. |
-| 16 | Step 7: Financial due diligence | One-time and recurring estimates, cost/document prompts and loan comparison. Empty values remain unknown. Some controls have closed dropdowns. |
+| 16 | Step 8: Final review and next actions | Aggregates statuses, budget/loan assumptions, saved projects and notes, pending items, concerns, professional review and user actions. This must reflect real data without implying independent verification. |
+| 15 | Step 7: Financial due diligence | One-time and recurring estimates, cost/document prompts and loan comparison. Empty values remain unknown. Some controls have closed dropdowns. |
 
-File order is not journey-step order: images 13–16 show steps 5, 6, 8 and 7 respectively.
+File order is not journey-step order: images 13–16 show steps 5, 6, 7 and 8 respectively.
 
 ## Resale and shared screens
 
@@ -49,4 +49,8 @@ Android uses a fixed-rate monthly amortization formula including a zero-interest
 
 ## Step 6 implementation decisions
 
-Android uses nine screenshot prompts and the same provisional status labels as earlier checklists, with locally saved optional note, source and follow-up date. These are user records, not legal findings. No lawyer profiles or referral service are configured, so the screen does not claim to connect users. Step 7 remains unavailable.
+Android uses nine screenshot prompts and the same provisional status labels as earlier checklists, with locally saved optional note, source and follow-up date. These are user records, not legal findings. No lawyer profiles or referral service are configured, so the screen does not claim to connect users. Step 7 follows this checklist.
+
+## Step 7 implementation decisions
+
+Android stores separate one-time and monthly amounts, ten cost/document prompts and one set of lender terms locally. Totals include only entered values and display the entered count; no entries means not available, while malformed values prevent a total. Amounts accept up to two decimal places and ₹1 trillion per field; these are implementation limits, not financial advice. Status options are provisional. The screenshot shows one lender-term record, not a multi-offer comparison; no lender offers are supplied. Final review remains unavailable.
