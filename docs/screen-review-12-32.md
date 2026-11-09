@@ -38,3 +38,7 @@ File order is not journey-step order: images 13–16 show steps 6, 5, 8 and 7 re
 ## Blocker for the next Android screen
 
 Screen 12's Topic selector is closed. Neither its choices nor the exact required-field/added-note rules are specified by this image. The supporting content lists example questions for residents, but does not establish the selector's exact choices. The master brief says to ask when a screenshot is unclear and not invent missing options. The next step therefore cannot be faithfully completed and tested without the expanded menu or an explicit decision to use a different input. No changes were made to live databases or guest data as part of this review.
+
+## Decision for Step 4B
+
+The user authorized discretion on the missing menu. Android uses a free-text topic instead of invented dropdown options. Topic and what was shared are required to add a note; the other fields are optional. These are explicit implementation choices, not claims about hidden prototype behavior. The current form autosaves unfinished input locally, permits deletion of added notes after confirmation, and stops before the unimplemented loan guide. Cloud sync and device-level validation remain outstanding.

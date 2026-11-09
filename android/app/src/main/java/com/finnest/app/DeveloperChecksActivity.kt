@@ -17,6 +17,8 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import com.finnest.app.databinding.ActivityDeveloperChecksBinding
+import org.json.JSONArray
+import org.json.JSONObject
 import java.util.Calendar
 import java.util.Locale
 
@@ -25,6 +27,7 @@ class DeveloperChecksActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDeveloperChecksBinding
     private val journey = "new_property"
     private var loaded = false
+    private val isFeedback by lazy { intent.getBooleanExtra("resident_feedback", false) }
     private val isVisit by lazy { intent.getBooleanExtra("visit_observations", false) }
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 
@@ -32,7 +35,12 @@ class DeveloperChecksActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater)
         setContentView(binding.root)
-        if (isVisit) {
+        if (isFeedback) {
+            binding.stepLabel.text = "STEP 4B · NEW PROPERTY"
+            binding.screenTitle.text = "Resident feedback notes"
+            binding.screenDescription.text = "Record what residents share in your own words. Your notes stay on this device. Avoid sensitive personal information."
+            binding.screenNotice.text = "Individual accounts are not independently verified by FINNEST. Seek evidence and professional advice where appropriate."
+        } else if (isVisit) {
             binding.stepLabel.text = "STEP 4A · NEW PROPERTY"
             binding.screenTitle.text = "What to notice on a visit"
             binding.screenDescription.text = "Record your own observations during a visit. A visual visit is not a technical inspection."
@@ -46,17 +54,19 @@ class DeveloperChecksActivity : AppCompatActivity() {
         })
         binding.next.setOnClickListener {
             afterSaves {
-                if (isVisit) {
+                if (isFeedback) {
                     AlertDialog.Builder(this).setTitle("Draft saved on this device")
-                        .setMessage("Resident feedback notes are not available yet. You can return to your visit observations later.")
+                        .setMessage("The home loan guide is not available yet. You can return to these notes later.")
                         .setPositiveButton("OK") { _, _ -> finish() }.show()
+                } else if (isVisit) {
+                    startActivity(Intent(this, DeveloperChecksActivity::class.java).putExtra("resident_feedback", true))
                 } else startActivity(Intent(this, ProjectsActivity::class.java))
             }
         }
         DraftRepository.load(this, journey) { result ->
             runOnUiThread {
                 if (!isFinishing && !isDestroyed) result.fold(onSuccess = {
-                    buildForm(it)
+                    if (isFeedback) buildFeedback(it) else buildForm(it)
                     loaded = true
                     binding.loading.visibility = View.GONE
                     binding.next.isEnabled = true
@@ -112,6 +122,71 @@ class DeveloperChecksActivity : AppCompatActivity() {
         parent.addView(button, LinearLayout.LayoutParams(-1, -2))
         val clear = Button(this).apply { text = "Clear date"; isAllCaps = false; setOnClickListener { value = ""; update(); save(key, "") } }
         parent.addView(clear, LinearLayout.LayoutParams(-1, -2))
+    }
+    private fun buildFeedback(draft: Map<String, String>) {
+        val fields = listOf("topic" to "Topic (free text)", "date" to "Date (optional)",
+            "context" to "Who / setting (optional)", "shared" to "What was shared?",
+            "concern" to "Concern or question (optional)", "followup" to "Follow-up (optional)")
+        val edits = mutableMapOf<String, EditText>()
+        fields.forEach { (key, title) ->
+            label(binding.form, title)
+            val edit = EditText(this).apply {
+                hint = if (key == "date") "e.g. 15/11/2026" else "Enter $title"
+                textSize = 16f
+                inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_SENTENCES
+                setText(draft["feedback_pending_$key"].orEmpty())
+                contentDescription = title
+            }
+            binding.form.addView(edit, LinearLayout.LayoutParams(-1, -2))
+            edit.doAfterTextChanged { save("feedback_pending_$key", it?.toString().orEmpty()) }
+            edits[key] = edit
+        }
+        // Preserve the original serialized data if parsing fails; never silently overwrite it.
+        val raw = draft["feedback_notes"] ?: "[]"
+        val notes = try { JSONArray(raw) } catch (_: Exception) { null }
+        val list = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        val add = Button(this).apply { text = "Add feedback note"; isAllCaps = false }
+        binding.form.addView(add)
+        binding.form.addView(list)
+        fun renderNotes() {
+            list.removeAllViews()
+            label(list, "Notes entered: ${notes?.length() ?: 0}", true)
+            if (notes == null) { label(list, "Could not read saved notes. They have not been changed; please do not add new notes."); return }
+            for (i in 0 until notes.length()) {
+                val note = notes.optJSONObject(i)
+                if (note == null) { label(list, "A saved note could not be displayed."); continue }
+                val card = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(16)); setBackgroundResource(R.drawable.card) }
+                list.addView(card, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) })
+                fields.forEach { (key, title) ->
+                    val value = note.optString(key)
+                    if (value.isNotBlank()) label(card, "$title: $value", key == "topic")
+                }
+                card.addView(Button(this).apply {
+                    text = "Delete note"; isAllCaps = false
+                    setOnClickListener {
+                        AlertDialog.Builder(this@DeveloperChecksActivity).setTitle("Delete this note?")
+                            .setMessage("This removes the note from this device.")
+                            .setNegativeButton("Cancel", null).setPositiveButton("Delete") { _, _ ->
+                                notes.remove(i); save("feedback_notes", notes.toString()); renderNotes()
+                            }.show()
+                    }
+                })
+            }
+        }
+        add.isEnabled = notes != null
+        add.setOnClickListener {
+            if (edits.getValue("topic").text.toString().isBlank() || edits.getValue("shared").text.toString().isBlank()) {
+                AlertDialog.Builder(this).setMessage("Enter a topic and what was shared before adding a note. Other fields are optional.").setPositiveButton("OK", null).show()
+            } else if (notes != null) {
+                val note = JSONObject()
+                fields.forEach { (key, _) -> note.put(key, edits.getValue(key).text.toString().trim()) }
+                notes.put(note)
+                save("feedback_notes", notes.toString())
+                fields.forEach { (key, _) -> edits.getValue(key).setText("") }
+                renderNotes()
+            }
+        }
+        renderNotes()
     }
     private fun buildForm(draft: Map<String, String>) {
         val checks = if (isVisit) VisitObservations.checks else listOf(
