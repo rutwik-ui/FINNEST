@@ -4,7 +4,7 @@ Review basis: FINNEST master brief supplied with this project, Game of Home Buyi
 
 | Requirement | Intended responsibility | Current state | Completion gate |
 |---|---|---|---|
-| Native Android Kotlin/XML, guest flow, offline draft | Android + Room; account synchronization via backend | Entry, New Property steps 1–3 and 4A use local storage; no full dashboard or account sync | Exact screen-by-screen parity; persistent drafts, process-death and device tests |
+| Native Android Kotlin/XML, guest flow, offline draft | Android + Room; account synchronization via backend | Entry, dashboard and New Property steps 1–8 use local storage; no account sync | Exact screen-by-screen parity; persistent drafts, process-death and device tests |
 | New and Resale journeys | Published versioned definitions + compatible Android/web form renderers; local draft cache | First New Property screens hard-coded; Resale not built | Inventory remaining prototypes, field IDs/options, conditions; versioned form engine, offline compatibility and migration tests |
 | Dynamic form administration | Admin editor, version history, preview, publishing/rollback backed by server authorization | Limited guidance editor only; no form builder or published-form API | Versioning, stable IDs, validation, role permissions, preview, audit, rollback and Android/web parity tests |
 | Guest-to-account migration | Local queue, authenticated backend, verified idempotent confirmation | No migration or sync; local guest data stays local | Offline, retry, conflict, account-switch, partial-failure and duplicate tests; no loss of unsynced data |
@@ -23,4 +23,4 @@ Review basis: FINNEST master brief supplied with this project, Game of Home Buyi
 - MFA enrollment/recovery and administrator bootstrap must be tested with real, authorized staging accounts before granting administrative roles or using the editor operationally.
 
 ## Current verification boundaries
-The GitHub Android workflow assembles a debug APK and runs JVM tests, not emulator/instrumentation tests. Web unit/UI tests use mocks and do not prove real Supabase login, authorization, email, MFA, storage, or account isolation. Current live database metadata checks verify policy definitions only; they are not a substitute for two-user end-to-end authorization tests. No application code should be described as production-ready until these release gates are met.
+GitHub workflows assemble a debug APK, run JVM tests, and exercise selected Android 14 emulator/instrumentation scenarios; full journey and real-device testing remain outstanding. Web unit/UI tests use mocks and do not prove real Supabase login, authorization, email, MFA, storage, or account isolation. Current live database metadata checks verify policy definitions only; they are not a substitute for two-user end-to-end authorization tests. No application code should be described as production-ready until these release gates are met.
