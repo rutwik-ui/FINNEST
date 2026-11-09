@@ -36,6 +36,11 @@ class ResaleOverviewActivity : AppCompatActivity() {
             card.addView(Button(this).apply { text = "$label  →"; isAllCaps = false; setOnClickListener { startActivity(Intent(this@ResaleOverviewActivity, ResaleConditionActivity::class.java).putExtra("resale_section", section.id)) } }, LinearLayout.LayoutParams(-1, -2))
         }
         card.addView(Button(this).apply { text = "View resale summary  →"; isAllCaps = false; setOnClickListener { startActivity(Intent(this@ResaleOverviewActivity, ResaleSummaryActivity::class.java)) } }, LinearLayout.LayoutParams(-1, -2))
+        val help = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(16)); setBackgroundResource(R.drawable.card) }
+        binding.form.addView(help, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) })
+        listOf("Experts directory" to "experts", "Understand a concern" to "risk", "About FINNEST" to "about").forEach { (title, screen) ->
+            help.addView(Button(this).apply { text = title; isAllCaps = false; setOnClickListener { startActivity(Intent(this@ResaleOverviewActivity, CommonActivity::class.java).putExtra("screen", screen).putExtra("scope", "resale_property")) } }, LinearLayout.LayoutParams(-1, -2))
+        }
         binding.form.addView(TextView(this).apply {
             text = "FINNEST does not inspect a property, verify documents or provide legal advice."; textSize = 14f; setTextColor(getColor(R.color.muted)); setPadding(0, dp(14), 0, 0)
         })

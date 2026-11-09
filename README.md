@@ -4,7 +4,7 @@ FINNEST is an Indian home-buying guidance product, delivered in small, reviewabl
 
 ## Current Android scope
 
-`android/` is a native Kotlin/XML guest application. The New Property flow currently includes a dashboard, locally saved requirements, developer checks, a shortlist of project names, visit observations, resident feedback, an illustrative loan guide, legal and financial due diligence, final review, journey summary, in-app dated reminders, and an online published-guidance library. Checklist status labels are provisional because the references show closed menus. These are user entries, not independently verified findings or professional advice.
+`android/` is a native Kotlin/XML guest application. The New Property flow currently includes a dashboard, locally saved requirements, developer checks, a shortlist of project names, visit observations, resident feedback, an illustrative loan guide, legal and financial due diligence, final review, journey summary, in-app dated reminders, an online published-guidance library, informational expert roles, a verbal-promise risk guide and an About screen. Checklist status labels are provisional because the references show closed menus. These are user entries, not independently verified findings or professional advice.
 
 The separate Resale overview and the six prototype subject areas are available as local planning and checklist notes, with a resale summary. This is not a complete resale journey: the prototype and supporting document have an unresolved journey mapping. Society and handover statuses and lawyer review status use free text because their expanded options are not visible; other checklist labels are provisional.
 

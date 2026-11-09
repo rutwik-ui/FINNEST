@@ -64,6 +64,9 @@ class ResaleSummaryActivity : AppCompatActivity() {
             if (section.id == "legal") draft["legal_lawyer_status"]?.takeIf { it.isNotBlank() }?.let { label(block, "Lawyer review status: $it") }
             block.addView(Button(this).apply { text = "Open ${section.title}"; isAllCaps = false; setOnClickListener { startActivity(Intent(this@ResaleSummaryActivity, ResaleConditionActivity::class.java).putExtra("resale_section", section.id)) } })
         }
+        val help = card("Questions worth pausing over")
+        label(help, "An unwritten promise is an illustrative concern, not a finding about any property.")
+        help.addView(Button(this).apply { text = "Understand an illustrative concern"; isAllCaps = false; setOnClickListener { startActivity(Intent(this@ResaleSummaryActivity, CommonActivity::class.java).putExtra("screen", "risk").putExtra("scope", "resale_property")) } })
         val footer = card("About this summary")
         label(footer, "These six areas do not define the complete resale journey. Entries remain on this device and have not been independently verified.")
     }

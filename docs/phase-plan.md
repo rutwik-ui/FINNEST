@@ -59,3 +59,6 @@ See `requirements-traceability.md` for the detailed requirements review and prod
 
 ### Remaining resale prototype subject areas
 - Android provides seller/ownership (5 prompts), society/dues (7 prompts with optional amount), legal review (8 prompts and lawyer status), and agreement/handover (13 prompts), plus a summary of local entries. All are user notes, not verification, professional assessment or a complete resale journey. Seller/legal use existing provisional checklist labels; society, handover and lawyer-review statuses use free text with visible prototype defaults as placeholders because expanded choices are unknown. Live device QA and the six-area versus 12-step mapping remain unresolved.
+
+### Android common information screens
+- Android now has informational expert roles, a deliberately unavailable expert-contact state, an About/disclaimer screen reflecting actual local storage and online guidance, and an illustrative verbal-promise concern. The concern can explicitly mark an existing New Property or Resale checklist item Pending / unknown after confirmation, or open its checklist. No professional profiles, booking, matching, advice or independent verification are provided; expanded reference filter options remain unknown.
