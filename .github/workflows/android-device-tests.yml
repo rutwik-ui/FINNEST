@@ -37,6 +37,25 @@ jobs:
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
           script: cd android && ./gradlew --no-daemon connectedDebugAndroidTest
+      - name: Summarize instrumentation failures
+        if: failure()
+        run: |
+          python3 - <<'PYCODE'
+          import glob, xml.etree.ElementTree as ET
+          files = glob.glob('android/app/build/outputs/androidTest-results/connected/**/*.xml', recursive=True)
+          failures = []
+          for path in files:
+              try:
+                  root = ET.parse(path).getroot()
+                  for case in root.iter('testcase'):
+                      for error in list(case.findall('failure')) + list(case.findall('error')):
+                          failures.append(f"{case.get('classname')}.{case.get('name')}: {error.get('message', '')}\n{error.text or ''}")
+              except ET.ParseError:
+                  pass
+          message = ('\n'.join(failures) if failures else 'No instrumentation XML failure details found.')[:12000]
+          message = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
+          print(f'::error::{message}')
+          PYCODE
       - name: Upload test reports
         if: always()
         uses: actions/upload-artifact@v4
