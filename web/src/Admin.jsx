@@ -2,22 +2,28 @@ import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { ArrowRight, LockKeyhole, ShieldAlert } from 'lucide-react';
 import { supabase } from './supabase';
 import { CATEGORIES, CONTENT_ROLES, validateGuidance } from './admin';
+import AdminMfa from './AdminMfa';
 
 const empty = () => ({title:'', body:'', category:'general', status:'draft'});
 export default function Admin({go,session,authLoading}) {
   const [email,setEmail]=useState(''), [password,setPassword]=useState('');
-  const [role,setRole]=useState(null), [checking,setChecking]=useState(false), [error,setError]=useState(''), [message,setMessage]=useState(''), [busy,setBusy]=useState(false);
+  const [roleState,setRoleState]=useState(null), [checking,setChecking]=useState(false), [error,setError]=useState(''), [message,setMessage]=useState(''), [busy,setBusy]=useState(false);
   const [items,setItems]=useState([]), [audit,setAudit]=useState([]), [form,setForm]=useState(empty), [editing,setEditing]=useState(null);
+  const [aalState,setAalState]=useState(null), [checkingAal,setCheckingAal]=useState(false), [aalError,setAalError]=useState('');
   const userId=session?.user?.id;
+  const token=session?.access_token;
   const currentUser=useRef(userId); currentUser.current=userId;
+  const currentToken=useRef(token); currentToken.current=token;
+  const role=roleState && roleState.userId===userId ? roleState.role : null;
+  const aal=aalState && aalState.userId===userId && aalState.token===token ? aalState.level : null;
   useEffect(()=>{
-    let live=true; setRole(null); setItems([]); setAudit([]); setEditing(null); setForm(empty()); setError(''); setMessage('');
+    let live=true; setChecking(false); setRoleState(null); setAalState(null); setItems([]); setAudit([]); setEditing(null); setForm(empty()); setError(''); setMessage('');
     if(!supabase || !userId)return;
     setChecking(true);
     (async()=>{const {data,error}=await supabase.from('finnest_admin_roles').select('role').eq('user_id',userId).maybeSingle();
       if(!live)return; setChecking(false);
       if(error) setError('Could not verify administrator access. Please try again.');
-      else setRole(data?.role || 'none');
+      else setRoleState({userId,role:data?.role || 'none'});
     })().catch(()=>{if(live){setChecking(false);setError('Could not verify administrator access. Please try again.')}});
     return()=>{live=false};
   },[userId]);
@@ -30,7 +36,15 @@ export default function Admin({go,session,authLoading}) {
     if (currentUser.current !== userId) return;
     setItems(contentResult.data || []); setAudit(auditResult.data || []);
   },[userId]);
-  useEffect(()=>{if(CONTENT_ROLES.includes(role)) refresh().catch(e=>setError(e.message))},[role,refresh]);
+  const checkAal=useCallback(async()=>{
+    if(!userId || !CONTENT_ROLES.includes(role)){setAalState(null);setCheckingAal(false);setAalError('');return}
+    setCheckingAal(true);setAalError('');
+    try{const {data,error}=await supabase.auth.mfa.getAuthenticatorAssuranceLevel();if(error)throw error;if(currentUser.current===userId && currentToken.current===token)setAalState({userId,token,level:data.currentLevel})}
+    catch(e){if(currentUser.current===userId && currentToken.current===token){setAalState(null);setAalError('Could not verify session assurance. Please retry.')}}
+    finally{if(currentUser.current===userId && currentToken.current===token)setCheckingAal(false)}
+  },[userId,role,token]);
+  useEffect(()=>{checkAal()},[checkAal]);
+  useEffect(()=>{if(CONTENT_ROLES.includes(role) && aal==='aal2') refresh().catch(e=>setError(e.message))},[role,aal,refresh]);
   async function login(e){e.preventDefault();if(!supabase || busy)return;setBusy(true);setError('');setMessage('');try{const {error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;setPassword('')}catch(e){setError(e?.message || 'Sign-in failed.')}finally{setBusy(false)}}
   async function logout(){setBusy(true);setError('');try{const {error}=await supabase.auth.signOut();if(error)throw error}catch(e){setError(e?.message || 'Sign-out failed.')}finally{setBusy(false)}}
   async function save(e){
@@ -48,8 +62,8 @@ export default function Admin({go,session,authLoading}) {
   }
   const patch=(key,value)=>setForm(previous=>({...previous,[key]:value}));
   return <main className="admin-main"><div className="admin-lock admin-panel"><div className="lock-icon"><LockKeyhole size={30}/></div><span className="eyebrow">FINNEST ADMIN</span><h1>Content management</h1><p>This early admin phase manages guidance only. It does not manage users, buyer data, Android forms, experts, or projects.</p>
-  <div className="admin-notice"><ShieldAlert size={21}/><span>Published guidance is public. Do not enter customer data or secrets. MFA enforcement and full security testing are not yet complete; do not use this panel for production operations.</span></div>
-  {!supabase?<p>Sign-in is not configured. See README setup.</p>:authLoading||checking?<p role="status">Checking administrator access…</p>:!session?<form className="auth-form" onSubmit={login}><label>Admin email<input type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Password<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label><button className="primary compact" disabled={busy}>Sign in <ArrowRight size={17}/></button></form>:!CONTENT_ROLES.includes(role)?<><p>{role==='none'?'This account has no administrator role.':'This role cannot manage guidance content.'} Roles must be assigned by a trusted project administrator.</p><button className="outline-button admin-space" disabled={busy} onClick={logout}>Sign out</button></>:<>
+  <div className="admin-notice"><ShieldAlert size={21}/><span>Published guidance is public. Do not enter customer data or secrets. Authenticator verification is required for content access. Full security testing is not yet complete; do not use this panel for production operations.</span></div>
+  {!supabase?<p>Sign-in is not configured. See README setup.</p>:authLoading||checking||(session && role===null && !error)?<p role="status">Checking administrator access…</p>:!session?<form className="auth-form" onSubmit={login}><label>Admin email<input type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Password<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label><button className="primary compact" disabled={busy}>Sign in <ArrowRight size={17}/></button></form>:!CONTENT_ROLES.includes(role)?<><p>{role==='none'?'This account has no administrator role.':'This role cannot manage guidance content.'} Roles must be assigned by a trusted project administrator.</p><button className="outline-button admin-space" disabled={busy} onClick={logout}>Sign out</button></>:checkingAal?<p role="status">Checking session security…</p>:aalError?<><p className="auth-error" role="alert">{aalError}</p><button className="outline-button" onClick={checkAal}>Retry</button><button className="text-link admin-space" onClick={logout}>Sign out</button></>:aal!=='aal2'?<><AdminMfa onVerified={checkAal}/><button className="text-link admin-space" disabled={busy} onClick={logout}>Sign out</button></>:<>
    <div className="admin-identity"><span>Signed in as {session.user.email} · {role.replaceAll('_',' ')}</span><button className="text-link" disabled={busy} onClick={logout}>Sign out</button></div>
    <h2 className="admin-heading">{editing?'Edit guidance':'New guidance'}</h2><form className="auth-form admin-form" onSubmit={save}>
     <label>Title<input required maxLength={150} value={form.title} onChange={e=>patch('title',e.target.value)}/></label>

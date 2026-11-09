@@ -45,4 +45,10 @@ This is a debug-signed, incomplete test build, not a Play Store release. It does
 
 No account has automatically been made an administrator. To bootstrap a trusted account, first create and confirm that account through Supabase Auth, then a project owner can use the Supabase SQL editor to insert its verified `auth.users.id` and role into `public.finnest_admin_roles`. Do not grant access to an unverified account. No service-role key belongs in the web app. The migration is `20261109092048_finnest_admin_content_foundation.sql`.
 
-**Not production-ready:** the admin UI does not enforce MFA or separate sessions, and full two-user RLS tests, security review, recovery, monitoring, backups, content approval, full admin operations and capacity tests remain outstanding. The initial role and any subsequent grants must be managed by a trusted operator, not by the browser.
+**Not production-ready:** the editor now requires authenticator verification and its database policies require an AAL2 session, but it does not use separate admin sessions. Full real-account MFA and two-user RLS tests, recovery, security review, monitoring, backups, content approval, full admin operations and capacity tests remain outstanding. The initial role and any subsequent grants must be managed by a trusted operator, not by the browser.
+
+## Current review and tests
+
+See `docs/requirements-traceability.md` for the distinction between native, admin-managed and backend functionality and the remaining release gates. Administrator TOTP setup is available after a trusted operator grants a content role; the code and QR are sensitive and should never be shared. If an authenticator is lost, a secure, documented recovery process must be established before production use.
+
+For the web run `npm run test:unit`, `npm run test:ui`, and `npm run build` from `web/`. The MFA UI tests mock Supabase; they do not prove live enrollment or RLS behavior. Migration `20261109095719_finnest_admin_require_mfa.sql` enforces AAL2 for admin draft reads, content writes and audit reads; published guidance remains public.
