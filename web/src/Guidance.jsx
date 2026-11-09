@@ -54,7 +54,7 @@ export default function Guidance() {
       {state.items.length === 0 ? <div className="card guidance-empty"><h2>No published guidance yet</h2><p>Check another category or return later.</p></div> : <div className="guidance-list">{state.items.map(item => <article className="card guidance-item" key={item.id}>
         <span className="eyebrow">{names[item.category]}</span><h2>{item.title}</h2><p className="guidance-body">{item.body}</p>
       </article>)}</div>}
-      {state.truncated && <p className="footnote guidance-limit">Showing the latest 50 items in this category. Narrow the category to explore more.</p>}
+      {state.truncated && <p className="footnote guidance-limit">Showing the latest 50 items for this filter. Older items are not available in this view yet.</p>}
     </div>}
   </>;
 }
