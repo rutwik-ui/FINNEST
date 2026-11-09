@@ -6,7 +6,9 @@ FINNEST is an Indian home-buying guidance product, delivered in small, reviewabl
 
 `android/` is a native Kotlin/XML guest application. The New Property flow currently includes a dashboard, locally saved requirements, developer checks, a shortlist of project names, visit observations, resident feedback, an illustrative loan guide, legal and financial due diligence, final review, journey summary, in-app dated reminders, and an online published-guidance library. Checklist status labels are provisional because the references show closed menus. These are user entries, not independently verified findings or professional advice.
 
-The app is incomplete: Android authentication, cloud sync, the Resale journey, comparison details, personalization, real notifications, expert referrals and several shared screens are not yet implemented. Emulator checks cover selected persistence and navigation scenarios; visual, accessibility and real-device testing remain necessary.
+The separate Resale overview and requirements/location planning screen are also available locally. Its other subject areas remain unimplemented; the six prototype areas are not a complete resale journey.
+
+The app is incomplete: Android authentication, cloud sync, the remaining Resale journey, comparison details, personalization, real notifications, expert referrals and several shared screens are not yet implemented. Emulator checks cover selected persistence and navigation scenarios; visual, accessibility and real-device testing remain necessary.
 ### Run
 
 Open `android/` in Android Studio, install Android SDK 35 and JDK 17, sync Gradle and run the `app` configuration on an API 24+ emulator or device. Or run `cd android && ./gradlew assembleDebug` with a configured Android SDK and JDK 17. Run the Room instrumentation test with `./gradlew connectedDebugAndroidTest` on an emulator or device. The Android guidance library uses the bundled public Supabase project key; no service-role credentials are required.
@@ -36,7 +38,7 @@ Migration `supabase/migrations/20261109073922_finnest_private_foundation.sql` wa
 
 The repository's **Android debug APK** workflow builds an Android-only debug APK when Android code changes, and can also be run manually from the Actions tab using **Run workflow**. Open a successful run and download the **FINNEST-android-debug** artifact; unzip it to get `app-debug.apk`. GitHub artifacts require GitHub sign-in and expire after 14 days. Install it only on a test device you trust, enabling installation from your chosen source if Android asks.
 
-This is a debug-signed, incomplete test build, not a Play Store release. It does not include cloud sync, Android login or the resale journey. Separate GitHub workflows run JVM and Android 14 emulator/instrumentation tests; the app still needs real-device and broader end-to-end testing. Debug signing keys can differ between CI builds, so an APK update may fail. Uninstalling to install another build deletes all local drafts. If the workflow is unavailable, open `android/` in Android Studio and build a debug APK locally as described above.
+This is a debug-signed, incomplete test build, not a Play Store release. It does not include cloud sync, Android login or the complete resale journey. Separate GitHub workflows run JVM and Android 14 emulator/instrumentation tests; the app still needs real-device and broader end-to-end testing. Debug signing keys can differ between CI builds, so an APK update may fail. Uninstalling to install another build deletes all local drafts. If the workflow is unavailable, open `android/` in Android Studio and build a debug APK locally as described above.
 
 ## Early administrator content editor
 

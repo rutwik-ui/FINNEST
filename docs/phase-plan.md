@@ -50,3 +50,6 @@ See `requirements-traceability.md` for the detailed requirements review and prod
 
 ### Android published guidance
 - Android uses the public Supabase project key over HTTPS to fetch published guidance only, with category filtering and 50-item keyset pagination. It sends no buyer draft and uses no admin credential; database RLS is the authorization boundary. No offline cache is provided, so an offline/error state offers retry. Unit and emulator tests use fixtures/fakes; live Android publishing, pagination and authorization are not yet verified end to end.
+
+### Resale planning increment
+- Android now opens a separate resale overview with six reference subject areas, marking five as not available, and a requirements/location form. Its optional budget, configuration and location fields autosave in the separate `resale_property` local scope. No completion, property inspection, tax rate or independent verification is implied. The other five subject areas, full resale mapping and cloud sync remain outstanding.

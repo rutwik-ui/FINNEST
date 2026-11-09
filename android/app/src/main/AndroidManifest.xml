@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <application android:allowBackup="false" android:usesCleartextTraffic="false" android:label="FINNEST" android:theme="@style/Theme.Finnest" android:supportsRtl="true">
+        <activity android:name=".ResaleOverviewActivity" android:exported="false" />
+        <activity android:name=".ResaleRequirementsActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".GuidanceActivity" android:exported="false" />
         <activity android:name=".RemindersActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".JourneySummaryActivity" android:exported="false" />
