@@ -35,4 +35,4 @@ jobs:
           set -euo pipefail
           psql -v ON_ERROR_STOP=1 -f supabase/tests/00_disposable_supabase_shim.sql
           for migration in supabase/migrations/*.sql; do psql -v ON_ERROR_STOP=1 -f "$migration"; done
-          for test in supabase/tests/[123]*.sql; do psql -v ON_ERROR_STOP=1 -f "$test"; done
+          for test in supabase/tests/[1234]*.sql; do psql -v ON_ERROR_STOP=1 -f "$test"; done

@@ -110,3 +110,6 @@ See `requirements-traceability.md` for the detailed requirements review and prod
 
 ### Website local draft restore
 - Profile can restore a structurally compatible raw website draft up to 5 MiB after a file selection and typed RESTORE confirmation. It replaces both journeys and profile/reminder data, including unsaved tab edits; it does not merge or affect Android or cloud data. Files are parsed locally, known fields validated, unknown fields preserved, and the write checks for a changed stored value; localStorage comparison is not atomic. Invalid recovery copies can be downloaded but cannot be restored without repair. These are unencrypted raw files without version/authenticity guarantees; validation does not prove their origin or semantic correctness. Unit and jsdom tests cover success, invalid data, quota and conflicts; real-browser round-trip and accessibility QA remain outstanding.
+
+### Additional disposable database policy boundaries
+- Expanded the isolated PostgreSQL shim suite with direct role and audit mutation denial, guidance deletion denial, missing-subject AAL2 denial, draft uniqueness, invalid journey, and oversized payload checks. This does not change the connected Supabase project or establish real Auth, Storage, PostgREST or MFA behavior. Hosted PostgreSQL CI is required because local PostgreSQL is not installed.
