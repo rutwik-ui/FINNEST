@@ -101,3 +101,6 @@ See `requirements-traceability.md` for the detailed requirements review and prod
 
 ### Admin activity pagination
 - Guidance activity is paged by descending audit identity with lookahead, retry and stale-session response guards. Refresh is needed to see newer or late-committing transactions; identity order is not necessarily commit order. Only guidance create/update metadata is logged, not a complete security audit. Queries are tested with mocks, not live PostgREST or real MFA sessions.
+
+### Browser draft recovery copy
+- Profile offers a user-initiated download of the current raw saved browser draft, including malformed drafts for recovery. The file is unencrypted and may contain sensitive information; unsaved in-memory changes, account data and Android data are excluded. Download completion depends on browser behavior, and in-app import/restore is not implemented. Automated tests use jsdom mocks; real-browser download and recovery remain to be verified.

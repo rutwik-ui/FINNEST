@@ -51,3 +51,20 @@ it('persists edits and reopens them, with roadmap links to implemented sections 
  fireEvent.click(screen.getByRole('button',{name:/Developer checks/}));
  expect(screen.getAllByLabelText('Note / observation')[0].value).toBe('Ask for delivery records');
 });
+it('downloads only the current saved raw draft, including unreadable drafts',()=>{
+ const raw='{invalid';localStorage.setItem(DRAFT_KEY,raw);
+ const create=vi.fn(()=> 'blob:test'),revoke=vi.fn();vi.stubGlobal('URL',Object.assign(URL,{createObjectURL:create,revokeObjectURL:revoke}));
+ const click=vi.spyOn(HTMLAnchorElement.prototype,'click').mockImplementation(()=>{});
+ render(<App/>);fireEvent.click(screen.getByText('Download saved browser draft'));
+ expect(create).toHaveBeenCalledOnce();expect(create.mock.calls[0][0]).toBeInstanceOf(Blob);
+ expect(click).toHaveBeenCalledOnce();expect(revoke).toHaveBeenCalledWith('blob:test');
+ expect(screen.getByRole('status').textContent).toMatch(/Download requested/);expect(localStorage.getItem(DRAFT_KEY)).toBe(raw);
+ vi.unstubAllGlobals();
+});
+it('does not claim a download when no saved draft exists or storage is unavailable',()=>{
+ render(<App/>);fireEvent.click(screen.getByText('Download saved browser draft'));
+ expect(screen.getByRole('status').textContent).toMatch(/No saved/);
+ vi.spyOn(Storage.prototype,'getItem').mockImplementation(()=>{throw new Error('blocked')});
+ fireEvent.click(screen.getByText('Download saved browser draft'));
+ expect(screen.getByRole('status').textContent).toMatch(/Could not request/);
+});
