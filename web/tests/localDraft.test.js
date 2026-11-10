@@ -43,3 +43,7 @@ test('new resale structures reject malformed values without writing',()=>{
   const store=storage(raw);assert.equal(readDraft(store).issue,'invalid');assert.equal(store.value(),raw);
  }
 });
+test('validates local profile and reminder lists without replacing malformed saved values',()=>{
+ for(const raw of ['{"localProfile":{"name":null}}','{"reminderForm":[]}','{"reminders":[{}]}','{"reminders":[{"id":"1","title":"x","note":"","date":"2023-02-29"}]}']) {const store=storage(raw);assert.equal(readDraft(store).issue,'invalid');assert.equal(store.value(),raw);}
+ assert.equal(decodeDraft('{"reminderForm":{"title":"Draft"}}').reminderForm.note,'');
+});
