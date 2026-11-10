@@ -13,7 +13,7 @@ function setup({roleResults=[{data:{role:'content_manager'},error:null}],listRes
  mocks.aal.mockResolvedValue({data:{currentLevel:'aal2'},error:null});
  mocks.from.mockImplementation(table=>{
   if(table==='finnest_admin_roles')return {select:()=>({eq:()=>({maybeSingle:async()=>roleResults[Math.min(r++,roleResults.length-1)]})})};
-  return {select:()=>({order:()=>({limit:async()=>table==='finnest_guidance'?listResults[Math.min(l++,listResults.length-1)]:{data:[],error:null}})})};
+  const query={order:()=>query,eq:()=>query,or:()=>query,limit:async()=>table==='finnest_guidance'?listResults[Math.min(l++,listResults.length-1)]:{data:[],error:null}}; return {select:()=>query};
  });
 }
 describe('admin reliability',()=>{
@@ -28,7 +28,7 @@ describe('admin reliability',()=>{
   setup({listResults:[{data:null,error:new Error('offline')},{data:[item],error:null}]});
   render(<Admin session={session} authLoading={false} go={()=>{}}/>);
   expect(await screen.findByText(/Could not load guidance and activity/)).toBeTruthy();
-  expect(screen.queryByText('No guidance added yet.')).toBeNull();
+  expect(screen.queryByText('No guidance matches these filters.')).toBeNull();
   fireEvent.click(screen.getByText('Refresh'));
   expect(await screen.findByText('Existing')).toBeTruthy();
  });
@@ -52,7 +52,7 @@ describe('admin reliability',()=>{
   mocks.aal.mockResolvedValue({data:{currentLevel:'aal2'},error:null});
   mocks.from.mockImplementation(table=>{
    if(table==='finnest_admin_roles')return {select:()=>({eq:(_key,id)=>({maybeSingle:async()=>({data:id==='user1'?{role:'content_manager'}:null,error:null})})})};
-   return {select:()=>({order:()=>({limit:()=>table==='finnest_guidance'?old:Promise.resolve({data:[],error:null})})})};
+   const query={order:()=>query,eq:()=>query,or:()=>query,limit:()=>table==='finnest_guidance'?old:Promise.resolve({data:[],error:null})};return {select:()=>query};
   });
   const view=render(<Admin session={session} authLoading={false} go={()=>{}}/>);
   await screen.findByText('Loading guidance and activity…');
@@ -66,8 +66,7 @@ describe('admin reliability',()=>{
   mocks.aal.mockResolvedValue({data:{currentLevel:'aal2'},error:null});
   mocks.from.mockImplementation(table=>{
    if(table==='finnest_admin_roles')return {select:()=>({eq:()=>({maybeSingle:async()=>({data:{role:'content_manager'},error:null})})})};
-   if(table==='finnest_guidance')return {select:()=>({order:()=>({limit:async()=>({data:[item],error:null})})}),update};
-   return {select:()=>({order:()=>({limit:async()=>({data:[],error:null})})})};
+   const query={order:()=>query,eq:()=>query,or:()=>query,limit:async()=>({data:table==='finnest_guidance'?[item]:[],error:null})};return {select:()=>query,update};
   });
   const confirm=vi.spyOn(window,'confirm').mockReturnValue(false);
   render(<Admin session={session} authLoading={false} go={()=>{}}/>);

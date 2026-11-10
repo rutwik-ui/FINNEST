@@ -11,7 +11,7 @@ function setup(role,level){
   mocks.aal.mockResolvedValue({data:{currentLevel:level},error:null});
   mocks.from.mockImplementation(table=>{
     if(table==='finnest_admin_roles') return {select:()=>({eq:()=>({maybeSingle:async()=>({data:role?{role}:null,error:null})})})};
-    return {select:()=>({order:()=>({limit:async()=>({data:[],error:null})})})};
+    const query={order:()=>query,eq:()=>query,or:()=>query,limit:async()=>({data:[],error:null})}; return {select:()=>query};
   });
 }
 describe('admin access gating',()=>{
