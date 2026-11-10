@@ -1,0 +1,6 @@
+import test from 'node:test';
+import assert from 'node:assert/strict';
+import {loadAdminAudit,AUDIT_PAGE_SIZE} from '../src/adminAudit.js';
+function client(data,error=null){const calls=[];const q={select:(...a)=>(calls.push(['select',...a]),q),lt:(...a)=>(calls.push(['lt',...a]),q),order:(...a)=>(calls.push(['order',...a]),q),limit:async(...a)=>(calls.push(['limit',...a]),{data,error})};return {calls,from:t=>(calls.push(['from',t]),q)}}
+test('uses descending identity keyset and lookahead',async()=>{const db=client(Array.from({length:21},(_,i)=>({id:21-i})));const page=await loadAdminAudit(db);assert.equal(page.items.length,AUDIT_PAGE_SIZE);assert.equal(page.cursor,2);assert.deepEqual(db.calls.at(-2),['order','id',{ascending:false}]);assert.deepEqual(db.calls.at(-1),['limit',21]);const next=client([{id:1}]);assert.equal((await loadAdminAudit(next,page.cursor)).cursor,null);assert.deepEqual(next.calls.find(c=>c[0]==='lt'),['lt','id',2])});
+test('rejects invalid ids and propagates query failures',async()=>{await assert.rejects(loadAdminAudit(client([]),Number.MAX_SAFE_INTEGER+1),/cursor/);await assert.rejects(loadAdminAudit(client([{id:Number.MAX_SAFE_INTEGER+1}])),/audit data/);await assert.rejects(loadAdminAudit(client(null,new Error('offline'))),/offline/)});

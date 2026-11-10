@@ -1,0 +1,42 @@
+// @vitest-environment jsdom
+import React from 'react';
+import {afterEach,beforeEach,expect,it,vi} from 'vitest';
+import {cleanup,fireEvent,render,screen,within} from '@testing-library/react';
+vi.mock('../supabase',()=>({supabase:null}));
+import {App} from '../main';
+import {DRAFT_KEY} from '../localDraft';
+beforeEach(()=>{localStorage.clear();history.replaceState({},'','/financial');vi.spyOn(window,'scrollTo').mockImplementation(()=>{})});
+afterEach(()=>{cleanup();vi.restoreAllMocks()});
+it('keeps unknowns separate, blocks invalid totals and restores entries and next actions',()=>{
+ const view=render(<App/>);
+ expect(screen.getByText('Entered one-time estimate total: Not available')).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Property price (₹)'),{target:{value:'1000000.10'}});
+ fireEvent.change(screen.getByLabelText('Stamp duty (₹)'),{target:{value:'0.20'}});
+ expect(screen.getByText('Entered one-time estimate total: ₹10,00,000.30 (2 of 11 entered)')).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Registration (₹)'),{target:{value:'bad'}});
+ expect(screen.getByText(/Entered one-time estimate total: Check amounts/)).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Registration (₹)'),{target:{value:''}});
+ const prompt=screen.getByText('Stamp duty',{selector:'h3'}).parentElement;
+ fireEvent.change(within(prompt).getByLabelText('Status for Stamp duty'),{target:{value:'Pending / unknown'}});
+ fireEvent.change(within(prompt).getByLabelText('Note / observation'),{target:{value:'Ask about duty'}});
+ fireEvent.change(screen.getByLabelText('Lender'),{target:{value:'Example bank'}});
+ fireEvent.click(screen.getByText('Continue to final review'));
+ expect(screen.getByText('Ask about duty')).toBeTruthy();
+ expect(screen.getByText('₹10,00,000.30 (2 of 11 entered)')).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Questions to resolve or people to consult'),{target:{value:'Ask a lawyer'}});
+ fireEvent.click(screen.getByText('View journey summary'));
+ fireEvent.change(screen.getByLabelText('Filter checklist'),{target:{value:'pending'}});
+ expect(screen.getByText('Stamp duty')).toBeTruthy();
+ view.unmount();history.replaceState({},'','/review');render(<App/>);
+ expect(screen.getByLabelText('Questions to resolve or people to consult').value).toBe('Ask a lawyer');
+ expect(JSON.parse(localStorage.getItem(DRAFT_KEY)).loanTerms.lender).toBe('Example bank');
+});
+it('summary reports checked and pending statuses without claiming verification',()=>{
+ localStorage.setItem(DRAFT_KEY,JSON.stringify({checks:{track:{status:'Checked by you'}},visitChecks:{water:{status:'Pending / unknown'}}}));
+ history.replaceState({},'','/summary');render(<App/>);
+ expect(screen.getByText(/1 marked checked by you/)).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Filter checklist'),{target:{value:'Checked by you'}});
+ expect(screen.getByText('Track record / delivery')).toBeTruthy();expect(screen.queryByText('Water')).toBeNull();
+ fireEvent.click(screen.getByText('Open section'));
+ expect(screen.getByText('Questions worth asking')).toBeTruthy();
+});

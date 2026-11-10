@@ -36,4 +36,29 @@ class JourneyDatabaseTest {
         assertEquals("Seller", saved["developer_land_title_source"])
         assertEquals("05/12/2026", saved["developer_land_title_date"])
     }
+    @Test fun visitFieldsAreSeparateFromDeveloperChecks() {
+        val dao = database.drafts()
+        dao.put(DraftField("new_property", "developer_approvals_note", "Ask developer"))
+        dao.put(DraftField("new_property", "visit_water_note", "Ask resident"))
+        dao.put(DraftField("new_property", "visit_water_source", "Neighbour"))
+        dao.put(DraftField("new_property", "visit_water_date", "06/11/2026"))
+        dao.put(DraftField("new_property", "visit_water_status", "Pending / unknown"))
+        val saved = dao.fields("new_property").associate { it.fieldKey to it.value }
+        assertEquals("Ask developer", saved["developer_approvals_note"])
+        assertEquals("Ask resident", saved["visit_water_note"])
+        assertEquals("Neighbour", saved["visit_water_source"])
+        assertEquals("06/11/2026", saved["visit_water_date"])
+        assertEquals("Pending / unknown", saved["visit_water_status"])
+    }
+    @Test fun scopedDeletionDoesNotRemoveOtherData() {
+        val dao = database.drafts()
+        dao.put(DraftField("new_property", "loan", "100"))
+        dao.put(DraftField("resale_property", "loan", "200"))
+        dao.put(DraftField("local_reminders", "reminders_v1", "notes"))
+        dao.put(DraftField("local_profile", "name", "Test"))
+        dao.put(DraftField("unrelated", "keep", "safe"))
+        assertEquals(4, dao.deleteScopes(LocalData.resetScopes.toList()))
+        LocalData.resetScopes.forEach { assertEquals(0, dao.fields(it).size) }
+        assertEquals("safe", dao.fields("unrelated").single().value)
+    }
 }

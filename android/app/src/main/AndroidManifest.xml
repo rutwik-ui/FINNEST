@@ -1,5 +1,20 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
-    <application android:allowBackup="false" android:label="FINNEST" android:theme="@style/Theme.Finnest" android:supportsRtl="true">
+    <uses-permission android:name="android.permission.INTERNET" />
+    <application android:allowBackup="false" android:usesCleartextTraffic="false" android:label="FINNEST" android:theme="@style/Theme.Finnest" android:supportsRtl="true">
+        <activity android:name=".ProfileSettingsActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".PrivacyInfoActivity" android:exported="false" />
+        <activity android:name=".CommonActivity" android:exported="false" />
+        <activity android:name=".ResaleSummaryActivity" android:exported="false" />
+        <activity android:name=".ResaleOverviewActivity" android:exported="false" />
+        <activity android:name=".ResaleConditionActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".ResaleRequirementsActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".GuidanceActivity" android:exported="false" />
+        <activity android:name=".RemindersActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".JourneySummaryActivity" android:exported="false" />
+        <activity android:name=".DashboardActivity" android:exported="false" />
+        <activity android:name=".FinalReviewActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".FinancialDueDiligenceActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".LoanGuideActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".ProjectsActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".DeveloperChecksActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".RequirementsActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />

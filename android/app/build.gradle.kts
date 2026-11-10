@@ -14,8 +14,11 @@ android {
         versionCode = 1
         versionName = "0.2.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        // This is the same public-client key used by the website; RLS remains the authorization boundary.
+        buildConfigField("String", "GUIDANCE_URL", "\"https://wyjjzynjoorjmpffndzu.supabase.co\"")
+        buildConfigField("String", "GUIDANCE_PUBLISHABLE_KEY", "\"sb_publishable_Nzb2UydbWvi6wJTtdt0_oA_pRuAWfWf\"")
     }
-    buildFeatures { viewBinding = true }
+    buildFeatures { viewBinding = true; buildConfig = true }
     compileOptions { sourceCompatibility = JavaVersion.VERSION_17; targetCompatibility = JavaVersion.VERSION_17 }
     kotlinOptions { jvmTarget = "17" }
 }
@@ -27,6 +30,8 @@ dependencies {
     implementation("com.google.android.material:material:1.12.0")
     implementation("androidx.room:room-runtime:2.6.1")
     kapt("androidx.room:room-compiler:2.6.1")
+    testImplementation("junit:junit:4.13.2")
     androidTestImplementation("androidx.test:runner:1.6.2")
+    androidTestImplementation("androidx.test.espresso:espresso-core:3.6.1")
     androidTestImplementation("androidx.test.ext:junit:1.2.1")
 }

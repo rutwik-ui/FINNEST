@@ -22,6 +22,9 @@ interface DraftDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     fun put(field: DraftField)
+
+    @Query("DELETE FROM DraftField WHERE journey IN (:journeys)")
+    fun deleteScopes(journeys: List<String>): Int
 }
 
 @Database(entities = [DraftField::class], version = 1, exportSchema = false)
@@ -61,6 +64,16 @@ object DraftRepository {
                 if (runCatching { JourneyDatabase.get(app).drafts().put(DraftField(key.first, key.second, value)) }.isSuccess) failed.remove(key)
             }
             callback(failed.keys.none { it.first == journey })
+        }
+    }
+    /** Deletes the requested scopes in one SQL statement on the same serialized queue as writes. */
+    fun deleteScopes(context: Context, journeys: Set<String>, callback: (Result<Int>) -> Unit) {
+        val app = context.applicationContext
+        val scopes = journeys.toSet()
+        executor.execute {
+            val result = runCatching { JourneyDatabase.get(app).drafts().deleteScopes(scopes.toList()) }
+            if (result.isSuccess) failed.keys.removeAll { it.first in scopes }
+            callback(result)
         }
     }
     fun save(context: Context, journey: String, key: String, value: String) {
