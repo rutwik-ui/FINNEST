@@ -9,6 +9,12 @@ do $$ begin
   exception when insufficient_privilege then null; end;
 end $$;
 set local role authenticated;
+select set_config('request.jwt.claims', '{}', true);
+do $$ begin
+  if (select count(*) from public.finnest_user_drafts) <> 0 then raise exception 'missing user identity read drafts'; end if;
+  begin insert into public.finnest_user_drafts(user_id,device_id,journey_type) values ('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','new_property'); raise exception 'missing identity inserted draft';
+  exception when insufficient_privilege then null; end;
+end $$;
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000001","aal":"aal1"}', true);
 insert into public.finnest_user_drafts(user_id,device_id,journey_type,payload) values
  ('10000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000001','new_property','{"budget":"100"}'),

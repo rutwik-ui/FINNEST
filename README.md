@@ -57,3 +57,7 @@ For the web run `npm run test:unit`, `npm run test:ui`, and `npm run build` from
 ### Android profile and local deletion
 
 Profile & settings saves optional name and city locally. The app currently always saves guest data locally; it does not offer a session-only switch or Android account sign-in. Privacy & data use describes the current implementation rather than treating prototype-only consent switches as functioning services. Deleting local data requires typing DELETE and removes New Property, Resale, reminders and local profile fields in a single database operation; journey selection and onboarding preferences are kept. It does not delete website data, Supabase data or any account. Device backup is disabled, and the action is irreversible.
+
+### Database authorization checks
+
+The `Database policy tests` GitHub Actions workflow runs the migrations and RLS behavior tests on disposable PostgreSQL with a minimal simulated Supabase Auth/Storage shim. See `supabase/tests/README.md` for coverage and its important limitations. It does not use or change the connected Supabase project, and is not a substitute for real staging Auth, MFA and Storage API tests.

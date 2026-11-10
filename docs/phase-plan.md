@@ -65,3 +65,6 @@ See `requirements-traceability.md` for the detailed requirements review and prod
 
 ### Android local profile and privacy
 - Android provides optional device-only name and city, accurate privacy information, links to reminders and About, and a typed-confirmation reset for New Property, Resale, reminders and local profile scopes. Reset does not alter selected journey or onboarding preferences, website data, Supabase records or an account. Device saving is always on; no fabricated marketing, analytics, contact-consent or notification switches are offered. Database deletion is one SQL statement serialized with draft writes, and successful deletion clears stale activity stacks. Real-device, failure-injection and accessibility testing remain release gates.
+
+### Isolated backend security checks
+- A disposable PostgreSQL CI workflow applies the repository migrations and exercises draft ownership, simulated Storage object policies, and guidance/admin MFA/role policies, including publication, audit and role revocation. Tests supply simulated claims and a minimal storage schema; they do not contact or change the connected Supabase project and do not verify real Auth, MFA, Storage APIs or uploads. Real staging tests and a security review remain necessary.

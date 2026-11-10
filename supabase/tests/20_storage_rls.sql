@@ -12,6 +12,8 @@ insert into storage.objects(bucket_id,name) values ('finnest-private-documents',
 do $$ begin
   begin insert into storage.objects(bucket_id,name) values ('finnest-private-documents','10000000-0000-4000-8000-000000000002/document.pdf'); raise exception 'cross-user upload allowed';
   exception when insufficient_privilege then null; end;
+  begin insert into storage.objects(bucket_id,name) values ('finnest-private-documents','10000000-0000-4000-8000-000000000001-extra/document.pdf'); raise exception 'similar prefix upload allowed';
+  exception when insufficient_privilege then null; end;
   begin insert into storage.objects(bucket_id,name) values ('finnest-private-documents','document.pdf'); raise exception 'root upload allowed';
   exception when insufficient_privilege then null; end;
   begin update storage.objects set name='10000000-0000-4000-8000-000000000002/document.pdf'; raise exception 'cross-owner move allowed';

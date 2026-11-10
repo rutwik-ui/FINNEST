@@ -46,6 +46,13 @@ do $$ begin
   begin insert into public.finnest_admin_audit(actor_id,item_id,action) values ('10000000-0000-4000-8000-000000000001','30000000-0000-4000-8000-000000000001','UPDATE'); raise exception 'editor wrote audit directly';
   exception when insufficient_privilege then null; end;
 end $$;
+do $$ begin
+  if (select count(*) from public.finnest_admin_roles) <> 1 then raise exception 'editor cannot see own role or sees another'; end if;
+  begin insert into public.finnest_guidance(title,body,category) values ('   ','Body','general'); raise exception 'blank title allowed';
+  exception when check_violation then null; end;
+  begin insert into public.finnest_guidance(title,body,category) values ('Title','Body','invalid'); raise exception 'invalid category allowed';
+  exception when check_violation then null; end;
+end $$;
 insert into public.finnest_guidance(id,title,body,category,status) values ('30000000-0000-4000-8000-000000000003','Editor draft','Written by editor','new_property','draft');
 update public.finnest_guidance set status='published' where id='30000000-0000-4000-8000-000000000003';
 do $$ begin
@@ -57,12 +64,19 @@ do $$ begin
   if (select count(*) from public.finnest_guidance) <> 2 then raise exception 'published guidance unavailable'; end if;
   if exists(select 1 from public.finnest_guidance where status='draft') then raise exception 'draft leaked after publishing'; end if;
 end $$;
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000001","aal":"aal2"}', true);
+update public.finnest_guidance set status='draft' where id='30000000-0000-4000-8000-000000000003';
+set local role anon;
+do $$ begin
+  if (select count(*) from public.finnest_guidance) <> 1 then raise exception 'unpublished guidance remains visible'; end if;
+end $$;
 reset role;
 delete from public.finnest_admin_roles where user_id='10000000-0000-4000-8000-000000000001';
 set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000001","aal":"aal2"}', true);
 do $$ begin
-  if (select count(*) from public.finnest_guidance) <> 2 then raise exception 'revoked editor retained draft access'; end if;
+  if (select count(*) from public.finnest_guidance) <> 1 then raise exception 'revoked editor retained draft access'; end if;
   begin insert into public.finnest_guidance(title,body,category) values ('bad','bad','general'); raise exception 'revoked editor retained write access';
   exception when insufficient_privilege then null; end;
 end $$;
