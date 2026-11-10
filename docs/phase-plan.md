@@ -98,3 +98,6 @@ See `requirements-traceability.md` for the detailed requirements review and prod
 
 ### Website expert roles and concern action
 - Website expert directory now lists the seven informational professional roles plus optional personal-preference roles, with a role filter and an explicitly unavailable contact state. This is not a profile, booking or verified expert service; reference filter menus were not expanded. The illustrative concern guide can open a selected checklist item or, after explicit confirmation, set it to Pending / unknown in the currently selected journey while preserving notes. An explicit save reports success only after localStorage accepts the write; cross-tab or storage errors do not mutate the selected status in memory. Unit and jsdom tests cover both journeys, confirmation and conflict, not real-browser/device QA or cloud sync. The user-entered pending status is not a FINNEST risk finding.
+
+### Admin activity pagination
+- Guidance activity is paged by descending audit identity with lookahead, retry and stale-session response guards. Refresh is needed to see newer or late-committing transactions; identity order is not necessarily commit order. Only guidance create/update metadata is logged, not a complete security audit. Queries are tested with mocks, not live PostgREST or real MFA sessions.
