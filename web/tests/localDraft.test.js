@@ -37,3 +37,9 @@ test('resale values validate without overwriting malformed data',()=>{
  }
  const older=decodeDraft('{"budget":{"loan":"500"}}');assert.deepEqual(older.resaleBudget,{});assert.deepEqual(older.resaleLocation,[]);
 });
+
+test('new resale structures reject malformed values without writing',()=>{
+ for(const raw of ['{"resaleSeller":null}','{"resaleSociety":{"tax":{"amount":3}}}','{"resaleLegal":{"title_chain":[]}}','{"resaleHandover":[]}','{"resaleLawyerStatus":null}']) {
+  const store=storage(raw);assert.equal(readDraft(store).issue,'invalid');assert.equal(store.value(),raw);
+ }
+});
