@@ -107,3 +107,6 @@ See `requirements-traceability.md` for the detailed requirements review and prod
 
 ### Admin independent loading resilience
 - Guidance and activity refresh independently: either may remain usable if the other fails, with separate status/error messages and shared refresh. Mocked UI tests cover failed activity, retry, keyset cursor and ignoring a delayed page after refresh. Live PostgREST, real MFA sessions and browser end-to-end behavior remain unverified; this remains a guidance-only admin tool.
+
+### Website local draft restore
+- Profile can restore a structurally compatible raw website draft up to 5 MiB after a file selection and typed RESTORE confirmation. It replaces both journeys and profile/reminder data, including unsaved tab edits; it does not merge or affect Android or cloud data. Files are parsed locally, known fields validated, unknown fields preserved, and the write checks for a changed stored value; localStorage comparison is not atomic. Invalid recovery copies can be downloaded but cannot be restored without repair. These are unencrypted raw files without version/authenticity guarantees; validation does not prove their origin or semantic correctness. Unit and jsdom tests cover success, invalid data, quota and conflicts; real-browser round-trip and accessibility QA remain outstanding.

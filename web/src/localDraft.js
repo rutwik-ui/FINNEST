@@ -41,3 +41,19 @@ export function deleteDraft(storage, expected) {
  try {if(storage.getItem(DRAFT_KEY)!==expected)return {issue:'conflict'};storage.removeItem(DRAFT_KEY);return {raw:null,issue:null}}
  catch{return {issue:'unavailable'}}
 }
+
+// Recovery files are deliberately not a cloud-sync or Android interchange format.
+export function decodeRecovery(raw) {
+ if(typeof raw!=='string' || raw.length>5*1024*1024) throw new Error('invalid');
+ const value=JSON.parse(raw);
+ if(!object(value) || !Object.keys(freshDraft()).some(key=>Object.hasOwn(value,key))) throw new Error('invalid');
+ return decodeDraft(raw);
+}
+export function restoreDraft(storage,expected,raw) {
+ let data;try{data=decodeRecovery(raw)}catch{return {issue:'invalid-file'}}
+ try {
+  if(storage.getItem(DRAFT_KEY)!==expected)return {issue:'conflict'};
+  storage.setItem(DRAFT_KEY,raw);
+  return {issue:null,raw,data};
+ } catch{return {issue:'unavailable'}}
+}

@@ -47,3 +47,12 @@ test('validates local profile and reminder lists without replacing malformed sav
  for(const raw of ['{"localProfile":{"name":null}}','{"reminderForm":[]}','{"reminders":[{}]}','{"reminders":[{"id":"1","title":"x","note":"","date":"2023-02-29"}]}']) {const store=storage(raw);assert.equal(readDraft(store).issue,'invalid');assert.equal(store.value(),raw);}
  assert.equal(decodeDraft('{"reminderForm":{"title":"Draft"}}').reminderForm.note,'');
 });
+
+test('recovery validates before replacing and preserves unknown fields',async()=>{
+ const {restoreDraft}=await import('../src/localDraft.js');const previous='{"budget":{"loan":"10"}}',store=storage(previous);
+ for(const raw of ['{}','null','{"other":true}','{"budget":null}','bad']){assert.equal(restoreDraft(store,previous,raw).issue,'invalid-file');assert.equal(store.value(),previous)}
+ const raw='{"journey":"Resale Property","future":{"extra":true}}';
+ assert.equal(restoreDraft(store,'outdated',raw).issue,'conflict');assert.equal(store.value(),previous);
+ const result=restoreDraft(store,previous,raw);assert.equal(result.issue,null);assert.equal(store.value(),raw);assert.equal(result.data.future.extra,true);
+ assert.equal(restoreDraft({getItem:()=>null,setItem(){throw Error('quota')}},null,raw).issue,'unavailable');
+});
