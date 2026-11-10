@@ -44,7 +44,7 @@ it('persists edits and reopens them, with roadmap links to implemented sections 
  expect(screen.getByText('Questions worth asking')).toBeTruthy();
  fireEvent.change(screen.getAllByLabelText('Note / observation')[0],{target:{value:'Ask for delivery records'}});
  expect(JSON.parse(localStorage.getItem(DRAFT_KEY)).checks.track.note).toBe('Ask for delivery records');
- expect(screen.getByRole('button',{name:/Home loan guide/}).disabled).toBe(true);
+ expect(screen.getByRole('button',{name:/Financial due diligence/}).disabled).toBe(true);
  fireEvent.click(screen.getByRole('button',{name:/Requirements & budget/}));
  expect(screen.getByRole('heading',{name:'Requirements & Budget'})).toBeTruthy();
  view.unmount();history.replaceState({},'','/');render(<App/>);

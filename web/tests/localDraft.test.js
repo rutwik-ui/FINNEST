@@ -22,3 +22,8 @@ test('storage errors are surfaced without claiming success',()=>{
  const full={getItem:()=>null,setItem(){throw Error('full')},removeItem(){throw Error('denied')}};
  assert.equal(writeDraft(full,null,freshDraft()).issue,'unavailable');assert.equal(deleteDraft(full,null).issue,'unavailable');
 });
+test('new journey structures are validated and partial feedback is restored safely',()=>{
+ const draft=decodeDraft('{"feedbackForm":{"topic":"Water"},"loan":{"amount":"100"}}');
+ assert.equal(draft.feedbackForm.topic,'Water');assert.equal(draft.feedbackForm.shared,'');
+ for(const raw of ['{"feedbackNotes":[{}]}','{"feedbackForm":{"topic":7}}','{"loan":[]}','{"legalChecks":{"x":{"note":null}}}','{"lenderChecks":null}']) assert.equal(readDraft(storage(raw)).issue,'invalid');
+});

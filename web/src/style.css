@@ -14,3 +14,11 @@
 .admin-filters select { border: 1px solid #d9d9d9; border-radius: 8px; background: #fff; padding: .7rem; color: inherit; font: inherit; }
 .road-step:disabled { opacity: .6; cursor: not-allowed; }
 .roadmap-unavailable { font-weight: 500; }
+.feedback-note { border-top: 1px solid #eeece8; padding: 18px 0; }
+.feedback-note p { margin: 8px 0; overflow-wrap: anywhere; }
+.lender-check { border-top: 1px solid #eeece8; padding-top: 16px; margin-top: 16px; display: grid; gap: 10px; }
+.loan-result { background: #fff8f7; }
+.loan-result h2 { margin-top: 10px; }
+.form-card ul { padding-left: 22px; color: #515b68; line-height: 1.7; }
+.form-card textarea { width: 100%; border: 1px solid #e3e2df; border-radius: 9px; padding: 12px 13px; font: inherit; color: #273341; resize: vertical; }
+.form-card textarea:focus-visible { outline: 3px solid #f19799; outline-offset: 2px; }
