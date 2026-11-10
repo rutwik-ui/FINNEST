@@ -52,7 +52,7 @@ jobs:
                           failures.append(f"{case.get('classname')}.{case.get('name')}: {error.get('message', '')}\n{error.text or ''}")
               except ET.ParseError:
                   pass
-          message = ('\n'.join(failures) if failures else ''.join(open('/tmp/finnest-emulator-build.log').readlines()[-120:]) if __import__('os').path.exists('/tmp/finnest-emulator-build.log') else 'No emulator build log found.')[-12000:]
+          message = ('\n'.join(failures) if failures else ''.join(open('/tmp/finnest-emulator-build.log').readlines()[-120:]) if __import__('os').path.exists('/tmp/finnest-emulator-build.log') else 'No emulator build log found.')[-3500:]
           message = message.replace('%', '%25').replace('\r', '%0D').replace('\n', '%0A')
           print(f'::error::{message}')
           PYCODE
