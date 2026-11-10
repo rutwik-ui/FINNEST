@@ -68,3 +68,6 @@ See `requirements-traceability.md` for the detailed requirements review and prod
 
 ### Isolated backend security checks
 - A disposable PostgreSQL CI workflow applies the repository migrations and exercises draft ownership, simulated Storage object policies, and guidance/admin MFA/role policies, including publication, audit and role revocation. Tests supply simulated claims and a minimal storage schema; they do not contact or change the connected Supabase project and do not verify real Auth, MFA, Storage APIs or uploads. Real staging tests and a security review remain necessary.
+
+### Guidance editor reliability
+- The limited web guidance editor now distinguishes loading/failure from an empty list, supports retry after role lookup failure, ignores stale list results after account/token changes, and asks before discarding edited content on editor navigation/sign-out (with a browser unload warning). Concurrent edits still require a refresh and manual reconciliation; published items require confirmation. The editor remains limited to 100 recent guidance records and 20 audit events, and it is not a complete admin panel. UI tests use mocked Supabase; real sessions, MFA, role revocation and concurrent edits must be verified in staging.

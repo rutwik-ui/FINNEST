@@ -5,10 +5,15 @@ import { CATEGORIES, CONTENT_ROLES, validateGuidance } from './admin';
 import AdminMfa from './AdminMfa';
 
 const empty = () => ({title:'', body:'', category:'general', status:'draft'});
+const formFrom = item => item ? ({title:item.title, body:item.body, category:item.category, status:item.status}) : empty();
+const sameForm = (a,b) => ['title','body','category','status'].every(key => a[key] === b[key]);
 export default function Admin({go,session,authLoading}) {
   const [email,setEmail]=useState(''), [password,setPassword]=useState('');
   const [roleState,setRoleState]=useState(null), [checking,setChecking]=useState(false), [error,setError]=useState(''), [message,setMessage]=useState(''), [busy,setBusy]=useState(false);
   const [items,setItems]=useState([]), [audit,setAudit]=useState([]), [form,setForm]=useState(empty), [editing,setEditing]=useState(null);
+  const [listState,setListState]=useState('idle'), [roleRetry,setRoleRetry]=useState(0);
+  const dirty = !sameForm(form, formFrom(editing));
+  const discardChanges = () => !dirty || window.confirm('Discard unsaved guidance changes?');
   const [aalState,setAalState]=useState(null), [checkingAal,setCheckingAal]=useState(false), [aalError,setAalError]=useState('');
   const userId=session?.user?.id;
   const token=session?.access_token;
@@ -17,7 +22,7 @@ export default function Admin({go,session,authLoading}) {
   const role=roleState && roleState.userId===userId ? roleState.role : null;
   const aal=aalState && aalState.userId===userId && aalState.token===token ? aalState.level : null;
   useEffect(()=>{
-    let live=true; setChecking(false); setRoleState(null); setAalState(null); setItems([]); setAudit([]); setEditing(null); setForm(empty()); setError(''); setMessage('');
+    let live=true; setChecking(false); setRoleState(null); setAalState(null); setItems([]); setAudit([]); setEditing(null); setForm(empty()); setError(''); setMessage(''); setListState('idle');
     if(!supabase || !userId)return;
     setChecking(true);
     (async()=>{const {data,error}=await supabase.from('finnest_admin_roles').select('role').eq('user_id',userId).maybeSingle();
@@ -26,16 +31,23 @@ export default function Admin({go,session,authLoading}) {
       else setRoleState({userId,role:data?.role || 'none'});
     })().catch(()=>{if(live){setChecking(false);setError('Could not verify administrator access. Please try again.')}});
     return()=>{live=false};
-  },[userId]);
+  },[userId,roleRetry]);
+  const refreshRequest=useRef(0);
   const refresh=useCallback(async()=>{
-    const [contentResult,auditResult]=await Promise.all([
-      supabase.from('finnest_guidance').select('id,title,body,category,status,updated_at').order('updated_at',{ascending:false}).limit(100),
-      supabase.from('finnest_admin_audit').select('id,actor_id,item_id,action,occurred_at').order('occurred_at',{ascending:false}).limit(20)
-    ]);
-    if(contentResult.error || auditResult.error) throw new Error('Could not load admin content or audit records.');
-    if (currentUser.current !== userId) return;
-    setItems(contentResult.data || []); setAudit(auditResult.data || []);
-  },[userId]);
+    const request=++refreshRequest.current;
+    setListState('loading');
+    try {
+      const [contentResult,auditResult]=await Promise.all([
+        supabase.from('finnest_guidance').select('id,title,body,category,status,updated_at').order('updated_at',{ascending:false}).limit(100),
+        supabase.from('finnest_admin_audit').select('id,actor_id,item_id,action,occurred_at').order('occurred_at',{ascending:false}).limit(20)
+      ]);
+      if(contentResult.error || auditResult.error) throw new Error('Could not load admin content or audit records.');
+      if (request !== refreshRequest.current || currentUser.current !== userId || currentToken.current !== token) return;
+      setItems(contentResult.data || []); setAudit(auditResult.data || []); setListState('ready');
+    } catch(e) {
+      if (request === refreshRequest.current && currentUser.current === userId && currentToken.current === token) setListState('error');
+    }
+  },[userId,token]);
   const checkAal=useCallback(async()=>{
     if(!userId || !CONTENT_ROLES.includes(role)){setAalState(null);setCheckingAal(false);setAalError('');return}
     setCheckingAal(true);setAalError('');
@@ -44,9 +56,10 @@ export default function Admin({go,session,authLoading}) {
     finally{if(currentUser.current===userId && currentToken.current===token)setCheckingAal(false)}
   },[userId,role,token]);
   useEffect(()=>{checkAal()},[checkAal]);
-  useEffect(()=>{if(CONTENT_ROLES.includes(role) && aal==='aal2') refresh().catch(e=>setError(e.message))},[role,aal,refresh]);
+  useEffect(()=>{if(CONTENT_ROLES.includes(role) && aal==='aal2') refresh(); else {refreshRequest.current++;setItems([]);setAudit([]);setListState('idle')} return ()=>{refreshRequest.current++}},[role,aal,refresh]);
+  useEffect(()=>{const handler=e=>{if(dirty){e.preventDefault();e.returnValue=''}};window.addEventListener('beforeunload',handler);return ()=>window.removeEventListener('beforeunload',handler)},[dirty]);
   async function login(e){e.preventDefault();if(!supabase || busy)return;setBusy(true);setError('');setMessage('');try{const {error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;setPassword('')}catch(e){setError(e?.message || 'Sign-in failed.')}finally{setBusy(false)}}
-  async function logout(){setBusy(true);setError('');try{const {error}=await supabase.auth.signOut();if(error)throw error}catch(e){setError(e?.message || 'Sign-out failed.')}finally{setBusy(false)}}
+  async function logout(){if(!discardChanges())return;setBusy(true);setError('');try{const {error}=await supabase.auth.signOut();if(error)throw error}catch(e){setError(e?.message || 'Sign-out failed.')}finally{setBusy(false)}}
   async function save(e){
     e.preventDefault(); if(busy)return; const validation=validateGuidance(form); if(validation){setError(validation);return}
     if(form.status==='published' && !window.confirm('Published guidance is publicly readable. Continue?'))return;
@@ -55,27 +68,29 @@ export default function Admin({go,session,authLoading}) {
       const payload={title:form.title.trim(),body:form.body.trim(),category:form.category,status:form.status};
       const query=editing ? supabase.from('finnest_guidance').update(payload).eq('id',editing.id).eq('updated_at',editing.updated_at).select('id') : supabase.from('finnest_guidance').insert(payload).select('id');
       const {data,error}=await query;if(error)throw error;
+      if(currentUser.current !== userId || currentToken.current !== token)return;
       if(!data?.length)throw new Error('This item changed or access was removed. Reload the list before editing again.');
       setForm(empty());setEditing(null);setMessage('Guidance saved. Published items are public and appear in the website and Android guidance libraries.');
       await refresh();
-    }catch(e){setError(e?.message || 'Could not save guidance.')}finally{setBusy(false)}
+    }catch(e){if(currentUser.current === userId && currentToken.current === token)setError(e?.message || 'Could not save guidance.')}finally{setBusy(false)}
   }
   const patch=(key,value)=>setForm(previous=>({...previous,[key]:value}));
   return <main className="admin-main"><div className="admin-lock admin-panel"><div className="lock-icon"><LockKeyhole size={30}/></div><span className="eyebrow">FINNEST ADMIN</span><h1>Content management</h1><p>This early admin phase manages guidance only. It does not manage users, buyer data, Android forms, experts, or projects.</p>
   <div className="admin-notice"><ShieldAlert size={21}/><span>Published guidance is public. Do not enter customer data or secrets. Authenticator verification is required for content access. Full security testing is not yet complete; do not use this panel for production operations.</span></div>
-  {!supabase?<p>Sign-in is not configured. See README setup.</p>:authLoading||checking||(session && role===null && !error)?<p role="status">Checking administrator access…</p>:!session?<form className="auth-form" onSubmit={login}><label>Admin email<input type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Password<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label><button className="primary compact" disabled={busy}>Sign in <ArrowRight size={17}/></button></form>:!CONTENT_ROLES.includes(role)?<><p>{role==='none'?'This account has no administrator role.':'This role cannot manage guidance content.'} Roles must be assigned by a trusted project administrator.</p><button className="outline-button admin-space" disabled={busy} onClick={logout}>Sign out</button></>:checkingAal?<p role="status">Checking session security…</p>:aalError?<><p className="auth-error" role="alert">{aalError}</p><button className="outline-button" onClick={checkAal}>Retry</button><button className="text-link admin-space" onClick={logout}>Sign out</button></>:aal!=='aal2'?<><AdminMfa onVerified={checkAal}/><button className="text-link admin-space" disabled={busy} onClick={logout}>Sign out</button></>:<>
+  {!supabase?<p>Sign-in is not configured. See README setup.</p>:authLoading||checking||(session && role===null && !error)?<p role="status">Checking administrator access…</p>:!session?<form className="auth-form" onSubmit={login}><label>Admin email<input type="email" autoComplete="username" required value={email} onChange={e=>setEmail(e.target.value)}/></label><label>Password<input type="password" autoComplete="current-password" required value={password} onChange={e=>setPassword(e.target.value)}/></label><button className="primary compact" disabled={busy}>Sign in <ArrowRight size={17}/></button></form>:role===null?<><p role="alert">Could not verify administrator access.</p><button className="outline-button" onClick={()=>{setError('');setRoleRetry(n=>n+1)}}>Retry access check</button><button className="text-link admin-space" disabled={busy} onClick={logout}>Sign out</button></>:!CONTENT_ROLES.includes(role)?<><p>{role==='none'?'This account has no administrator role.':'This role cannot manage guidance content.'} Roles must be assigned by a trusted project administrator.</p><button className="outline-button admin-space" disabled={busy} onClick={logout}>Sign out</button></>:checkingAal?<p role="status">Checking session security…</p>:aalError?<><p className="auth-error" role="alert">{aalError}</p><button className="outline-button" onClick={checkAal}>Retry</button><button className="text-link admin-space" onClick={logout}>Sign out</button></>:aal!=='aal2'?<><AdminMfa onVerified={checkAal}/><button className="text-link admin-space" disabled={busy} onClick={logout}>Sign out</button></>:<>
    <div className="admin-identity"><span>Signed in as {session.user.email} · {role.replaceAll('_',' ')}</span><button className="text-link" disabled={busy} onClick={logout}>Sign out</button></div>
    <h2 className="admin-heading">{editing?'Edit guidance':'New guidance'}</h2><form className="auth-form admin-form" onSubmit={save}>
     <label>Title<input required maxLength={150} value={form.title} onChange={e=>patch('title',e.target.value)}/></label>
     <label>Category<select value={form.category} onChange={e=>patch('category',e.target.value)}>{CATEGORIES.map(x=><option key={x} value={x}>{x.replaceAll('_',' ')}</option>)}</select></label>
     <label>Guidance<textarea required maxLength={10000} rows={7} value={form.body} onChange={e=>patch('body',e.target.value)}/></label>
     <label>Status<select value={form.status} onChange={e=>patch('status',e.target.value)}><option value="draft">Draft (admins only)</option><option value="published">Published (public)</option></select></label>
-    <div className="admin-actions"><button className="primary compact" disabled={busy}>{busy?'Saving…':'Save guidance'}</button>{editing&&<button type="button" className="outline-button" onClick={()=>{setEditing(null);setForm(empty());setError('')}}>Cancel edit</button>}</div>
+    <div className="admin-actions"><button className="primary compact" disabled={busy}>{busy?'Saving…':'Save guidance'}</button>{editing&&<button type="button" className="outline-button" onClick={()=>{if(!discardChanges())return;setEditing(null);setForm(empty());setError('')}}>Cancel edit</button>}</div>
    </form>
-   <div className="admin-list-heading"><h2>Guidance</h2><button className="text-link" onClick={()=>refresh().catch(e=>setError(e.message))}>Refresh</button></div><p>Showing up to 100 most recently updated items.</p>
-   {items.length===0?<p className="admin-empty">No guidance added yet.</p>:items.map(item=><article className="admin-item" key={item.id}><div><strong>{item.title}</strong><p>{item.category.replaceAll('_',' ')} · {item.status} · {new Date(item.updated_at).toLocaleString()}</p></div><button className="outline-button" onClick={()=>{setEditing(item);setForm({title:item.title,body:item.body,category:item.category,status:item.status});setError('');setMessage('')}}>Edit</button></article>)}
-   <h2 className="admin-heading">Recent content activity</h2><p>Most recent 20 create/update events. This is not a full security audit.</p>{audit.length===0?<p className="admin-empty">No content activity yet.</p>:audit.map(entry=><div className="audit-row" key={entry.id}><span>{entry.action==='INSERT'?'Created':'Updated'} · {new Date(entry.occurred_at).toLocaleString()}</span><small>Item {entry.item_id} · actor {entry.actor_id || 'removed'}</small></div>)}
+   <div className="admin-list-heading"><h2>Guidance</h2><button className="text-link" disabled={listState==='loading'} onClick={refresh}>Refresh</button></div><p>Showing up to 100 most recently updated items.</p>
+   {listState==='loading'&&<p role="status">Loading guidance and activity…</p>}{listState==='error'&&<p className="auth-error" role="alert">Could not load guidance and activity. Select Refresh to retry; existing results may be out of date.</p>}
+   {listState==='ready'&&items.length===0?<p className="admin-empty">No guidance added yet.</p>:items.map(item=><article className="admin-item" key={item.id}><div><strong>{item.title}</strong><p>{item.category.replaceAll('_',' ')} · {item.status} · {new Date(item.updated_at).toLocaleString()}</p></div><button className="outline-button" onClick={()=>{if(!discardChanges())return;setEditing(item);setForm(formFrom(item));setError('');setMessage('')}}>Edit</button></article>)}
+   <h2 className="admin-heading">Recent content activity</h2><p>Most recent 20 create/update events. This is not a full security audit.</p>{listState==='ready'&&audit.length===0?<p className="admin-empty">No content activity yet.</p>:audit.map(entry=><div className="audit-row" key={entry.id}><span>{entry.action==='INSERT'?'Created':'Updated'} · {new Date(entry.occurred_at).toLocaleString()}</span><small>Item {entry.item_id} · actor {entry.actor_id || 'removed'}</small></div>)}
   </>}
   {error&&<p className="auth-error" role="alert">{error}</p>}{message&&<p className="auth-message" role="status">{message}</p>}
-  <button className="text-link admin-home" onClick={()=>go('/')}>Return to FINNEST <ArrowRight size={16}/></button></div></main>
+  <button className="text-link admin-home" onClick={()=>{if(discardChanges())go('/')}}>Return to FINNEST <ArrowRight size={16}/></button></div></main>
 }

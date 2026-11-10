@@ -61,3 +61,5 @@ Profile & settings saves optional name and city locally. The app currently alway
 ### Database authorization checks
 
 The `Database policy tests` GitHub Actions workflow runs the migrations and RLS behavior tests on disposable PostgreSQL with a minimal simulated Supabase Auth/Storage shim. See `supabase/tests/README.md` for coverage and its important limitations. It does not use or change the connected Supabase project, and is not a substitute for real staging Auth, MFA and Storage API tests.
+
+The early guidance editor warns before discarding unsaved work, provides retry on access/list errors, and reports conflicting edits rather than silently overwriting them. This is not autosave or a version history; browser unload prompts depend on browser behavior. The list currently shows only the 100 most recently updated records. The panel remains a prototype and requires real staging authorization, MFA and operational testing.
