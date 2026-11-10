@@ -77,3 +77,5 @@ Website Resale now offers an overview, optional requirements/location planning, 
 The website includes a browser-local optional name/city, dated reminder notes, privacy/about information and an illustrative concern guide. Reminders do not generate notifications. The website's confirmed browser-data deletion removes profile and reminder notes along with both local journeys, but does not delete an account or data on other devices.
 
 Guidance editors can preview plain text before saving. Unsaved-edit warnings now cover the website header and same-document history; browser unload prompts and history behavior vary and need real-browser QA. While a save is in flight, editor inputs and in-app navigation are blocked. If a save cannot be confirmed, check the list before retrying to avoid a duplicate. Admin functionality remains limited to guidance, not full operations.
+
+The website expert directory is informational: no professionals, booking, contact-sharing or payments are configured. The illustrative verbal-promise concern can optionally mark a selected checklist item pending after confirmation; it is not a property finding and stays in browser-local data.

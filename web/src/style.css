@@ -34,3 +34,5 @@
 .resale-sections button span { font-size: 12px; font-weight: 500; }
 .admin-preview { padding: 18px; background: #faf9f6; }
 .admin-preview h3 { margin: 8px 0; overflow-wrap: anywhere; }
+.expert-grid { margin-top: 16px; }
+button:disabled { cursor: not-allowed; }

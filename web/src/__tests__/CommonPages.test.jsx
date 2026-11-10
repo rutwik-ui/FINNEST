@@ -34,3 +34,34 @@ it('illustrative concern does not alter recorded status',()=>{
  expect(screen.getByText(/Illustrative pattern only/)).toBeTruthy();
  expect(localStorage.getItem(DRAFT_KEY)).toBe(draft);
 });
+it('explicitly marks a selected item pending only after confirmation and successful persistence',()=>{
+ const draft=JSON.stringify({checks:{track:{status:'Checked by you',note:'Existing'}}});localStorage.setItem(DRAFT_KEY,draft);history.replaceState({},'','/concern');render(<App/>);
+ const confirm=vi.spyOn(window,'confirm').mockReturnValue(false);
+ fireEvent.change(screen.getByLabelText('Related checklist item'),{target:{value:'checks:track'}});fireEvent.click(screen.getByText('Save as pending'));
+ expect(localStorage.getItem(DRAFT_KEY)).toBe(draft);
+ confirm.mockReturnValue(true);fireEvent.click(screen.getByText('Save as pending'));
+ expect(screen.getByRole('status').textContent).toMatch(/Status saved/);
+ const saved=JSON.parse(localStorage.getItem(DRAFT_KEY));expect(saved.checks.track).toEqual({status:'Pending / unknown',note:'Existing'});
+ fireEvent.click(screen.getByText('Open related checklist'));expect(screen.getByText('Questions worth asking')).toBeTruthy();
+});
+it('never claims pending was saved after a cross-tab storage conflict',()=>{
+ localStorage.setItem(DRAFT_KEY,'{}');history.replaceState({},'','/concern');render(<App/>);
+ fireEvent.change(screen.getByLabelText('Related checklist item'),{target:{value:'checks:track'}});
+ localStorage.setItem(DRAFT_KEY,'{"budget":{"loan":"other"}}');vi.spyOn(window,'confirm').mockReturnValue(true);
+ fireEvent.click(screen.getByText('Save as pending'));
+ expect(screen.getByRole('status').textContent).toMatch(/could not be saved/);expect(screen.getByRole('alert').textContent).toMatch(/another tab/);
+ expect(JSON.parse(localStorage.getItem(DRAFT_KEY)).budget.loan).toBe('other');
+});
+it('supports resale checklist pending without modifying New Property',()=>{
+ localStorage.setItem(DRAFT_KEY,JSON.stringify({journey:'Resale Property',checks:{track:{status:'Checked by you'}},resaleSociety:{maintenance:{note:'Keep'}}}));history.replaceState({},'','/concern');render(<App/>);
+ fireEvent.change(screen.getByLabelText('Related checklist item'),{target:{value:'resaleSociety:maintenance'}});vi.spyOn(window,'confirm').mockReturnValue(true);fireEvent.click(screen.getByText('Save as pending'));
+ const saved=JSON.parse(localStorage.getItem(DRAFT_KEY));expect(saved.resaleSociety.maintenance).toEqual({status:'Pending / unknown',note:'Keep'});expect(saved.checks.track.status).toBe('Checked by you');
+});
+it('filters informational expert roles and disables unavailable contact',()=>{
+ history.replaceState({},'','/experts');render(<App/>);
+ expect(screen.getByRole('heading',{name:'Architect / technical inspector'})).toBeTruthy();
+ fireEvent.change(screen.getByLabelText('Role category'),{target:{value:'Property lawyer'}});
+ expect(screen.queryByRole('heading',{name:'Architect / technical inspector'})).toBeNull();expect(screen.getByRole('heading',{name:'Property lawyer'})).toBeTruthy();
+ fireEvent.click(screen.getByText('Expert detail & contact'));expect(screen.getByText('Request a conversation · unavailable').disabled).toBe(true);
+ expect(screen.getByText(/no booking, messaging/)).toBeTruthy();
+});
