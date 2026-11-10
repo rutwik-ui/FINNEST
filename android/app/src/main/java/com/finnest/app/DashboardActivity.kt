@@ -61,6 +61,7 @@ class DashboardActivity : AppCompatActivity() {
         listOf("Experts directory" to "experts", "Understand a concern" to "risk", "About FINNEST" to "about").forEach { (title, screen) ->
             help.addView(Button(this).apply { text = title; isAllCaps = false; setOnClickListener { startActivity(Intent(this@DashboardActivity, CommonActivity::class.java).putExtra("screen", screen).putExtra("scope", "new_property")) } }, LinearLayout.LayoutParams(-1, -2))
         }
+        help.addView(Button(this).apply { text = "Profile & settings"; isAllCaps = false; setOnClickListener { startActivity(Intent(this@DashboardActivity, ProfileSettingsActivity::class.java)) } }, LinearLayout.LayoutParams(-1, -2))
         val privacy = panel(page)
         addText(privacy, "A note on your data", 16f, R.color.navy, true, 0)
         addText(privacy, "This is a local guest journey. Android account sync, documents and expert connections are not available yet.", 14f, R.color.muted, false, 6)

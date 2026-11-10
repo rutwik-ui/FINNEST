@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <uses-permission android:name="android.permission.INTERNET" />
     <application android:allowBackup="false" android:usesCleartextTraffic="false" android:label="FINNEST" android:theme="@style/Theme.Finnest" android:supportsRtl="true">
+        <activity android:name=".ProfileSettingsActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
+        <activity android:name=".PrivacyInfoActivity" android:exported="false" />
         <activity android:name=".CommonActivity" android:exported="false" />
         <activity android:name=".ResaleSummaryActivity" android:exported="false" />
         <activity android:name=".ResaleOverviewActivity" android:exported="false" />

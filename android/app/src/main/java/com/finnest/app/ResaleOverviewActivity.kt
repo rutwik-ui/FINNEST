@@ -41,6 +41,7 @@ class ResaleOverviewActivity : AppCompatActivity() {
         listOf("Experts directory" to "experts", "Understand a concern" to "risk", "About FINNEST" to "about").forEach { (title, screen) ->
             help.addView(Button(this).apply { text = title; isAllCaps = false; setOnClickListener { startActivity(Intent(this@ResaleOverviewActivity, CommonActivity::class.java).putExtra("screen", screen).putExtra("scope", "resale_property")) } }, LinearLayout.LayoutParams(-1, -2))
         }
+        help.addView(Button(this).apply { text = "Profile & settings"; isAllCaps = false; setOnClickListener { startActivity(Intent(this@ResaleOverviewActivity, ProfileSettingsActivity::class.java)) } }, LinearLayout.LayoutParams(-1, -2))
         binding.form.addView(TextView(this).apply {
             text = "FINNEST does not inspect a property, verify documents or provide legal advice."; textSize = 14f; setTextColor(getColor(R.color.muted)); setPadding(0, dp(14), 0, 0)
         })

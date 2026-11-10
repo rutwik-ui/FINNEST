@@ -62,3 +62,6 @@ See `requirements-traceability.md` for the detailed requirements review and prod
 
 ### Android common information screens
 - Android now has informational expert roles, a deliberately unavailable expert-contact state, an About/disclaimer screen reflecting actual local storage and online guidance, and an illustrative verbal-promise concern. The concern can explicitly mark an existing New Property or Resale checklist item Pending / unknown after confirmation, or open its checklist. No professional profiles, booking, matching, advice or independent verification are provided; expanded reference filter options remain unknown.
+
+### Android local profile and privacy
+- Android provides optional device-only name and city, accurate privacy information, links to reminders and About, and a typed-confirmation reset for New Property, Resale, reminders and local profile scopes. Reset does not alter selected journey or onboarding preferences, website data, Supabase records or an account. Device saving is always on; no fabricated marketing, analytics, contact-consent or notification switches are offered. Database deletion is one SQL statement serialized with draft writes, and successful deletion clears stale activity stacks. Real-device, failure-injection and accessibility testing remain release gates.

@@ -4,7 +4,7 @@ FINNEST is an Indian home-buying guidance product, delivered in small, reviewabl
 
 ## Current Android scope
 
-`android/` is a native Kotlin/XML guest application. The New Property flow currently includes a dashboard, locally saved requirements, developer checks, a shortlist of project names, visit observations, resident feedback, an illustrative loan guide, legal and financial due diligence, final review, journey summary, in-app dated reminders, an online published-guidance library, informational expert roles, a verbal-promise risk guide and an About screen. Checklist status labels are provisional because the references show closed menus. These are user entries, not independently verified findings or professional advice.
+`android/` is a native Kotlin/XML guest application. The New Property flow currently includes a dashboard, locally saved requirements, developer checks, a shortlist of project names, visit observations, resident feedback, an illustrative loan guide, legal and financial due diligence, final review, journey summary, in-app dated reminders, an online published-guidance library, informational expert roles, a verbal-promise risk guide an About screen, a device-only profile and scoped local data deletion. Checklist status labels are provisional because the references show closed menus. These are user entries, not independently verified findings or professional advice.
 
 The separate Resale overview and the six prototype subject areas are available as local planning and checklist notes, with a resale summary. This is not a complete resale journey: the prototype and supporting document have an unresolved journey mapping. Society and handover statuses and lawyer review status use free text because their expanded options are not visible; other checklist labels are provisional.
 
@@ -53,3 +53,7 @@ No account has automatically been made an administrator. To bootstrap a trusted 
 See `docs/requirements-traceability.md` for the distinction between native, admin-managed and backend functionality and the remaining release gates. Administrator TOTP setup is available after a trusted operator grants a content role; the code and QR are sensitive and should never be shared. If an authenticator is lost, a secure, documented recovery process must be established before production use.
 
 For the web run `npm run test:unit`, `npm run test:ui`, and `npm run build` from `web/`. The MFA UI tests mock Supabase; they do not prove live enrollment or RLS behavior. Migration `20261109095719_finnest_admin_require_mfa.sql` enforces AAL2 for admin draft reads, content writes and audit reads; published guidance remains public.
+
+### Android profile and local deletion
+
+Profile & settings saves optional name and city locally. The app currently always saves guest data locally; it does not offer a session-only switch or Android account sign-in. Privacy & data use describes the current implementation rather than treating prototype-only consent switches as functioning services. Deleting local data requires typing DELETE and removes New Property, Resale, reminders and local profile fields in a single database operation; journey selection and onboarding preferences are kept. It does not delete website data, Supabase data or any account. Device backup is disabled, and the action is irreversible.
