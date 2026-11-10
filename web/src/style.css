@@ -32,3 +32,5 @@
 .resale-sections button { justify-content: space-between; text-align: left; }
 .resale-sections button:disabled { color: #777; border-color: #dedede; cursor: not-allowed; }
 .resale-sections button span { font-size: 12px; font-weight: 500; }
+.admin-preview { padding: 18px; background: #faf9f6; }
+.admin-preview h3 { margin: 8px 0; overflow-wrap: anywhere; }

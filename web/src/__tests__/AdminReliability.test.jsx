@@ -80,4 +80,35 @@ describe('admin reliability',()=>{
   expect(update).toHaveBeenCalledTimes(1);
  });
 
+ it('previews plain text without saving or publishing',async()=>{
+  setup();render(<Admin session={session} authLoading={false} go={()=>{}}/>);
+  await screen.findByText('New guidance');
+  fireEvent.change(screen.getByLabelText('Title'),{target:{value:'Preview title'}});
+  fireEvent.change(screen.getByLabelText('Guidance'),{target:{value:'<script>example</script>'}});
+  fireEvent.click(screen.getByText('Preview guidance'));
+  const preview=screen.getByLabelText('Guidance preview');
+  expect(preview.textContent).toContain('<script>example</script>');
+  expect(preview.querySelector('script')).toBeNull();
+  expect(preview.textContent).toContain('Nothing is published by previewing.');
+ });
+
+ it('disables editing while a save is in flight and warns about ambiguous failures',async()=>{
+  let finish;const result=new Promise(resolve=>{finish=resolve});
+  mocks.aal.mockResolvedValue({data:{currentLevel:'aal2'},error:null});
+  mocks.from.mockImplementation(table=>{
+   if(table==='finnest_admin_roles')return {select:()=>({eq:()=>({maybeSingle:async()=>({data:{role:'content_manager'},error:null})})})};
+   const q={order:()=>q,eq:()=>q,or:()=>q,limit:async()=>({data:[],error:null})};
+   return {select:()=>q,insert:()=>({select:()=>result})};
+  });
+  render(<Admin session={session} authLoading={false} go={()=>{}}/>);
+  fireEvent.change(await screen.findByLabelText('Title'),{target:{value:'New title'}});
+  fireEvent.change(screen.getByLabelText('Guidance'),{target:{value:'Body'}});
+  fireEvent.click(screen.getByText('Save guidance'));
+  expect(screen.getByLabelText('Title').disabled).toBe(true);
+  finish({data:null,error:new Error('network')});
+  expect(await screen.findByText(/Save could not be confirmed/)).toBeTruthy();
+  expect(screen.getByLabelText('Title').value).toBe('New title');
+  expect(screen.getByLabelText('Title').disabled).toBe(false);
+ });
+
 });
