@@ -113,3 +113,6 @@ See `requirements-traceability.md` for the detailed requirements review and prod
 
 ### Additional disposable database policy boundaries
 - Expanded the isolated PostgreSQL shim suite with direct role and audit mutation denial, guidance deletion denial, missing-subject AAL2 denial, draft uniqueness, invalid journey, and oversized payload checks. This does not change the connected Supabase project or establish real Auth, Storage, PostgREST or MFA behavior. Hosted PostgreSQL CI is required because local PostgreSQL is not installed.
+
+### Real-browser website smoke tests
+- GitHub Actions now runs Playwright Chromium with desktop and mobile viewport profiles, offline-from-Supabase configuration, covering actual file download and restore, reload and cross-tab conflict. Browser journey smoke tests cover New Property navigation through summary back to dashboard and switching between New Property and Resale without overwriting notes. These tests do not validate physical mobile devices, screen-reader accessibility, other browser engines, live services or every journey field.

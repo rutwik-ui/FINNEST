@@ -81,3 +81,5 @@ Guidance editors can preview plain text before saving. Unsaved-edit warnings now
 The website expert directory is informational: no professionals, booking, contact-sharing or payments are configured. The illustrative verbal-promise concern can optionally mark a selected checklist item pending after confirmation; it is not a property finding and stays in browser-local data.
 
 Profile offers an unencrypted website draft download and a confirmed local replacement from a compatible recovery file. It is not Android interchange or cloud sync. Keep files private, and download the current saved draft before replacing it; unsaved edits are not included in the download. Validation is structural, not proof of origin, and cross-tab checks are best-effort.
+
+Website browser smoke tests: from `web`, install dependencies with `npm ci`, install Playwright Chromium with `npx playwright install chromium`, then run `npm run test:e2e`. These run with Supabase configuration disabled and use test-only browser data.
