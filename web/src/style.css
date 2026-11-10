@@ -28,3 +28,7 @@
 .review-entry { border-top: 1px solid #eeece8; padding: 14px 0; overflow-wrap: anywhere; }
 .review-entry p { margin: 6px 0; }
 .summary-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+.resale-sections { display: grid; gap: 10px; margin-top: 16px; }
+.resale-sections button { justify-content: space-between; text-align: left; }
+.resale-sections button:disabled { color: #777; border-color: #dedede; cursor: not-allowed; }
+.resale-sections button span { font-size: 12px; font-weight: 500; }

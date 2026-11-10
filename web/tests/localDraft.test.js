@@ -31,3 +31,9 @@ test('new journey structures are validated and partial feedback is restored safe
 test('financial structures reject malformed records and preserve them',()=>{
  for(const raw of ['{"initialCosts":null}','{"recurringCosts":{"emi":42}}','{"costChecks":{"tax":false}}','{"loanTerms":[]}','{"nextActions":null}']) { const store=storage(raw);assert.equal(readDraft(store).issue,'invalid');assert.equal(store.value(),raw); }
 });
+test('resale values validate without overwriting malformed data',()=>{
+ for(const raw of ['{"resaleBudget":[]}','{"resalePreferences":{"carpet":null}}','{"resaleConfiguration":"lift"}','{"resaleLocation":[3]}','{"resaleCondition":{"walls":{"note":false}}}']) {
+  const store=storage(raw);assert.equal(readDraft(store).issue,'invalid');assert.equal(store.value(),raw);
+ }
+ const older=decodeDraft('{"budget":{"loan":"500"}}');assert.deepEqual(older.resaleBudget,{});assert.deepEqual(older.resaleLocation,[]);
+});
