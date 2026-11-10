@@ -27,3 +27,7 @@ test('new journey structures are validated and partial feedback is restored safe
  assert.equal(draft.feedbackForm.topic,'Water');assert.equal(draft.feedbackForm.shared,'');
  for(const raw of ['{"feedbackNotes":[{}]}','{"feedbackForm":{"topic":7}}','{"loan":[]}','{"legalChecks":{"x":{"note":null}}}','{"lenderChecks":null}']) assert.equal(readDraft(storage(raw)).issue,'invalid');
 });
+
+test('financial structures reject malformed records and preserve them',()=>{
+ for(const raw of ['{"initialCosts":null}','{"recurringCosts":{"emi":42}}','{"costChecks":{"tax":false}}','{"loanTerms":[]}','{"nextActions":null}']) { const store=storage(raw);assert.equal(readDraft(store).issue,'invalid');assert.equal(store.value(),raw); }
+});

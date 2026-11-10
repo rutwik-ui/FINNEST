@@ -1,7 +1,7 @@
 import {emptyFeedback} from './newJourney.js';
 // Browser-local data only. Do not use this storage format as a cloud-sync protocol.
 export const DRAFT_KEY = 'finnest-web-v1';
-export const freshDraft = () => ({journey:'New Property',budget:{},location:[],configuration:[],checks:{},visitChecks:{},projects:[],feedbackForm:emptyFeedback(),feedbackNotes:[],loan:{},lenderChecks:{},legalChecks:{}});
+export const freshDraft = () => ({journey:'New Property',budget:{},location:[],configuration:[],checks:{},visitChecks:{},projects:[],feedbackForm:emptyFeedback(),feedbackNotes:[],loan:{},lenderChecks:{},legalChecks:{},initialCosts:{},recurringCosts:{},costChecks:{},loanTerms:{},nextActions:''});
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const stringValues = value => object(value) && Object.values(value).every(v => typeof v === 'string');
 const checkValues = value => object(value) && Object.values(value).every(stringValues);
@@ -14,8 +14,9 @@ export function decodeDraft(raw) {
  if(!object(value) || (value.journey !== undefined && !['New Property','Resale Property'].includes(value.journey)) ||
     (value.budget !== undefined && !stringValues(value.budget)) ||
     ['location','configuration'].some(k=>value[k] !== undefined && (!Array.isArray(value[k]) || !value[k].every(v=>typeof v==='string'))) ||
-    ['checks','visitChecks','lenderChecks','legalChecks'].some(k=>value[k] !== undefined && !checkValues(value[k])) ||
-    (value.loan !== undefined && !stringValues(value.loan)) ||
+    ['checks','visitChecks','lenderChecks','legalChecks','costChecks'].some(k=>value[k] !== undefined && !checkValues(value[k])) ||
+    ['loan','initialCosts','recurringCosts','loanTerms'].some(k=>value[k] !== undefined && !stringValues(value[k])) ||
+    (value.nextActions !== undefined && typeof value.nextActions !== 'string') ||
     (value.feedbackForm !== undefined && !stringValues(value.feedbackForm)) ||
     (value.feedbackNotes !== undefined && (!Array.isArray(value.feedbackNotes) || !value.feedbackNotes.every(n=>stringValues(n) && ['id','topic','date','context','shared','concern','followup'].every(k=>typeof n[k]==='string')))) ||
     (value.projects !== undefined && (!Array.isArray(value.projects) || !value.projects.every(p=>object(p) && typeof p.id==='string' && typeof p.name==='string')))) throw new Error('invalid');

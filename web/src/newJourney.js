@@ -16,3 +16,26 @@ export function monthlyEmi(amount, rate, years) {
  const result=p*monthly/denominator;
  return Number.isFinite(result)?result:null;
 }
+export const INITIAL_COSTS=[['price','Property price'],['tax','Applicable taxes / GST'],['stamp','Stamp duty'],['registration','Registration'],['parking','Parking'],['deposit','Maintenance deposit'],['brokerage','Brokerage'],['legal','Legal fees'],['loan','Loan fees'],['interiors','Interiors'],['moving','Moving / contingency']];
+export const RECURRING_COSTS=[['emi','EMI estimate · monthly'],['maintenance','Maintenance · monthly'],['other','Other recurring costs · monthly']];
+export const LOAN_TERMS=[['lender','Lender'],['rate_type','Rate & type'],['fees','Fees'],['tenure','Tenure'],['emi','EMI'],['interest','Estimated total interest'],['prepayment','Prepayment terms']];
+export const DEVELOPER_CHECKS=[['track','Track record / delivery'],['rera','Project RERA registration / disclosures'],['title','Land ownership / title'],['approvals','Approvals / sanctioned plans'],['legal','Credible legal history'],['financial','Financial stability where evidence exists']];
+
+// Integer paise avoids floating-point rounding for money and large entered totals.
+export function costTotal(values) {
+ let paise=0n,count=0;
+ for(const raw of values) {
+  if(!raw.trim())continue;
+  if(!/^\d{1,13}(?:\.\d{1,2})?$/.test(raw))return {kind:'invalid'};
+  const [whole,fraction='']=raw.split('.');
+  const value=BigInt(whole)*100n+BigInt(fraction.padEnd(2,'0'));
+  if(value>100000000000000n)return {kind:'invalid'};
+  paise+=value;count++;
+ }
+ return count?{kind:'entered',paise,count}:{kind:'empty'};
+}
+export function formatPaise(paise) {
+ const whole=(paise/100n).toString(), fraction=(paise%100n).toString().padStart(2,'0');
+ const tail=whole.slice(-3), head=whole.slice(0,-3);
+ return `${head?head.replace(/\B(?=(\d{2})+(?!\d))/g,',')+',':''}${tail}.${fraction}`;
+}

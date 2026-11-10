@@ -22,3 +22,9 @@
 .form-card ul { padding-left: 22px; color: #515b68; line-height: 1.7; }
 .form-card textarea { width: 100%; border: 1px solid #e3e2df; border-radius: 9px; padding: 12px 13px; font: inherit; color: #273341; resize: vertical; }
 .form-card textarea:focus-visible { outline: 3px solid #f19799; outline-offset: 2px; }
+.review-values { margin: 12px 0 0; }
+.review-values>div,.review-counts>div { display: flex; justify-content: space-between; gap: 18px; border-bottom: 1px solid #eeece8; padding: 11px 0; }
+.review-values dd { margin: 0; text-align: right; overflow-wrap: anywhere; max-width: 60%; }
+.review-entry { border-top: 1px solid #eeece8; padding: 14px 0; overflow-wrap: anywhere; }
+.review-entry p { margin: 6px 0; }
+.summary-links { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
