@@ -27,7 +27,7 @@ describe('admin reliability',()=>{
  it('does not report an empty list after a failed load and can retry',async()=>{
   setup({listResults:[{data:null,error:new Error('offline')},{data:[item],error:null}]});
   render(<Admin session={session} authLoading={false} go={()=>{}}/>);
-  expect(await screen.findByText(/Could not load guidance and activity/)).toBeTruthy();
+  expect(await screen.findByText(/Could not load guidance/)).toBeTruthy();
   expect(screen.queryByText('No guidance matches these filters.')).toBeNull();
   fireEvent.click(screen.getByText('Refresh'));
   expect(await screen.findByText('Existing')).toBeTruthy();
@@ -55,7 +55,7 @@ describe('admin reliability',()=>{
    const query={order:()=>query,eq:()=>query,or:()=>query,limit:()=>table==='finnest_guidance'?old:Promise.resolve({data:[],error:null})};return {select:()=>query};
   });
   const view=render(<Admin session={session} authLoading={false} go={()=>{}}/>);
-  await screen.findByText('Loading guidance and activity…');
+  await screen.findByText('Loading guidance…');
   view.rerender(<Admin session={{access_token:'token2',user:{id:'user2',email:'other@example.com'}}} authLoading={false} go={()=>{}}/>);
   expect(await screen.findByText(/no administrator role/i)).toBeTruthy();
   resolveOld({data:[item],error:null});

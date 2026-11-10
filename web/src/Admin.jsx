@@ -13,7 +13,7 @@ export default function Admin({go,session,authLoading,navigationGuardRef}) {
   const [email,setEmail]=useState(''), [password,setPassword]=useState('');
   const [roleState,setRoleState]=useState(null), [checking,setChecking]=useState(false), [error,setError]=useState(''), [message,setMessage]=useState(''), [busy,setBusy]=useState(false);
   const [items,setItems]=useState([]), [audit,setAudit]=useState([]), [form,setForm]=useState(empty), [editing,setEditing]=useState(null);
-  const [listState,setListState]=useState('idle'), [roleRetry,setRoleRetry]=useState(0);
+  const [listState,setListState]=useState('idle'), [auditState,setAuditState]=useState('idle'), [roleRetry,setRoleRetry]=useState(0);
   const [preview,setPreview]=useState(false);
   const [filters,setFilters]=useState({category:'all',status:'all'}), [cursor,setCursor]=useState(null), [moreState,setMoreState]=useState('idle');
   const moreBusy=useRef(false), auditBusy=useRef(false);
@@ -30,7 +30,7 @@ export default function Admin({go,session,authLoading,navigationGuardRef}) {
   const role=roleState && roleState.userId===userId ? roleState.role : null;
   const aal=aalState && aalState.userId===userId && aalState.token===token ? aalState.level : null;
   useEffect(()=>{
-    let live=true; setChecking(false); setRoleState(null); setAalState(null); setItems([]); setAudit([]); setEditing(null); setForm(empty()); setError(''); setMessage(''); setPreview(false); setListState('idle'); setCursor(null); setMoreState('idle'); setAuditCursor(null); setAuditMore('idle');
+    let live=true; setChecking(false); setRoleState(null); setAalState(null); setItems([]); setAudit([]); setEditing(null); setForm(empty()); setError(''); setMessage(''); setPreview(false); setListState('idle'); setAuditState('idle'); setCursor(null); setMoreState('idle'); setAuditCursor(null); setAuditMore('idle');
     if(!supabase || !userId)return;
     setChecking(true);
     (async()=>{const {data,error}=await supabase.from('finnest_admin_roles').select('role').eq('user_id',userId).maybeSingle();
@@ -43,17 +43,13 @@ export default function Admin({go,session,authLoading,navigationGuardRef}) {
   const refreshRequest=useRef(0);
   const refresh=useCallback(async()=>{
     const request=++refreshRequest.current;
-    setListState('loading'); setCursor(null); setMoreState('idle'); moreBusy.current=false;setAuditCursor(null);setAuditMore('idle');auditBusy.current=false;
-    try {
-      const [contentResult,auditResult]=await Promise.all([
-        loadAdminGuidance(supabase,filters),
-        loadAdminAudit(supabase)
-      ]);
-      if (request !== refreshRequest.current || currentUser.current !== userId || currentToken.current !== token) return;
-      setItems(contentResult.items); setCursor(contentResult.cursor); setAudit(auditResult.items); setAuditCursor(auditResult.cursor); setListState('ready');
-    } catch(e) {
-      if (request === refreshRequest.current && currentUser.current === userId && currentToken.current === token) setListState('error');
-    }
+    setListState('loading'); setAuditState('loading'); setCursor(null); setMoreState('idle'); moreBusy.current=false;setAuditCursor(null);setAuditMore('idle');auditBusy.current=false;
+    const current=()=>request===refreshRequest.current && currentUser.current===userId && currentToken.current===token;
+    // Separate results so a failed activity query doesn't hide available guidance (or vice versa).
+    await Promise.all([
+      loadAdminGuidance(supabase,filters).then(result=>{if(current()){setItems(result.items);setCursor(result.cursor);setListState('ready')}},()=>{if(current())setListState('error')}),
+      loadAdminAudit(supabase).then(result=>{if(current()){setAudit(result.items);setAuditCursor(result.cursor);setAuditState('ready')}},()=>{if(current())setAuditState('error')})
+    ]);
   },[userId,token,filters]);
   const loadMore=async()=>{
     if(!cursor || moreBusy.current || listState!=='ready')return;
@@ -67,7 +63,7 @@ export default function Admin({go,session,authLoading,navigationGuardRef}) {
     finally {if(request===refreshRequest.current)moreBusy.current=false}
   };
   const loadMoreAudit=async()=>{
-    if(!auditCursor || auditBusy.current || listState!=='ready')return;
+    if(!auditCursor || auditBusy.current || auditState!=='ready')return;
     const request=refreshRequest.current;auditBusy.current=true;setAuditMore('loading');
     try {
       const result=await loadAdminAudit(supabase,auditCursor);
@@ -85,7 +81,7 @@ export default function Admin({go,session,authLoading,navigationGuardRef}) {
     finally{if(currentUser.current===userId && currentToken.current===token)setCheckingAal(false)}
   },[userId,role,token]);
   useEffect(()=>{checkAal()},[checkAal]);
-  useEffect(()=>{if(CONTENT_ROLES.includes(role) && aal==='aal2') refresh(); else {refreshRequest.current++;setItems([]);setAudit([]);setCursor(null);setMoreState('idle');moreBusy.current=false;setAuditCursor(null);setAuditMore('idle');auditBusy.current=false;setListState('idle')} return ()=>{refreshRequest.current++}},[role,aal,refresh]);
+  useEffect(()=>{if(CONTENT_ROLES.includes(role) && aal==='aal2') refresh(); else {refreshRequest.current++;setItems([]);setAudit([]);setCursor(null);setMoreState('idle');moreBusy.current=false;setAuditCursor(null);setAuditMore('idle');auditBusy.current=false;setListState('idle');setAuditState('idle')} return ()=>{refreshRequest.current++}},[role,aal,refresh]);
   useEffect(()=>{const handler=e=>{if(dirty){e.preventDefault();e.returnValue=''}};window.addEventListener('beforeunload',handler);return ()=>window.removeEventListener('beforeunload',handler)},[dirty]);
   async function login(e){e.preventDefault();if(!supabase || busy)return;setBusy(true);setError('');setMessage('');try{const {error}=await supabase.auth.signInWithPassword({email:email.trim(),password});if(error)throw error;setPassword('')}catch(e){setError(e?.message || 'Sign-in failed.')}finally{setBusy(false)}}
   async function logout(){if(!discardChanges())return;setBusy(true);setError('');try{const {error}=await supabase.auth.signOut();if(error)throw error}catch(e){setError(e?.message || 'Sign-out failed.')}finally{setBusy(false)}}
@@ -117,15 +113,15 @@ export default function Admin({go,session,authLoading,navigationGuardRef}) {
     {preview&&<section className="card guidance-item admin-preview" aria-label="Guidance preview"><span className="eyebrow">{form.category.replaceAll('_',' ')}</span><h3>{form.title.trim()||'Untitled guidance'}</h3><p className="guidance-body">{form.body.trim()||'No guidance text entered.'}</p><p className="footnote">Preview only · {form.status==='published'?'would be public after saving':'draft is not public'}. Nothing is published by previewing.</p></section>}
     <div className="admin-actions"><button className="primary compact" disabled={busy}>{busy?'Saving…':'Save guidance'}</button>{editing&&<button type="button" className="outline-button" disabled={busy} onClick={()=>{if(!discardChanges())return;setEditing(null);setForm(empty());setError('')}}>Cancel edit</button>}</div>
    </form>
-   <div className="admin-list-heading"><h2>Guidance</h2><button className="text-link" disabled={busy || listState==='loading'} onClick={refresh}>Refresh</button></div><p>Most recently updated first. Refresh to include changes made while browsing.</p>
+   <div className="admin-list-heading"><h2>Guidance</h2><button className="text-link" disabled={busy} onClick={refresh}>Refresh</button></div><p>Most recently updated first. Refresh to include changes made while browsing.</p>
    <div className="admin-filters"><label>Filter category<select disabled={busy} value={filters.category} onChange={e=>{refreshRequest.current++;setItems([]);setCursor(null);setFilters(f=>({...f,category:e.target.value}))}}><option value="all">All categories</option>{CATEGORIES.map(x=><option key={x} value={x}>{x.replaceAll('_',' ')}</option>)}</select></label><label>Filter status<select disabled={busy} value={filters.status} onChange={e=>{refreshRequest.current++;setItems([]);setCursor(null);setFilters(f=>({...f,status:e.target.value}))}}><option value="all">All statuses</option><option value="draft">Draft</option><option value="published">Published</option></select></label></div>
-   {listState==='loading'&&<p role="status">Loading guidance and activity…</p>}{listState==='error'&&<p className="auth-error" role="alert">Could not load guidance and activity. Select Refresh to retry; existing results may be out of date.</p>}
+   {listState==='loading'&&<p role="status">Loading guidance…</p>}{listState==='error'&&<p className="auth-error" role="alert">Could not load guidance. Select Refresh to retry; existing results may be out of date.</p>}
    {listState==='ready'&&items.length===0?<p className="admin-empty">No guidance matches these filters.</p>:items.map(item=><article className="admin-item" key={item.id}><div><strong>{item.title}</strong><p>{item.category.replaceAll('_',' ')} · {item.status} · {new Date(item.updated_at).toLocaleString()}</p></div><button className="outline-button" disabled={busy} onClick={()=>{if(!discardChanges())return;setEditing(item);setForm(formFrom(item));setError('');setMessage('')}}>Edit</button></article>)}
    {moreState==='error'&&<p className="auth-error" role="alert">Could not load more guidance. Your current results are still shown.</p>}
    {listState==='ready'&&cursor&&<button type="button" className="outline-button admin-space" disabled={busy || moreState==='loading'} onClick={loadMore}>{moreState==='loading'?'Loading…':moreState==='error'?'Retry loading more':'Load more guidance'}</button>}
-   <h2 className="admin-heading">Recent content activity</h2><p>Guidance create/update events, newest sequence ID first. Sequence order may differ from commit time; refresh to see recent or late-committing events. This is not a full security audit.</p>{listState==='ready'&&audit.length===0?<p className="admin-empty">No content activity yet.</p>:audit.map(entry=><div className="audit-row" key={entry.id}><span>{entry.action==='INSERT'?'Created':'Updated'} · {new Date(entry.occurred_at).toLocaleString()}</span><small>Item {entry.item_id} · actor {entry.actor_id || 'removed'}</small></div>)}
+   <h2 className="admin-heading">Recent content activity</h2><p>Guidance create/update events, newest sequence ID first. Sequence order may differ from commit time; refresh to see recent or late-committing events. This is not a full security audit.</p>{auditState==='loading'&&<p role="status">Loading activity…</p>}{auditState==='error'&&<p className="auth-error" role="alert">Could not load activity. Select Refresh to retry; existing events may be out of date.</p>}{auditState==='ready'&&audit.length===0?<p className="admin-empty">No content activity yet.</p>:audit.map(entry=><div className="audit-row" key={entry.id}><span>{entry.action==='INSERT'?'Created':'Updated'} · {new Date(entry.occurred_at).toLocaleString()}</span><small>Item {entry.item_id} · actor {entry.actor_id || 'removed'}</small></div>)}
    {auditMore==='error'&&<p className="auth-error" role="alert">Could not load more activity. Existing events are still shown.</p>}
-   {listState==='ready'&&auditCursor&&<button type="button" className="outline-button admin-space" disabled={busy || auditMore==='loading'} onClick={loadMoreAudit}>{auditMore==='loading'?'Loading activity…':auditMore==='error'?'Retry loading activity':'Load more activity'}</button>}
+   {auditState==='ready'&&auditCursor&&<button type="button" className="outline-button admin-space" disabled={busy || auditMore==='loading'} onClick={loadMoreAudit}>{auditMore==='loading'?'Loading activity…':auditMore==='error'?'Retry loading activity':'Load more activity'}</button>}
   </>}
   {error&&<p className="auth-error" role="alert">{error}</p>}{message&&<p className="auth-message" role="status">{message}</p>}
   <button className="text-link admin-home" onClick={()=>{if(navigationGuardRef || discardChanges())go('/')}}>Return to FINNEST <ArrowRight size={16}/></button></div></main>

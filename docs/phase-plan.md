@@ -104,3 +104,6 @@ See `requirements-traceability.md` for the detailed requirements review and prod
 
 ### Browser draft recovery copy
 - Profile offers a user-initiated download of the current raw saved browser draft, including malformed drafts for recovery. The file is unencrypted and may contain sensitive information; unsaved in-memory changes, account data and Android data are excluded. Download completion depends on browser behavior, and in-app import/restore is not implemented. Automated tests use jsdom mocks; real-browser download and recovery remain to be verified.
+
+### Admin independent loading resilience
+- Guidance and activity refresh independently: either may remain usable if the other fails, with separate status/error messages and shared refresh. Mocked UI tests cover failed activity, retry, keyset cursor and ignoring a delayed page after refresh. Live PostgREST, real MFA sessions and browser end-to-end behavior remain unverified; this remains a guidance-only admin tool.
