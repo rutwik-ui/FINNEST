@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
 import { createRoot } from 'react-dom/client';
 import { ArrowLeft, ArrowRight, Menu, X, Home, SlidersHorizontal, FileText, CircleHelp, UserRound, ClipboardList, IndianRupee, Search, Handshake, Landmark, KeyRound, Building2, Check, Bookmark, Clock3, ChevronRight, ShieldAlert, LockKeyhole, Info, Plus, ExternalLink } from 'lucide-react';
 import './style.css';
@@ -7,37 +7,61 @@ import Admin from './Admin';
 import Guidance from './Guidance';
 import { MAX_PROJECTS, addProject, renameProject, removeProject } from './projects';
 import { VISIT_CHECKS, updateVisitCheck } from './visit';
+import { DRAFT_KEY, freshDraft, readDraft, writeDraft, deleteDraft } from './localDraft';
+import LocalDataSettings from './LocalDataSettings';
 
 const steps = [
-  {label:'Plan & Goals', icon:ClipboardList}, {label:'Budget & Finance', icon:IndianRupee},
-  {label:'Search Properties', icon:Search}, {label:'Site Visits & Shortlist', icon:FileText},
-  {label:'Legal & Documentation', icon:Handshake}, {label:'Home Loan & Approvals', icon:Landmark},
-  {label:'Finalize & Register', icon:KeyRound}, {label:'Move In', icon:Building2},
+  {label:'Requirements & budget', icon:ClipboardList, path:'/journey', section:'requirements'},
+  {label:'Developer checks', icon:Search, path:'/journey', section:'checks'},
+  {label:'Shortlist projects', icon:Bookmark, path:'/projects'},
+  {label:'Visit observations', icon:FileText, path:'/visit'},
+  {label:'Home loan guide', icon:Landmark},
+  {label:'Legal due diligence', icon:Handshake},
+  {label:'Financial due diligence', icon:IndianRupee},
+  {label:'Final review', icon:Check},
 ];
 const checks = [ ['track','Track record / delivery'], ['rera','Project RERA registration / disclosures'], ['title','Land ownership / title'], ['approvals','Approvals / sanctioned plans'], ['legal','Credible legal history'], ['financial','Financial stability where evidence exists'] ];
 const nav = [ ['/', 'Home', Home], ['/journey','Journey',SlidersHorizontal], ['/projects','Projects',FileText], ['/experts','Experts',CircleHelp], ['/profile','Profile',UserRound] ];
-const initial = { journey: 'New Property', budget:{}, location:[], configuration:[], checks:{}, visitChecks:{}, projects:[] };
-function readData(){try{let v=JSON.parse(localStorage.getItem('finnest-web-v1')); return v && typeof v==='object' ? {...initial,...v} : initial}catch{return initial}}
-function App(){
-  const [data,setData]=useState(readData), [path,setPath]=useState(location.pathname), [menu,setMenu]=useState(false), [section,setSection]=useState('requirements'), [showChoice,setShowChoice]=useState(false), [storageError,setStorageError]=useState(false);
+export function App(){
+  const [loaded]=useState(()=>{try{return readDraft(window.localStorage)}catch{return {data:freshDraft(),raw:null,issue:'unavailable'}}});
+  const [data,setData]=useState(loaded.data), [storageIssue,setStorageIssue]=useState(loaded.issue);
+  const dataRef=useRef(data), rawRef=useRef(loaded.raw), issueRef=useRef(loaded.issue), unsavedRef=useRef(false);
+  const [path,setPath]=useState(location.pathname), [menu,setMenu]=useState(false), [section,setSection]=useState('requirements'), [showChoice,setShowChoice]=useState(false);
   const [session,setSession]=useState(null), [authLoading,setAuthLoading]=useState(Boolean(supabase));
-  useEffect(()=>{try{localStorage.setItem('finnest-web-v1',JSON.stringify(data));setStorageError(false)}catch{setStorageError(true)}},[data]);
+  useEffect(()=>{const changed=e=>{if(e.storageArea===window.localStorage && (e.key===DRAFT_KEY || e.key===null) && e.newValue!==rawRef.current){issueRef.current='conflict';setStorageIssue('conflict')}};window.addEventListener('storage',changed);return()=>window.removeEventListener('storage',changed)},[]);
+  useEffect(()=>{const warn=e=>{if(unsavedRef.current){e.preventDefault();e.returnValue=''}};window.addEventListener('beforeunload',warn);return()=>window.removeEventListener('beforeunload',warn)},[]);
   useEffect(()=>{const pop=()=>setPath(location.pathname);addEventListener('popstate',pop);return()=>removeEventListener('popstate',pop)},[]);
   useEffect(()=>{if(!supabase)return; let active=true; const {data:{subscription}}=supabase.auth.onAuthStateChange((_event,next)=>{if(active){setSession(next);setAuthLoading(false)}}); return()=>{active=false;subscription.unsubscribe()}},[]);
   const go=(p)=>{history.pushState({},'',p);setPath(p);setMenu(false);window.scrollTo(0,0)};
-  const update=(patch)=>setData(d=>({...d,...patch}));
+  const update=(patch)=>{
+    const next={...dataRef.current,...patch};dataRef.current=next;setData(next);
+    unsavedRef.current=true;
+    if(issueRef.current==='invalid' || issueRef.current==='conflict')return;
+    let result;try{result=writeDraft(window.localStorage,rawRef.current,next)}catch{result={issue:'unavailable'}}
+    issueRef.current=result.issue;setStorageIssue(result.issue);if(!result.issue){rawRef.current=result.raw;unsavedRef.current=false;}
+  };
+  const removeLocalData=()=>{
+    if(issueRef.current==='conflict')return false;
+    let result;try{result=deleteDraft(window.localStorage,rawRef.current)}catch{result={issue:'unavailable'}}
+    issueRef.current=result.issue;setStorageIssue(result.issue);
+    if(result.issue)return false;
+    rawRef.current=null;unsavedRef.current=false;dataRef.current=freshDraft();setData(dataRef.current);setSection('requirements');return true;
+  };
   const choose=(name)=>{update({journey:name});setShowChoice(false)};
   const edited=Object.values(data.checks||{}).filter(x=>Object.values(x||{}).some(Boolean)).length;
   const completed=Object.values(data.checks||{}).filter(x=>x?.status==='Checked by you').length;
   const admin=path.toLowerCase()==='/adminlogin' || path.toLowerCase().startsWith('/admin');
   return <div className="app-shell">
     <header className="topbar"><button className="icon-button back" aria-label="Go back" onClick={()=>history.length>1?history.back():go('/')}><ArrowLeft/></button><button className="brand" onClick={()=>go('/')} aria-label="FINNEST home">F<span className="brand-house"><Home size={30}/></span>NNEST</button><div className="header-actions"><button className="journey-pill" onClick={()=>setShowChoice(true)}>{data.journey}</button><button className="icon-button" aria-label={menu?'Close menu':'Open menu'} aria-expanded={menu} onClick={()=>setMenu(!menu)}>{menu?<X/>:<Menu/>}</button></div>{menu&&<div className="menu-pop">{nav.map(([url,label,Icon])=><button key={url} onClick={()=>go(url)}><Icon size={18}/>{label}</button>)}<button onClick={()=>go('/guidance')}><Info size={18}/>Guidance</button><button onClick={()=>go('/Adminlogin')}><LockKeyhole size={18}/>Admin access</button></div>}</header>
-    {storageError&&<div className="storage-warning" role="alert">Your browser could not save changes. Check your browser storage settings before leaving.</div>}
-    {admin ? <Admin go={go} session={session} authLoading={authLoading}/> : <><Roadmap go={go} journey={data.journey}/><main className="main">{path==='/'?<Dashboard data={data} completed={completed} edited={edited} go={go} setSection={setSection} setShowChoice={setShowChoice}/>:path==='/journey'?<Journey data={data} update={update} section={section} setSection={setSection} go={go}/>:path==='/projects'?<Projects data={data} update={update} go={go}/>:path==='/visit'?<Visit data={data} update={update} go={go}/>:path==='/guidance'?<Guidance/>:path==='/experts'?<Experts/>:path==='/profile'?<Profile data={data} setShowChoice={setShowChoice} go={go} session={session} authLoading={authLoading}/>:<div className="page-head"><span className="eyebrow">FINNEST</span><h1>Page not found</h1><button className="primary compact" onClick={()=>go('/')}>Back home <ArrowRight size={19}/></button></div>}</main><BottomNav path={path} go={go}/></>}
+    {storageIssue&&<div className="storage-warning" role="alert">{storageIssue==='invalid'?'Saved browser data could not be read. It has not been overwritten. Changes on this page cannot be saved; use a compatible version or explicitly delete the local draft in Profile.':storageIssue==='conflict'?'Browser data changed in another tab. This tab cannot save or delete it. Reload to view the latest saved data; unsaved changes in this tab will be lost.':'Browser storage is unavailable or full. Your changes may not be saved; check storage settings before leaving.'}</div>}
+    {admin ? <Admin go={go} session={session} authLoading={authLoading}/> : <><Roadmap go={go} journey={data.journey} path={path} section={section} setSection={setSection}/><main className="main">{path==='/'?<Dashboard data={data} completed={completed} edited={edited} go={go} setSection={setSection} setShowChoice={setShowChoice}/>:path==='/journey'?<Journey data={data} update={update} section={section} setSection={setSection} go={go}/>:path==='/projects'?<Projects data={data} update={update} go={go}/>:path==='/visit'?<Visit data={data} update={update} go={go}/>:path==='/guidance'?<Guidance/>:path==='/experts'?<Experts/>:path==='/profile'?<Profile data={data} setShowChoice={setShowChoice} go={go} session={session} authLoading={authLoading} removeLocalData={removeLocalData}/>:<div className="page-head"><span className="eyebrow">FINNEST</span><h1>Page not found</h1><button className="primary compact" onClick={()=>go('/')}>Back home <ArrowRight size={19}/></button></div>}</main><BottomNav path={path} go={go}/></>}
     {showChoice&&<div className="modal-backdrop" onClick={()=>setShowChoice(false)}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="choose-heading" onClick={e=>e.stopPropagation()}><div className="modal-head"><span className="eyebrow">YOUR JOURNEY</span><button className="plain-icon" aria-label="Close" onClick={()=>setShowChoice(false)}><X/></button></div><h2 id="choose-heading">Choose your path</h2><p>Your selection is saved in this browser. The New Property checklist is available to explore.</p>{['New Property','Resale Property'].map(j=><button className={'choice '+(data.journey===j?'selected':'')} key={j} onClick={()=>choose(j)}><span><strong>{j}</strong><small>{j==='New Property'?'For a newly built or under-construction home':'For a home with a previous owner'}</small></span>{data.journey===j?<Check size={21}/>:<ChevronRight size={21}/>}</button>)}</div></div>}
   </div>
 }
-function Roadmap({go,journey}){return <div className="roadmap"><img src="/roadmap.png" alt=""/>{journey==='New Property' && <div className="roadmap-steps">{steps.map(({label,icon:Icon},i)=><button key={label} onClick={()=>go('/journey')} className={'road-step '+(i===0?'active':'')}><span className="step-number">{i+1}</span><span className="step-icon"><Icon size={21}/></span><span className="step-label">{label}</span></button>)}</div>}</div>}
+function Roadmap({go,journey,path,section,setSection}){return <div className="roadmap"><img src="/roadmap.png" alt=""/>{journey==='New Property' && <nav className="roadmap-steps" aria-label="New Property roadmap">{steps.map(({label,icon:Icon,path:target,section:targetSection},i)=>{
+ const active=path===target && (!targetSection || section===targetSection);
+ return <button key={label} type="button" disabled={!target} title={!target?'Not yet available on the website':undefined} aria-current={active?'step':undefined} onClick={()=>{if(targetSection)setSection(targetSection);go(target)}} className={'road-step '+(active?'active':'')}><span className="step-number">{i+1}</span><span className="step-icon"><Icon size={21}/></span><span className="step-label">{label}{!target && <span className="roadmap-unavailable"> · Soon</span>}</span></button>
+ })}</nav>}</div>}
 function Dashboard({data,completed,edited,go,setSection,setShowChoice}){return <>
   <div className="page-head"><span className="eyebrow">YOUR HOME-BUYING JOURNEY</span><h1>Your home-buying journey<span className="red-dot">.</span></h1><p className="intro">A clearer path to a place of your own.</p></div>
   <div className="dashboard-grid"><div className="left-stack">
@@ -72,7 +96,7 @@ function Visit({data,update,go}){
  <p className="footnote">Your entries are not independently verified. Status options are provisional; the reference does not show the expanded menu. Notes are saved in this browser, not to an account.</p><div className="step-actions"><button className="outline-button" onClick={()=>go('/projects')}><ArrowLeft size={17}/> Back to shortlist</button><button className="outline-button" onClick={()=>go('/')}>Save for later · Home</button></div><p className="footnote visit-next">Resident feedback notes (step 4B) will be available in a later phase.</p></>
 }
 function Experts(){return <><div className="page-head"><span className="eyebrow">THE RIGHT HELP, WHEN YOU NEED IT</span><h1>Find your experts<span className="red-dot">.</span></h1><p>Know which professionals can help at different points in your journey.</p></div><div className="notice"><Info size={20}/><span>These are guidance categories, not a verified expert directory. Contact and profiles are not yet available.</span></div><div className="expert-grid">{[['Property lawyer','Title, ownership and agreement review'],['Chartered accountant','Financial checks and tax planning'],['Home loan advisor','Eligibility and loan documentation'],['Property consultant','Shortlisting and market comparisons'],['Technical expert','Construction quality and structural checks'],['Valuation expert','Fair market price assessment']].map(([n,d])=><div className="card expert-card" key={n}><div className="project-icon"><UserRound/></div><h3>{n}</h3><p>{d}</p></div>)}</div></>}
-function Profile({data,setShowChoice,go,session,authLoading}){
+function Profile({data,setShowChoice,go,session,authLoading,removeLocalData}){
  const [email,setEmail]=useState(''), [password,setPassword]=useState(''), [mode,setMode]=useState('signin'), [busy,setBusy]=useState(false), [message,setMessage]=useState(''), [error,setError]=useState('');
  async function submit(e){
   e.preventDefault(); if(!supabase || busy)return;
@@ -93,8 +117,9 @@ function Profile({data,setShowChoice,go,session,authLoading}){
  <p>Account authentication uses Supabase. Your current guest drafts and project shortlist remain on this browser and are not backed up or synced yet.</p>
  {!supabase?<div className="notice"><Info size={20}/><span>Account sign-in is not configured. See the setup instructions in the project README.</span></div>:authLoading?<p role="status">Checking account…</p>:session?<><div className="profile-line"><span>Signed in as</span><strong>{session.user.email}</strong></div><button className="outline-button" disabled={busy} onClick={signOut}>Sign out</button></>:<><div className="auth-tabs" role="group" aria-label="Account action"><button type="button" className={mode==='signin'?'active':''} onClick={()=>{setMode('signin');setError('');setMessage('')}}>Sign in</button><button type="button" className={mode==='signup'?'active':''} onClick={()=>{setMode('signup');setError('');setMessage('')}}>Create account</button></div><form className="auth-form" onSubmit={submit}><label>Email<input type="email" autoComplete="email" required value={email} onChange={e=>setEmail(e.target.value)} /></label><label>Password<input type="password" autoComplete={mode==='signup'?'new-password':'current-password'} required minLength={mode==='signup'?8:1} value={password} onChange={e=>setPassword(e.target.value)} /></label>{mode==='signup'&&<p className="footnote">Use at least eight characters. Email confirmation may be required; redirect URLs must be configured in Supabase.</p>}<button className="primary compact" disabled={busy} type="submit">{busy?'Please wait…':mode==='signup'?'Create account':'Sign in'} <ArrowRight size={17}/></button></form></>}
  {error&&<p className="auth-error" role="alert">{error}</p>}{message&&<p className="auth-message" role="status">{message}</p>}</section>
- <section className="card form-card profile-card"><h3>Journey preferences</h3><p>Guest data remains on this browser, even after you sign in. Avoid entering sensitive details on a shared device.</p><div className="profile-line"><span>Selected journey</span><strong>{data.journey}</strong></div><button className="outline-button" onClick={()=>setShowChoice(true)}>Change journey</button></section><section className="card form-card"><h3>About FINNEST</h3><p>Buying a home is a big decision. FINNEST helps you organize the process, but it does not replace qualified legal, financial or tax advice.</p><button className="text-link" onClick={()=>go('/Adminlogin')}>Admin access <ExternalLink size={15}/></button></section></>
+ <section className="card form-card profile-card"><h3>Journey preferences</h3><p>Guest data remains on this browser, even after you sign in. Avoid entering sensitive details on a shared device.</p><div className="profile-line"><span>Selected journey</span><strong>{data.journey}</strong></div><button className="outline-button" onClick={()=>setShowChoice(true)}>Change journey</button></section><LocalDataSettings onDelete={removeLocalData}/><section className="card form-card"><h3>About FINNEST</h3><p>Buying a home is a big decision. FINNEST helps you organize the process, but it does not replace qualified legal, financial or tax advice.</p><button className="text-link" onClick={()=>go('/Adminlogin')}>Admin access <ExternalLink size={15}/></button></section></>
 }
 function BottomNav({path,go}){return <nav className="bottom-nav" aria-label="Main navigation">{nav.map(([url,label,Icon])=><button key={url} className={(path===url || (path==='/visit' && url==='/journey'))?'active':''} onClick={()=>go(url)}><Icon size={22}/><span>{label}</span></button>)}</nav>}
 
-createRoot(document.getElementById('root')).render(<App/>);
+const root = document.getElementById('root');
+if (root) createRoot(root).render(<App/>);

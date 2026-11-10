@@ -12,3 +12,5 @@
 .admin-filters { display: flex; gap: 1rem; flex-wrap: wrap; margin: 1rem 0; }
 .admin-filters label { display: flex; flex-direction: column; gap: .4rem; font-weight: 600; flex: 1 1 180px; }
 .admin-filters select { border: 1px solid #d9d9d9; border-radius: 8px; background: #fff; padding: .7rem; color: inherit; font: inherit; }
+.road-step:disabled { opacity: .6; cursor: not-allowed; }
+.roadmap-unavailable { font-weight: 500; }
