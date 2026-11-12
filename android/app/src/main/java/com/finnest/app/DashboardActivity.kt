@@ -21,22 +21,23 @@ class DashboardActivity : AppCompatActivity() {
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(getColor(R.color.cream)) }
         setContentView(root)
         val heading = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(dp(16), 0, dp(12), 0); setBackgroundColor(getColor(R.color.surface)) }
-        root.addView(heading, LinearLayout.LayoutParams(-1, dp(64)))
+        root.addView(heading, LinearLayout.LayoutParams(-1, dp(60)))
         val brand = FinnestUi.brand(this)
         heading.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         heading.addView(Button(this).apply {
             text = "Change journey"; isAllCaps = false; textSize = 12f
             setOnClickListener { startActivity(Intent(this@DashboardActivity, MainActivity::class.java).putExtra("change_journey", true).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish() }
         })
+        FinnestUi.header(this, heading, "new_property")
         val scroll = ScrollView(this).apply { isFillViewport = true }
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
-        val page = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(20), 0, dp(20), dp(28)) }
+        val page = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), 0, dp(16), dp(28)) }
         scroll.addView(page)
         roadmap = JourneyRoadmapView(this, "new_property")
-        page.addView(roadmap, LinearLayout.LayoutParams(-1, -2).apply { leftMargin = -dp(20); rightMargin = -dp(20) })
+        page.addView(roadmap, LinearLayout.LayoutParams(-1, -2).apply { leftMargin = -dp(16); rightMargin = -dp(16) })
         addText(page, "YOUR HOME-BUYING JOURNEY", 12f, R.color.red, true, 26)
-        addText(page, greeting(), 30f, R.color.navy, true, 8, true)
-        addText(page, "A clear next step, at your pace.", 16f, R.color.muted, false, 8)
+        addText(page, "Your home-buying journey.", 34f, R.color.navy, true, 8, true)
+        addText(page, "A clearer path to a place of your own.", 14f, R.color.muted, false, 8)
         val overview = panel(page)
         addText(overview, "YOUR JOURNEY", 12f, R.color.red, true, 0)
         addText(overview, "New Property", 22f, R.color.navy, true, 8, true)
@@ -71,6 +72,7 @@ class DashboardActivity : AppCompatActivity() {
         val privacy = panel(page)
         addText(privacy, "A note on your data", 16f, R.color.navy, true, 0)
         addText(privacy, "This is a local guest journey. Android account sync, documents and expert connections are not available yet.", 14f, R.color.muted, false, 6)
+        FinnestUi.styleTree(page)
     }
     private fun text(value: String, size: Float, color: Int, bold: Boolean) = TextView(this).apply {
         text = value; textSize = size; setTextColor(getColor(color)); if (bold) setTypeface(typeface, Typeface.BOLD); setLineSpacing(dp(2).toFloat(), 1f)

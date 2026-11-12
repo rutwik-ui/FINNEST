@@ -26,6 +26,7 @@ class ProfileSettingsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater); setContentView(binding.root)
+        FinnestUi.decorate(this, if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") "resale_property" else "new_property", roadmap = false)
         binding.stepLabel.text = "YOUR PROFILE"; binding.screenTitle.text = "Profile & settings"
         binding.screenDescription.text = "Review your device-only profile and data settings."
         binding.screenNotice.text = "This Android app does not have account sign-in or cloud backup yet."

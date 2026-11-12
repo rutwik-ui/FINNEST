@@ -1,19 +1,19 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="match_parent" android:layout_height="match_parent" android:orientation="vertical" android:background="@color/cream">
-    <LinearLayout android:layout_width="match_parent" android:layout_height="64dp" android:gravity="center_vertical" android:paddingHorizontal="20dp" android:background="@color/surface">
+    <LinearLayout android:layout_width="match_parent" android:layout_height="60dp" android:gravity="center_vertical" android:paddingHorizontal="16dp" android:background="@color/surface">
         <ImageButton android:id="@+id/back" android:layout_width="44dp" android:layout_height="44dp" android:background="@drawable/card" android:src="@android:drawable/ic_media_previous" android:contentDescription="@string/back" android:tint="@color/navy" />
         <include layout="@layout/brand_logo" />
     </LinearLayout>
     <ScrollView android:layout_width="match_parent" android:layout_height="0dp" android:layout_weight="1" android:fillViewport="true">
-      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="24dp">
-        <TextView android:id="@+id/eyebrow" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/red" android:letterSpacing="0" android:textStyle="bold" android:textSize="12sp" />
-        <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:textColor="@color/navy" android:textStyle="bold" android:textSize="30sp"  android:fontFamily="@font/plus_jakarta" />
-        <TextView android:id="@+id/description" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="@color/muted" android:textSize="16sp" android:lineSpacingExtra="3dp" />
+      <LinearLayout android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:padding="16dp">
+        <TextView android:id="@+id/eyebrow" android:layout_width="match_parent" android:layout_height="wrap_content" android:textColor="@color/red" android:letterSpacing="0" android:textStyle="bold" android:textSize="11sp" />
+        <TextView android:id="@+id/title" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="10dp" android:textColor="@color/navy" android:textStyle="bold" android:textSize="34sp"  android:fontFamily="@font/plus_jakarta" />
+        <TextView android:id="@+id/description" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="12dp" android:textColor="@color/muted" android:textSize="14sp" android:lineSpacingMultiplier="1.6" />
         <ImageView android:id="@+id/illustration" android:layout_width="match_parent" android:layout_height="210dp" android:layout_marginTop="22dp" android:scaleType="centerCrop" android:contentDescription="" android:importantForAccessibility="no" />
         <LinearLayout android:id="@+id/details" android:layout_width="match_parent" android:layout_height="wrap_content" android:orientation="vertical" android:layout_marginTop="16dp" />
-        <ProgressBar android:id="@+id/progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="22dp" android:max="3" android:progressTint="@color/red" android:progressBackgroundTint="#E8E7E9" />
+        <ProgressBar android:id="@+id/progress" style="?android:attr/progressBarStyleHorizontal" android:layout_width="match_parent" android:layout_height="8dp" android:layout_marginTop="22dp" android:max="3" android:progressTint="@color/red" android:progressBackgroundTint="@color/line" />
         <TextView android:id="@+id/caption" android:layout_width="match_parent" android:layout_height="wrap_content" android:layout_marginTop="14dp" android:textColor="@color/muted" android:textSize="14sp" />
         <Space android:layout_width="1dp" android:layout_height="24dp" android:layout_weight="1" />
-        <com.google.android.material.button.MaterialButton android:id="@+id/primary" android:layout_width="match_parent" android:layout_height="56dp" android:text="@string/continue_label" android:textAllCaps="false" android:textSize="16sp" />
+        <com.google.android.material.button.MaterialButton android:id="@+id/primary" android:layout_width="match_parent" android:layout_height="56dp" android:text="@string/continue_label" android:textAllCaps="false" android:textSize="14sp" android:lineSpacingMultiplier="1.6" />
         <TextView android:id="@+id/secondary" android:layout_width="match_parent" android:layout_height="52dp" android:gravity="center" android:text="@string/skip" android:textColor="@color/red" android:textStyle="bold" android:textSize="16sp" android:clickable="true" android:focusable="true" />
       </LinearLayout>
     </ScrollView>

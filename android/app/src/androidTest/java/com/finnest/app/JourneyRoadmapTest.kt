@@ -44,12 +44,10 @@ class JourneyRoadmapTest {
     private fun capture(name: String) {
         instrumentation.waitForIdleSync()
         val bitmap = instrumentation.uiAutomation.takeScreenshot() ?: throw AssertionError("Screenshot unavailable")
-        val dir = File(context.getExternalFilesDir(null), "roadmap-screenshots").apply { mkdirs() }
+        val dir = File(context.filesDir, "roadmap-screenshots").apply { mkdirs() }
         File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         bitmap.recycle()
-        instrumentation.uiAutomation.executeShellCommand("mkdir -p /data/local/tmp/roadmap-screenshots; screencap -p /data/local/tmp/roadmap-screenshots/$name.png").use { descriptor ->
-            android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).use { it.readBytes() }
-        }
+
     }
     @Test fun editedFormUpdatesDurableProgressAndReopens() {
         val key = "loan"

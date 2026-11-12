@@ -38,6 +38,7 @@ class RemindersActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        FinnestUi.decorate(this, if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") "resale_property" else "new_property", roadmap = false)
         binding.stepLabel.text = "A QUIETER WAY TO KEEP TRACK"
         binding.screenTitle.text = "Reminders"
         binding.screenDescription.text = "Keep dated follow-up notes on this device."
