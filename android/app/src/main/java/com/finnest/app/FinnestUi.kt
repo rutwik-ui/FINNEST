@@ -357,7 +357,7 @@ object FinnestUi {
                 addView(label(activity, title, 13f, 700, if (on) 0xFFD93239.toInt() else 0xFF52606C.toInt()).apply { setSingleLine(true) }, LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(activity, 10) })
                 if (on) addView(ImageView(activity).apply { setImageResource(R.drawable.journey_arrow); imageTintList = ColorStateList.valueOf(0xFFD93239.toInt()); rotation = 0f },
                     LinearLayout.LayoutParams(dp(activity, 14), dp(activity, 14)).apply { marginStart = dp(activity, 12) })
-                setOnClickListener { if (!on) leave(activity, "new_property", JourneyNavigation.intent(activity, id)) }
+                setOnClickListener { if (!on) JourneyNavigation.intent(activity, id)?.let { leave(activity, "new_property", it) } }
             }, LinearLayout.LayoutParams(-2, dp(activity, 40)))
         }
         head.addView(tabsScroll, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(activity, 21) })
