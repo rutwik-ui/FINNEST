@@ -36,7 +36,7 @@ jobs:
           target: google_apis
           disable-animations: true
           emulator-options: -no-window -gpu swiftshader_indirect -no-snapshot -noaudio -no-boot-anim -camera-back none
-          script: bash -o pipefail -c 'cd android; ./gradlew --no-daemon connectedDebugAndroidTest 2>&1 | tee /tmp/finnest-emulator-build.log; status=${PIPESTATUS[0]}; mkdir -p roadmap-screenshots; for name in $(adb shell run-as com.finnest.app ls files/roadmap-screenshots/ 2>/dev/null | tr -d "\r"); do adb exec-out run-as com.finnest.app cat files/roadmap-screenshots/$name > roadmap-screenshots/$name; done; exit "$status"'
+          script: bash -o pipefail -c 'cd android; ./gradlew --no-daemon connectedDebugAndroidTest 2>&1 | tee /tmp/finnest-emulator-build.log; status=${PIPESTATUS[0]}; exit "$status"'
       - name: Summarize instrumentation failures
         if: failure()
         run: |
@@ -71,6 +71,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: android-journey-screenshots
-          path: android/roadmap-screenshots/
+          path: android/app/build/outputs/connected_android_test_additional_output/
           if-no-files-found: ignore
           retention-days: 14

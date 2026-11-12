@@ -44,7 +44,7 @@ class JourneyRoadmapTest {
     private fun capture(name: String) {
         instrumentation.waitForIdleSync()
         val bitmap = instrumentation.uiAutomation.takeScreenshot() ?: throw AssertionError("Screenshot unavailable")
-        val dir = File(context.filesDir, "roadmap-screenshots").apply { mkdirs() }
+        val dir = File(InstrumentationRegistry.getArguments().getString("additionalTestOutputDir") ?: throw AssertionError("Missing test output directory"), "roadmap-screenshots").apply { mkdirs() }
         File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         bitmap.recycle()
 

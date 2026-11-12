@@ -19,7 +19,7 @@ class VisualScreensTest {
         ActivityScenario.launch<Activity>(intent).use {
             SystemClock.sleep(1400); inst.waitForIdleSync()
             val image = inst.uiAutomation.takeScreenshot() ?: throw AssertionError("No screen for $name")
-            val dir = File(context.filesDir, "roadmap-screenshots").apply { mkdirs() }
+            val dir = File(InstrumentationRegistry.getArguments().getString("additionalTestOutputDir") ?: throw AssertionError("Missing test output directory"), "roadmap-screenshots").apply { mkdirs() }
             File(dir, "$name.png").outputStream().use { out -> image.compress(Bitmap.CompressFormat.PNG, 100, out) }
             image.recycle()
         }
