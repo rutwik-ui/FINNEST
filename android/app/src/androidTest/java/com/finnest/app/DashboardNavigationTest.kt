@@ -85,7 +85,7 @@ class DashboardNavigationTest {
             onView(allOf(isAssignableFrom(EditText::class.java), withContentDescription("Your next actions")))
                 .perform(scrollTo(), replaceText(value))
             onView(withId(R.id.next)).perform(click())
-            onView(withText("My Journey")).check(matches(isDisplayed()))
+            onView(withText("My Journey")).perform(scrollTo()).check(matches(isDisplayed()))
             onView(withId(R.id.back_bottom)).perform(click())
             onView(withText("Your journey steps")).perform(scrollTo()).check(matches(isDisplayed()))
             onView(withText("Open final review  →")).perform(scrollTo(), click())
