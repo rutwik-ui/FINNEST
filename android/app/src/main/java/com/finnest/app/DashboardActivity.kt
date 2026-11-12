@@ -32,9 +32,11 @@ class DashboardActivity : AppCompatActivity() {
         val scroll = ScrollView(this).apply { isFillViewport = true }
         root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
         val page = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), 0, dp(16), dp(28)) }
-        scroll.addView(page)
+        val outer = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }
+        scroll.addView(outer)
         roadmap = JourneyRoadmapView(this, "new_property")
-        page.addView(roadmap, LinearLayout.LayoutParams(-1, -2).apply { leftMargin = -dp(16); rightMargin = -dp(16) })
+        outer.addView(roadmap, LinearLayout.LayoutParams(-1, -2))
+        outer.addView(page, LinearLayout.LayoutParams(-1, -2))
         addText(page, "YOUR HOME-BUYING JOURNEY", 12f, R.color.red, true, 26)
         addText(page, "Your home-buying journey.", 34f, R.color.navy, true, 8, true)
         addText(page, "A clearer path to a place of your own.", 14f, R.color.muted, false, 8)

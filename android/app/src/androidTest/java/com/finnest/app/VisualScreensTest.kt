@@ -22,6 +22,18 @@ class VisualScreensTest {
             val dir = File(InstrumentationRegistry.getArguments().getString("additionalTestOutputDir") ?: throw AssertionError("Missing test output directory"), "roadmap-screenshots").apply { mkdirs() }
             File(dir, "$name.png").outputStream().use { out -> image.compress(Bitmap.CompressFormat.PNG, 100, out) }
             image.recycle()
+            it.onActivity { activity ->
+                fun scroll(view: android.view.View) {
+                    if (view is android.widget.ScrollView) view.fullScroll(android.view.View.FOCUS_DOWN)
+                    if (view is android.widget.HorizontalScrollView) view.fullScroll(android.view.View.FOCUS_RIGHT)
+                    if (view is android.view.ViewGroup) (0 until view.childCount).forEach { index -> scroll(view.getChildAt(index)) }
+                }
+                scroll(activity.findViewById(android.R.id.content))
+            }
+            inst.waitForIdleSync(); SystemClock.sleep(200)
+            val bottom = inst.uiAutomation.takeScreenshot() ?: throw AssertionError("No footer for $name")
+            File(dir, "$name-bottom.png").outputStream().use { out -> bottom.compress(Bitmap.CompressFormat.PNG, 100, out) }
+            bottom.recycle()
         }
     }
     @Test fun captureAllNativeScreens() {

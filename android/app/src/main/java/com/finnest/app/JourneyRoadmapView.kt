@@ -68,7 +68,8 @@ class JourneyRoadmapView(context: Context, private val scope: String, private va
                 }
                 setOnClickListener { if (!active) open(step.id) }
             }
-            strip.addView(row, LayoutParams(-2, dp(52)).apply { marginEnd = dp(8) })
+            val titleWidth = caption(step.title, 12f, R.color.ink_secondary, true).paint.measureText(step.title).toInt()
+            strip.addView(row, LayoutParams(titleWidth + dp(73), dp(52)).apply { marginEnd = dp(8) })
             row.addView(caption((index + 1).toString(), 11f, R.color.ink_secondary), LayoutParams(dp(12), -2))
             row.addView(ImageView(context).apply {
                 setImageResource(step.icon)

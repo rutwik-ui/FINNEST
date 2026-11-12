@@ -26,7 +26,7 @@ object FinnestUi {
     fun brand(context: Context): LinearLayout = LinearLayout(context).apply {
         orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; contentDescription = "FINNEST"
         fun word(value: String) = TextView(context).apply {
-            text = value; textSize = 18f; letterSpacing = 0f; includeFontPadding = false
+            text = value; textSize = 18f; letterSpacing = 0f; includeFontPadding = false; setSingleLine(true)
             setTextColor(context.getColor(R.color.navy)); typeface = font(context, 800)
         }
         addView(word("F")); addView(ImageView(context).apply {
@@ -79,7 +79,8 @@ object FinnestUi {
         header.setPadding(dp(activity, 16), 0, dp(activity, 16), 0)
         header.setBackgroundColor(activity.getColor(R.color.surface))
         header.layoutParams.height = dp(activity, 60)
-        header.addView(brand(activity), LinearLayout.LayoutParams(0, -2, 1f))
+        header.addView(brand(activity), LinearLayout.LayoutParams(-2, -2))
+        header.addView(Space(activity), LinearLayout.LayoutParams(0, 1, 1f))
         header.addView(TextView(activity).apply {
             text = if (scope == "resale_property") "Resale Property" else "New Property"
             textSize = 12f; typeface = font(activity, 700); setTextColor(activity.getColor(R.color.red_dark))
@@ -162,8 +163,13 @@ object FinnestUi {
             it.background = shape(activity, R.color.blush, R.color.red_line, 12)
             it.textSize = 13f; it.setTextColor(activity.getColor(R.color.ink_secondary)); it.setLineSpacing(0f, 1.6f)
         }
-        if (roadmap) body.addView(JourneyRoadmapView(activity, scope, current), 0, LinearLayout.LayoutParams(-1, -2).apply {
-            leftMargin = -body.paddingLeft; rightMargin = -body.paddingRight; topMargin = -body.paddingTop; bottomMargin = dp(activity, 24)
-        })
+        if (roadmap) {
+            scroll.removeView(body)
+            val outer = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL }
+            outer.addView(JourneyRoadmapView(activity, scope, current), LinearLayout.LayoutParams(-1, -2))
+            outer.addView(body, LinearLayout.LayoutParams(-1, -2))
+            scroll.addView(outer)
+        }
+
     }
 }
