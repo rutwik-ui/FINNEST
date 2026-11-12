@@ -27,6 +27,7 @@ class LoanGuideActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        FinnestUi.decorate(this, journey, "loan")
         binding.stepLabel.text = "STEP 5 OF 8 · NEW PROPERTY"
         binding.screenTitle.text = "Home loan guide"
         binding.screenDescription.text = "Explore an illustrative monthly payment and prepare questions for lenders."

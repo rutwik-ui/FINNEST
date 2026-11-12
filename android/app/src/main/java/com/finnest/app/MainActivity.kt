@@ -23,6 +23,7 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        binding.back.visibility = View.GONE
         model = ViewModelProvider(this)[EntryViewModel::class.java]
         if (savedInstanceState == null && prefs.getBoolean("intro_complete", false)) model.page = 3
         model.selected = model.selected ?: prefs.getString("journey", null)

@@ -21,6 +21,7 @@ class JourneySummaryActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        FinnestUi.decorate(this, "new_property", "review")
         filterIndex = savedInstanceState?.getInt("filter", 0)?.coerceIn(JourneySummary.filters.indices) ?: 0
         binding.stepLabel.text = "YOUR PROGRESS"
         binding.screenTitle.text = "My Journey"

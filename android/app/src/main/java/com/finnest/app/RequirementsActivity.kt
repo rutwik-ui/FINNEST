@@ -24,6 +24,7 @@ class RequirementsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityRequirementsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        FinnestUi.decorate(this, "new_property", "requirements")
         binding.back.setOnClickListener { leaveWhenSaved() }
         binding.backBottom.setOnClickListener { leaveWhenSaved() }
         binding.saveLater.setOnClickListener { if (loaded) afterSaves { DashboardActivity.show(this) } else DashboardActivity.show(this) }

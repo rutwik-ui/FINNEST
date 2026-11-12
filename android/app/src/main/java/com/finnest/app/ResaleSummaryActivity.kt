@@ -17,6 +17,7 @@ class ResaleSummaryActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater); setContentView(binding.root)
+        FinnestUi.decorate(this, "resale_property", "summary")
         binding.stepLabel.text = "YOUR RESALE JOURNEY"
         binding.screenTitle.text = "Resale journey summary"
         binding.screenDescription.text = "A view of your locally saved notes and planning preferences."

@@ -30,6 +30,7 @@ class FinancialDueDiligenceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        FinnestUi.decorate(this, journey, "financial")
         binding.stepLabel.text = "STEP 7 OF 8 · NEW PROPERTY"
         binding.screenTitle.text = "Financial due diligence"
         binding.screenDescription.text = "Record costs and loan terms you want to clarify. Rates and fees are not supplied here."

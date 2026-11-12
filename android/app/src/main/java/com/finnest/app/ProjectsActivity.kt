@@ -29,6 +29,7 @@ class ProjectsActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityProjectsBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        FinnestUi.decorate(this, "new_property", "projects")
         binding.back.setOnClickListener { leaveWhenSaved() }
         binding.backBottom.setOnClickListener { leaveWhenSaved() }
         binding.saveLater.setOnClickListener { if (loaded) afterSaves { DashboardActivity.show(this) } else DashboardActivity.show(this) }

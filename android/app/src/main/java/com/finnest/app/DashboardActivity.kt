@@ -14,20 +14,26 @@ import androidx.core.content.res.ResourcesCompat
 
 /** A local-data entry point: links are available regardless of a user's chosen order. */
 class DashboardActivity : AppCompatActivity() {
+    private lateinit var roadmap: JourneyRoadmapView
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        val scroll = ScrollView(this).apply { setBackgroundColor(getColor(R.color.cream)); isFillViewport = true }
-        val page = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(22), dp(22), dp(22), dp(28)) }
-        scroll.addView(page); setContentView(scroll)
-        val heading = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
-        page.addView(heading, LinearLayout.LayoutParams(-1, -2))
-        val brand = text("FINNEST", 20f, R.color.navy, true).apply { letterSpacing = .12f }
+        val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(getColor(R.color.cream)) }
+        setContentView(root)
+        val heading = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(dp(16), 0, dp(12), 0); setBackgroundColor(getColor(R.color.surface)) }
+        root.addView(heading, LinearLayout.LayoutParams(-1, dp(64)))
+        val brand = FinnestUi.brand(this)
         heading.addView(brand, LinearLayout.LayoutParams(0, -2, 1f))
         heading.addView(Button(this).apply {
             text = "Change journey"; isAllCaps = false; textSize = 12f
             setOnClickListener { startActivity(Intent(this@DashboardActivity, MainActivity::class.java).putExtra("change_journey", true).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish() }
         })
+        val scroll = ScrollView(this).apply { isFillViewport = true }
+        root.addView(scroll, LinearLayout.LayoutParams(-1, 0, 1f))
+        val page = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(20), 0, dp(20), dp(28)) }
+        scroll.addView(page)
+        roadmap = JourneyRoadmapView(this, "new_property")
+        page.addView(roadmap, LinearLayout.LayoutParams(-1, -2).apply { leftMargin = -dp(20); rightMargin = -dp(20) })
         addText(page, "YOUR HOME-BUYING JOURNEY", 12f, R.color.red, true, 26)
         addText(page, greeting(), 30f, R.color.navy, true, 8, true)
         addText(page, "A clear next step, at your pace.", 16f, R.color.muted, false, 8)
@@ -71,7 +77,7 @@ class DashboardActivity : AppCompatActivity() {
     }
     private fun addText(parent: LinearLayout, value: String, size: Float, color: Int, bold: Boolean, margin: Int, heading: Boolean = false) {
         val view = text(value, size, color, bold)
-        if (heading) view.typeface = Typeface.create(ResourcesCompat.getFont(this, R.font.montserrat), Typeface.BOLD)
+        if (heading) view.typeface = Typeface.create(ResourcesCompat.getFont(this, R.font.plus_jakarta), Typeface.BOLD)
         parent.addView(view, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(margin) })
     }
     private fun panel(parent: LinearLayout): LinearLayout = LinearLayout(this).apply {
@@ -81,6 +87,7 @@ class DashboardActivity : AppCompatActivity() {
     private fun open(id: String) {
         JourneyNavigation.intent(this, id)?.let { startActivity(it) }
     }
+    override fun onResume() { super.onResume(); if (::roadmap.isInitialized) roadmap.refresh() }
     private fun greeting(): String = when (java.util.Calendar.getInstance().get(java.util.Calendar.HOUR_OF_DAY)) {
         in 5..11 -> "Good morning"; in 12..16 -> "Good afternoon"; else -> "Good evening"
     }

@@ -22,6 +22,7 @@ class ResaleRequirementsActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater); setContentView(binding.root)
+        FinnestUi.decorate(this, scope, "requirements")
         binding.stepLabel.text = "RESALE · PLANNING NOTES"
         binding.screenTitle.text = "Requirements & location"
         binding.screenDescription.text = "Optional preferences and estimated costs for your resale search."

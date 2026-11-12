@@ -17,6 +17,7 @@ class ResaleOverviewActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater); setContentView(binding.root)
+        FinnestUi.decorate(this, "resale_property")
         binding.stepLabel.text = "A SEPARATE HOME-BUYING JOURNEY"
         binding.screenTitle.text = "Resale Property Journey"
         binding.screenDescription.text = "Explore key areas when considering a resale home, at your own pace."
@@ -47,6 +48,11 @@ class ResaleOverviewActivity : AppCompatActivity() {
         })
     }
     private fun openRequirements() { startActivity(Intent(this, ResaleRequirementsActivity::class.java)) }
+    override fun onResume() { super.onResume(); refreshRoadmaps(binding.root) }
+    private fun refreshRoadmaps(view: View) {
+        if (view is JourneyRoadmapView) view.refresh()
+        if (view is android.view.ViewGroup) (0 until view.childCount).forEach { refreshRoadmaps(view.getChildAt(it)) }
+    }
     private fun changeJourney() { startActivity(Intent(this, MainActivity::class.java).putExtra("change_journey", true).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP)); finish() }
     companion object {
         fun show(context: Context) { context.startActivity(Intent(context, ResaleOverviewActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP)) }

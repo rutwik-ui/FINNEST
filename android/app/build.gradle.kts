@@ -11,8 +11,8 @@ android {
         applicationId = "com.finnest.app"
         minSdk = 24
         targetSdk = 35
-        versionCode = 1
-        versionName = "0.2.0"
+        versionCode = 2
+        versionName = "0.3.0"
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         // This is the same public-client key used by the website; RLS remains the authorization boundary.
         buildConfigField("String", "GUIDANCE_URL", "\"https://wyjjzynjoorjmpffndzu.supabase.co\"")

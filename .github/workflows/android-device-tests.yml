@@ -66,3 +66,16 @@ jobs:
             android/app/build/outputs/androidTest-results/connected/
           if-no-files-found: ignore
           retention-days: 14
+      - name: Collect journey screenshots
+        if: always()
+        run: |
+          mkdir -p android/roadmap-screenshots
+          adb pull /sdcard/Android/data/com.finnest.app/files/roadmap-screenshots/. android/roadmap-screenshots/ || true
+      - name: Upload journey screenshots
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-journey-screenshots
+          path: android/roadmap-screenshots/
+          if-no-files-found: ignore
+          retention-days: 14

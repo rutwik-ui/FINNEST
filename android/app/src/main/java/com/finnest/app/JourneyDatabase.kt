@@ -43,6 +43,15 @@ abstract class JourneyDatabase : RoomDatabase() {
 /** Serializes reads and writes across screens and activity recreation. */
 object DraftRepository {
     private val executor = Executors.newSingleThreadExecutor()
+    private val observers = java.util.concurrent.CopyOnWriteArraySet<(String) -> Unit>()
+    fun observeSaved(listener: (String) -> Unit) { observers.add(listener) }
+    fun removeSavedObserver(listener: (String) -> Unit) { observers.remove(listener) }
+    private fun notifySaved(journey: String) { observers.forEach { it(journey) } }
+    /** Durable rows only: failed in-memory edits must never inflate the saved-progress bar. */
+    fun loadSaved(context: Context, journey: String, callback: (Result<Map<String, String>>) -> Unit) {
+        val app = context.applicationContext
+        executor.execute { callback(runCatching { JourneyDatabase.get(app).drafts().fields(journey).associate { it.fieldKey to it.value } }) }
+    }
     // Retain failed edits in memory until explicitly retried; never mistake a failed write for a save.
     private val failed = mutableMapOf<Pair<String, String>, String>()
     fun load(context: Context, journey: String, callback: (Result<Map<String, String>>) -> Unit) {
@@ -63,6 +72,7 @@ object DraftRepository {
             failed.filterKeys { it.first == journey }.toMap().forEach { (key, value) ->
                 if (runCatching { JourneyDatabase.get(app).drafts().put(DraftField(key.first, key.second, value)) }.isSuccess) failed.remove(key)
             }
+            notifySaved(journey)
             callback(failed.keys.none { it.first == journey })
         }
     }
@@ -72,7 +82,7 @@ object DraftRepository {
         val scopes = journeys.toSet()
         executor.execute {
             val result = runCatching { JourneyDatabase.get(app).drafts().deleteScopes(scopes.toList()) }
-            if (result.isSuccess) failed.keys.removeAll { it.first in scopes }
+            if (result.isSuccess) { failed.keys.removeAll { it.first in scopes }; scopes.forEach(::notifySaved) }
             callback(result)
         }
     }
@@ -80,7 +90,7 @@ object DraftRepository {
         val app = context.applicationContext
         executor.execute {
             val pair = journey to key
-            if (runCatching { JourneyDatabase.get(app).drafts().put(DraftField(journey, key, value)) }.isSuccess) failed.remove(pair)
+            if (runCatching { JourneyDatabase.get(app).drafts().put(DraftField(journey, key, value)) }.isSuccess) { failed.remove(pair); notifySaved(journey) }
             else failed[pair] = value
         }
     }

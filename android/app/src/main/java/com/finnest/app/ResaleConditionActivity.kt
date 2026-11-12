@@ -30,6 +30,7 @@ class ResaleConditionActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater); setContentView(binding.root)
         val current = section ?: run { finish(); return }
+        FinnestUi.decorate(this, scope, current.id)
         binding.stepLabel.text = "RESALE PROPERTY · YOUR REVIEW"
         binding.screenTitle.text = current.title
         binding.screenDescription.text = current.description

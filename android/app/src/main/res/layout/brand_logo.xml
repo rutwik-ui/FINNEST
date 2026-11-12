@@ -1,0 +1,5 @@
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android" android:layout_width="wrap_content" android:layout_height="wrap_content" android:orientation="horizontal" android:gravity="center_vertical" android:contentDescription="FINNEST">
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="F" android:textColor="@color/navy" android:textSize="20sp" android:letterSpacing="0" android:textStyle="bold" android:fontFamily="@font/plus_jakarta" />
+    <ImageView android:layout_width="28dp" android:layout_height="28dp" android:src="@drawable/journey_home" android:tint="@color/red" android:importantForAccessibility="no" />
+    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="NNEST" android:textColor="@color/navy" android:textSize="20sp" android:letterSpacing="0" android:textStyle="bold" android:fontFamily="@font/plus_jakarta" />
+</LinearLayout>

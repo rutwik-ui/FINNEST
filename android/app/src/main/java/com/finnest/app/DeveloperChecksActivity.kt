@@ -36,6 +36,7 @@ class DeveloperChecksActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        FinnestUi.decorate(this, journey, if (isLegal) "legal" else if (isVisit || isFeedback) "visit" else "developer")
         if (isLegal) {
             binding.stepLabel.text = "STEP 6 OF 8 · NEW PROPERTY"
             binding.screenTitle.text = "Legal due diligence"

@@ -26,6 +26,7 @@ class FinalReviewActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        FinnestUi.decorate(this, journey, "review")
         binding.stepLabel.text = "STEP 8 OF 8 · NEW PROPERTY"
         binding.screenTitle.text = "Final review & next actions"
         binding.screenDescription.text = "A summary of what you recorded—not an approval or recommendation to proceed."
