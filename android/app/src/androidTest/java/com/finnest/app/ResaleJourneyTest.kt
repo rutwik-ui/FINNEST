@@ -41,6 +41,8 @@ class ResaleJourneyTest {
             waitReady(ResaleConditionActivity::class.java)
             onView(withContentDescription("Walls / ceilings / leaks Note / observation")).perform(scrollTo(), replaceText(value), closeSoftKeyboard())
             onView(withId(R.id.save_later)).perform(scrollTo(), click())
+            // Save & Home returns to the resale home, as on the website; reopen through the journey.
+            onView(withText("View journey")).perform(scrollTo(), click())
             onView(withText("Property condition  →")).perform(scrollTo(), click())
             waitReady(ResaleConditionActivity::class.java)
             onView(withContentDescription("Walls / ceilings / leaks Note / observation")).perform(scrollTo()).check(matches(withText(value)))
@@ -81,6 +83,8 @@ class ResaleJourneyTest {
             onView(withContentDescription("Resale Budget (₹)")).perform(scrollTo(), replaceText("123456"), closeSoftKeyboard())
             onView(withText("Lift")).perform(scrollTo(), click())
             onView(withId(R.id.save_later)).perform(scrollTo(), click())
+            // Save & Home returns to the resale home, as on the website; reopen through the journey.
+            onView(withText("View journey")).perform(scrollTo(), click())
             onView(withText("Requirements & location  →")).perform(scrollTo(), click())
             waitReady()
             onView(withContentDescription("Resale Budget (₹)")).perform(scrollTo()).check(matches(withText("123456")))

@@ -28,7 +28,7 @@ class ResaleRequirementsActivity : AppCompatActivity() {
         binding.screenDescription.text = "Optional preferences and estimated costs for your resale search."
         binding.screenNotice.text = "Cost reminders only. Applicable costs vary; no tax or fee rate is assumed. Blank amounts remain unknown."
         binding.back.setOnClickListener { leave { finish() } }; binding.backBottom.setOnClickListener { leave { finish() } }
-        binding.saveLater.setOnClickListener { leave { ResaleOverviewActivity.show(this) } }
+        binding.saveLater.setOnClickListener { leave { DashboardActivity.show(this, "resale_property") } }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) { override fun handleOnBackPressed() { leave { finish() } } })
         binding.next.setOnClickListener { leave { startActivity(Intent(this, ResaleConditionActivity::class.java)) } }
         DraftRepository.load(this, scope) { result -> runOnUiThread {

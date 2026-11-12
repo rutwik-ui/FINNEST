@@ -31,8 +31,8 @@ class MainActivity : AppCompatActivity() {
         if (savedInstanceState == null && !intent.getBooleanExtra("change_journey", false) &&
             prefs.getBoolean("intro_complete", false)) {
             when (model.selected) {
-                "New Property" -> DashboardActivity.show(this)
-                "Resale Property" -> ResaleOverviewActivity.show(this)
+                "New Property" -> DashboardActivity.show(this, "new_property")
+                "Resale Property" -> DashboardActivity.show(this, "resale_property")
             }
         }
         binding.back.setOnClickListener { goBack() }
@@ -43,9 +43,9 @@ class MainActivity : AppCompatActivity() {
             if (model.page < 2) model.page++ else if (model.page == 2) finishIntro()
             else if (model.page == 3 && model.selected != null) {
                 prefs.edit().putString("journey", model.selected).apply()
-                if (model.selected == "New Property") DashboardActivity.show(this) else ResaleOverviewActivity.show(this)
+                if (model.selected == "New Property") DashboardActivity.show(this, "new_property") else DashboardActivity.show(this, "resale_property")
             }
-            else if (model.page == 4 && model.selected == "New Property") { DashboardActivity.show(this) }
+            else if (model.page == 4 && model.selected == "New Property") { DashboardActivity.show(this, "new_property") }
             else if (model.page == 4) model.page = 3
             render()
         }

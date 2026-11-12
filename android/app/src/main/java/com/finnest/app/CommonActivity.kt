@@ -51,7 +51,7 @@ class CommonActivity : AppCompatActivity() {
         } }
     }
     private fun home() {
-        if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") ResaleOverviewActivity.show(this)
+        if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") DashboardActivity.show(this, "resale_property")
         else DashboardActivity.show(this)
     }
     private fun label(parent: LinearLayout, value: String, bold: Boolean = false): TextView = TextView(this).apply {

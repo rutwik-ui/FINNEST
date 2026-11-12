@@ -15,6 +15,8 @@ import androidx.test.espresso.matcher.ViewMatchers.*
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.Matchers.allOf
+import org.hamcrest.Matchers.startsWith
+import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.atomic.AtomicReference
@@ -57,10 +59,23 @@ class DashboardNavigationTest {
         }
         throw AssertionError("Reminders did not finish loading")
     }
+    private fun openFromMenu(item: String) {
+        onView(withContentDescription("Open menu")).perform(click())
+        onView(withContentDescription(item)).inRoot(isPlatformPopup()).perform(click())
+    }
+    @Test fun bottomTabsOpenWebsiteSections() {
+        ActivityScenario.launch(DashboardActivity::class.java).use {
+            onView(withText("At a glance")).perform(scrollTo()).check(matches(isDisplayed()))
+            onView(withContentDescription("Profile")).perform(click())
+            onView(withContentDescription("Profile, current tab")).check(matches(isDisplayed()))
+            onView(withContentDescription("Home")).perform(click())
+            onView(withContentDescription("Home, current tab")).check(matches(isDisplayed()))
+        }
+    }
     @Test fun addReopenAndDeleteDatedLocalReminder() {
         val title = "Inspect documents " + System.currentTimeMillis()
         ActivityScenario.launch(DashboardActivity::class.java).use {
-            onView(withText("Open reminders  →")).perform(scrollTo(), click())
+            openFromMenu("Reminders")
             waitForReminders()
             onView(withContentDescription("Reminder title")).perform(scrollTo(), replaceText(title), closeSoftKeyboard())
             onView(withContentDescription("Reminder date")).perform(scrollTo(), click())
@@ -68,7 +83,7 @@ class DashboardNavigationTest {
             onView(withText("Add reminder")).perform(scrollTo(), click())
             onView(withText(title)).perform(scrollTo()).check(matches(isDisplayed()))
             onView(withId(R.id.next)).perform(scrollTo(), click())
-            onView(withText("Open reminders  →")).perform(scrollTo(), click())
+            openFromMenu("Reminders")
             waitForReminders()
             onView(withText(title)).perform(scrollTo()).check(matches(isDisplayed()))
             onView(withContentDescription("Delete reminder: $title")).perform(scrollTo(), click())
@@ -79,21 +94,21 @@ class DashboardNavigationTest {
 
     @Test fun dashboardReviewSaveReturnAndReopenPreservesNextActions() {
         val value = "Follow up on title " + System.currentTimeMillis()
-        ActivityScenario.launch(DashboardActivity::class.java).use {
-            onView(withText("Open final review  →")).perform(scrollTo(), click())
+        ActivityScenario.launch(FinalReviewActivity::class.java).use {
             waitForReview()
             onView(allOf(isAssignableFrom(EditText::class.java), withContentDescription("Your next actions")))
                 .perform(scrollTo(), replaceText(value))
             onView(withId(R.id.next)).perform(scrollTo(), click())
-            onView(withText("My Journey")).perform(scrollTo()).check(matches(isDisplayed()))
+            onView(withText(startsWith("My Journey"))).perform(scrollTo()).check(matches(isDisplayed()))
             onView(withId(R.id.back_bottom)).perform(scrollTo(), click())
-            onView(withText("Your journey steps")).perform(scrollTo()).check(matches(isDisplayed()))
-            onView(withText("Open final review  →")).perform(scrollTo(), click())
+            onView(withText("At a glance")).perform(scrollTo()).check(matches(isDisplayed()))
+        }
+        ActivityScenario.launch(FinalReviewActivity::class.java).use {
             waitForReview()
             onView(allOf(isAssignableFrom(EditText::class.java), withContentDescription("Your next actions")))
                 .perform(scrollTo()).check(matches(withText(value)))
             onView(withId(R.id.save_later)).perform(scrollTo(), click())
-            onView(withText("Your journey steps")).perform(scrollTo()).check(matches(isDisplayed()))
+            onView(withText("At a glance")).perform(scrollTo()).check(matches(isDisplayed()))
         }
     }
 }

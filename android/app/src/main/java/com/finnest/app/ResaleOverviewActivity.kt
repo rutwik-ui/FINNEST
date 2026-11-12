@@ -21,11 +21,11 @@ class ResaleOverviewActivity : AppCompatActivity() {
         binding.stepLabel.text = "A SEPARATE HOME-BUYING JOURNEY"
         binding.screenTitle.text = "Resale Property Journey"
         binding.screenDescription.text = "Explore key areas when considering a resale home, at your own pace."
-        binding.screenNotice.text = "These are the subject areas defined in the prototype, not a complete resale journey. These six areas are available as locally saved notes, not a complete resale journey."
+        binding.screenNotice.text = "These are the subject areas defined in the prototype. They are saved as local notes on this device and are not a complete resale journey."
         binding.loading.visibility = View.GONE
         binding.back.setOnClickListener { changeJourney() }
         binding.backBottom.text = "Change journey"; binding.backBottom.setOnClickListener { changeJourney() }
-        binding.saveLater.text = "Change journey"; binding.saveLater.setOnClickListener { changeJourney() }
+        binding.saveLater.text = "Home"; binding.saveLater.setOnClickListener { DashboardActivity.show(this, "resale_property") }
         binding.next.text = "Open requirements  →"; binding.next.isEnabled = true
         binding.next.setOnClickListener { openRequirements() }
         val card = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(12), dp(16), dp(16)); setBackgroundResource(R.drawable.card) }

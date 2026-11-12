@@ -41,6 +41,18 @@ class JourneyRoadmapTest {
         }
         fail("Progress did not show $expected")
     }
+    /** Polls Room until the form's autosave has durably written the value. */
+    private fun awaitSaved(scope: String, key: String, expected: String) {
+        val deadline = SystemClock.elapsedRealtime() + 15000
+        while (SystemClock.elapsedRealtime() < deadline) {
+            val rows = mutableMapOf<String, String>(); val done = CountDownLatch(1)
+            DraftRepository.loadSaved(context, scope) { rows.putAll(it.getOrThrow()); done.countDown() }
+            assertTrue(done.await(10, TimeUnit.SECONDS))
+            if (rows[key] == expected) return
+            SystemClock.sleep(150)
+        }
+        fail("$key was not saved")
+    }
     private fun capture(name: String) {
         instrumentation.waitForIdleSync()
         val bitmap = instrumentation.uiAutomation.takeScreenshot() ?: throw AssertionError("Screenshot unavailable")
@@ -68,14 +80,14 @@ class JourneyRoadmapTest {
                 while (!ready && SystemClock.elapsedRealtime() < deadline) { scenario.onActivity { ready = it.findViewById<View>(R.id.next).isEnabled }; SystemClock.sleep(100) }
                 assertTrue(ready)
                 onView(withContentDescription("Approximate loan amount, if known")).perform(scrollTo(), replaceText("7500000"), closeSoftKeyboard())
-                awaitText(scenario, "${base.recorded + 1} of ${base.total}")
+                awaitSaved("new_property", key, "7500000")
                 capture("02-new-form-saved")
             }
             ActivityScenario.launch(DashboardActivity::class.java).use { scenario ->
                 awaitText(scenario, "${base.recorded + 1} of ${base.total}")
                 capture("03-new-dashboard-readback")
             }
-            ActivityScenario.launch(ResaleOverviewActivity::class.java).use { scenario ->
+            ActivityScenario.launch<DashboardActivity>(android.content.Intent(context, DashboardActivity::class.java).putExtra(DashboardActivity.SCOPE, "resale_property")).use { scenario ->
                 val rows = mutableMapOf<String, String>(); val done = CountDownLatch(1)
                 DraftRepository.loadSaved(context, "resale_property") { rows.putAll(it.getOrThrow()); done.countDown() }
                 assertTrue(done.await(10, TimeUnit.SECONDS))

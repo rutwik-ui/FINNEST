@@ -37,7 +37,7 @@ class ResaleConditionActivity : AppCompatActivity() {
         binding.screenNotice.text = if (current.freeTextStatus) "Keep observations, seller statements and professional advice distinct. Status is free text because the reference choices are not visible."
             else "Keep observations, seller statements and professional advice distinct. Status choices are provisional."
         binding.back.setOnClickListener { leave { finish() } }; binding.backBottom.setOnClickListener { leave { finish() } }
-        binding.saveLater.setOnClickListener { leave { ResaleOverviewActivity.show(this) } }
+        binding.saveLater.setOnClickListener { leave { DashboardActivity.show(this, "resale_property") } }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) { override fun handleOnBackPressed() { leave { finish() } } })
         if (current.id == "handover") binding.next.text = "View journey summary  →"
         binding.next.setOnClickListener { leave {

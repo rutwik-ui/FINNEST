@@ -41,7 +41,7 @@ class ProfileSettingsActivity : AppCompatActivity() {
         } }
     }
     private fun home() {
-        if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") ResaleOverviewActivity.show(this) else DashboardActivity.show(this)
+        if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") DashboardActivity.show(this, "resale_property") else DashboardActivity.show(this)
     }
     private fun leave(action: () -> Unit) {
         if (deleting) return

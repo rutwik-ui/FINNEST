@@ -48,7 +48,7 @@ class ProfilePrivacyTest {
             waitForScreen(ProfileSettingsActivity::class.java)
             onView(withContentDescription("Profile Name")).perform(scrollTo(), replaceText("Test buyer"), closeSoftKeyboard())
             onView(withText("Privacy & data use")).perform(scrollTo(), click())
-            onView(withText("Privacy & data use")).check(matches(isDisplayed()))
+            onView(withText(org.hamcrest.Matchers.startsWith("Privacy & data use"))).check(matches(isDisplayed()))
             onView(withText(containsString("does not upload your journey drafts"))).perform(scrollTo()).check(matches(isDisplayed()))
             androidx.test.espresso.Espresso.pressBack()
             waitForScreen(ProfileSettingsActivity::class.java)
