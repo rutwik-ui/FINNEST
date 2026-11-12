@@ -35,6 +35,10 @@ object FinnestUi {
     const val NOTICE_LINE = 0xFFF1C9C7.toInt(); const val NOTICE_BG = 0xFFFFF4F3.toInt(); const val CREAM = 0xFFF7F6F2.toInt()
     const val STAT_BG = 0xFFF7F6F2.toInt(); const val OUTLINE_LINE = 0xFFE8CCCC.toInt()
 
+    /** CSS-style line height (font size × multiple); Android's own multiplier scales the font's taller natural height. */
+    fun spacing(view: TextView, multiple: Float) {
+        androidx.core.widget.TextViewCompat.setLineHeight(view, (view.textSize * multiple).toInt().coerceAtLeast(1))
+    }
     fun dp(context: Context, n: Int) = (n * context.resources.displayMetrics.density).toInt()
     fun dpf(context: Context, n: Float) = n * context.resources.displayMetrics.density
 
@@ -58,7 +62,7 @@ object FinnestUi {
     fun label(context: Context, value: CharSequence, sizeSp: Float, weight: Int, color: Int, spacingEm: Float = 0f, lineHeightSp: Float = 0f) = TextView(context).apply {
         text = value; setTextSize(TypedValue.COMPLEX_UNIT_SP, sizeSp); typeface = font(context, weight); setTextColor(color)
         letterSpacing = spacingEm; includeFontPadding = false
-        if (lineHeightSp > 0) setLineSpacing(0f, lineHeightSp / sizeSp)
+        if (lineHeightSp > 0) spacing(this, lineHeightSp / sizeSp)
         markStyled(this)
     }
     fun eyebrow(context: Context, value: String) = label(context, value.uppercase(), 11f, 700, RED_TEXT, 0.14f)
@@ -158,11 +162,11 @@ object FinnestUi {
         val content = view.text?.toString().orEmpty()
         val caps = content.length > 2 && content.any { it.isLetter() } && content == content.uppercase() && size <= 13
         when {
-            caps -> { view.typeface = font(c, 700); view.letterSpacing = 0.14f; view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f); view.setLineSpacing(0f, 1.5f) }
-            size >= 28 -> { view.typeface = font(c, 800); view.letterSpacing = -0.025f; view.setLineSpacing(0f, 1.1f) }
-            size >= 18 && weight >= 600 -> { view.typeface = font(c, 700); view.letterSpacing = -0.025f; view.setLineSpacing(0f, 1.25f) }
-            weight >= 600 -> { view.typeface = font(c, 700); view.letterSpacing = if (size >= 15) -0.02f else 0f; view.setLineSpacing(0f, 1.4f) }
-            else -> { view.typeface = font(c, 400); view.letterSpacing = 0f; view.setLineSpacing(0f, 1.6f) }
+            caps -> { view.typeface = font(c, 700); view.letterSpacing = 0.14f; view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f); spacing(view, 1.5f) }
+            size >= 28 -> { view.typeface = font(c, 800); view.letterSpacing = -0.025f; spacing(view, 1.1f) }
+            size >= 18 && weight >= 600 -> { view.typeface = font(c, 700); view.letterSpacing = -0.025f; spacing(view, 1.25f) }
+            weight >= 600 -> { view.typeface = font(c, 700); view.letterSpacing = if (size >= 15) -0.02f else 0f; spacing(view, 1.4f) }
+            else -> { view.typeface = font(c, 400); view.letterSpacing = 0f; spacing(view, 1.6f) }
         }
     }
     private var cardConstant: android.graphics.drawable.Drawable.ConstantState? = null
@@ -325,7 +329,7 @@ object FinnestUi {
     }
     private fun notice(activity: Activity, it: TextView) {
         it.background = shape(activity, NOTICE_BG, NOTICE_LINE, 12); it.elevation = 0f
-        it.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); it.typeface = font(activity, 400); it.setTextColor(0xFF515B68.toInt()); it.setLineSpacing(0f, 1.5f)
+        it.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); it.typeface = font(activity, 400); it.setTextColor(0xFF515B68.toInt()); spacing(it, 1.5f)
         it.setPadding(dp(activity, 15), dp(activity, 15), dp(activity, 15), dp(activity, 15))
         val info = activity.getDrawable(R.drawable.journey_info)?.mutate()?.apply { setTint(RED); setBounds(0, 0, dp(activity, 18), dp(activity, 18)) }
         it.setCompoundDrawablesRelative(info, null, null, null); it.compoundDrawablePadding = dp(activity, 12)
@@ -366,7 +370,7 @@ object FinnestUi {
         for (i in 1 until page.childCount) {
             val t = page.getChildAt(i) as? TextView ?: continue
             if (t.textSize / activity.resources.displayMetrics.scaledDensity >= 28) {
-                t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f); t.typeface = font(activity, 700); t.letterSpacing = -0.025f; t.setLineSpacing(0f, 1.25f)
+                t.setTextSize(TypedValue.COMPLEX_UNIT_SP, 19f); t.typeface = font(activity, 700); t.letterSpacing = -0.025f; spacing(t, 1.25f)
                 t.setTag(R.id.finnest_bottom_nav, "form-title")
             }
         }
@@ -405,11 +409,11 @@ object FinnestUi {
             }
             activity.findViewById<TextView>(R.id.screen_title)?.let {
                 it.setTextSize(TypedValue.COMPLEX_UNIT_SP, 34f); it.typeface = font(activity, 800); it.letterSpacing = -0.025f
-                it.setLineSpacing(0f, 1.1f); it.setTextColor(NAVY); keepRedDot(it)
+                spacing(it, 1.1f); it.setTextColor(NAVY); keepRedDot(it)
                 (it.layoutParams as? ViewGroup.MarginLayoutParams)?.topMargin = dp(activity, 9)
             }
             activity.findViewById<TextView>(R.id.screen_description)?.let {
-                it.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f); it.typeface = font(activity, 400); it.setTextColor(MUTED); it.setLineSpacing(0f, 1.6f)
+                it.setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f); it.typeface = font(activity, 400); it.setTextColor(MUTED); spacing(it, 1.6f)
                 (it.layoutParams as? ViewGroup.MarginLayoutParams)?.topMargin = dp(activity, 9)
             }
             activity.findViewById<TextView>(R.id.step_label)?.let { it.setTextSize(TypedValue.COMPLEX_UNIT_SP, 11f); it.typeface = font(activity, 700); it.letterSpacing = 0.14f; it.setTextColor(RED_TEXT) }
