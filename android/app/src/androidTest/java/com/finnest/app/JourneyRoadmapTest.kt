@@ -47,6 +47,9 @@ class JourneyRoadmapTest {
         val dir = File(context.getExternalFilesDir(null), "roadmap-screenshots").apply { mkdirs() }
         File(dir, "$name.png").outputStream().use { bitmap.compress(Bitmap.CompressFormat.PNG, 100, it) }
         bitmap.recycle()
+        instrumentation.uiAutomation.executeShellCommand("mkdir -p /data/local/tmp/roadmap-screenshots; screencap -p /data/local/tmp/roadmap-screenshots/$name.png").use { descriptor ->
+            android.os.ParcelFileDescriptor.AutoCloseInputStream(descriptor).use { it.readBytes() }
+        }
     }
     @Test fun editedFormUpdatesDurableProgressAndReopens() {
         val key = "loan"
