@@ -29,7 +29,7 @@ class GuidanceActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater); setContentView(binding.root)
-        FinnestUi.decorate(this, if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") "resale_property" else "new_property", roadmap = false)
+        FinnestUi.decorate(this, if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") "resale_property" else "new_property", roadmap = true)
         binding.stepLabel.text = "GUIDANCE LIBRARY"
         binding.screenTitle.text = "Helpful guidance"
         binding.screenDescription.text = "Browse published guidance for your home-buying journey. Internet connection required."

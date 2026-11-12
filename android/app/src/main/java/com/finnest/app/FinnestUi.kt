@@ -171,13 +171,23 @@ object FinnestUi {
     }
     private var cardConstant: android.graphics.drawable.Drawable.ConstantState? = null
     private fun cardState(context: Context) = cardConstant ?: context.getDrawable(R.drawable.card)?.constantState.also { cardConstant = it }
+    /** A short caption directly above an input becomes the website's 13sp/700 field label. */
+    private fun fieldLabel(parent: ViewGroup, child: View) {
+        if (child !is EditText && child !is Spinner) return
+        val at = parent.indexOfChild(child); if (at < 1) return
+        val prev = parent.getChildAt(at - 1) as? TextView ?: return
+        if (prev is Button || prev is EditText || prev.id == R.id.screen_title || (prev.text?.length ?: 0) > 90) return
+        prev.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); prev.typeface = font(prev.context, 700); prev.letterSpacing = 0f
+        prev.setTextColor(LABEL); spacing(prev, 1.4f)
+        (prev.layoutParams as? ViewGroup.MarginLayoutParams)?.let { if (it.bottomMargin < dp(prev.context, 7)) { it.bottomMargin = dp(prev.context, 7); prev.layoutParams = it } }
+    }
     /** Applied to every attached view, including forms that load later. */
     fun styleTree(view: View) {
         if (view is JourneyRoadmapView || view.id == R.id.finnest_bottom_nav) return
         if (view is ViewGroup) {
-            for (i in 0 until view.childCount) styleTree(view.getChildAt(i))
+            for (i in 0 until view.childCount) { styleTree(view.getChildAt(i)); fieldLabel(view, view.getChildAt(i)) }
             view.setOnHierarchyChangeListener(object : ViewGroup.OnHierarchyChangeListener {
-                override fun onChildViewAdded(parent: View?, child: View?) { child?.let { styleTree(it) } }
+                override fun onChildViewAdded(parent: View?, child: View?) { child?.let { styleTree(it); if (parent is ViewGroup) fieldLabel(parent, it) } }
                 override fun onChildViewRemoved(parent: View?, child: View?) = Unit
             })
             // Legacy `card` backgrounds gain the website card shadow and padding once.

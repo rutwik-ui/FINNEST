@@ -13,7 +13,7 @@ class PrivacyInfoActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         binding = ActivityDeveloperChecksBinding.inflate(layoutInflater); setContentView(binding.root)
-        FinnestUi.decorate(this, if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") "resale_property" else "new_property", roadmap = false)
+        FinnestUi.decorate(this, if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") "resale_property" else "new_property", roadmap = true)
         binding.stepLabel.text = "YOUR DATA"; binding.screenTitle.text = "Privacy & data use"
         binding.screenDescription.text = "How this Android version handles your information."
         binding.screenNotice.text = "Avoid recording sensitive details on a shared device."
