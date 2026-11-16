@@ -369,6 +369,35 @@ affects zero rows without raising. The test now asserts that contract directly.
 5. Ask FINNEST to call them, and control whether their phone number is shared.
 6. Read, on both apps, exactly where their data lives — device or account.
 
+### 9.5b A bug found by testing the two apps against each other
+
+Kept here because it is the clearest example of why "it builds and the tests pass"
+is not the same as "it works".
+
+The sync protocol was correct: one row per answer, per-field merge, stale writes
+rejected by the database. Both apps passed their own tests. But the two apps had
+each chosen a different name for the same answer:
+
+| Question | Website stored | Android stored |
+|---|---|---|
+| Down payment | `budget.down` | `down_payment` |
+| Stamp duty | `budget.stamp` | `stamp_duty` |
+| Carpet area | `budget.carpet` | `carpet_area` |
+| Accessibility needs | `budget.access` | `accessibility_needs` |
+
+Both names were valid, nothing threw an error, and every test passed. The effect
+would have been that a buyer typed a down payment on their phone, opened the
+laptop, and found a blank box — while the app cheerfully said the journey was
+synced.
+
+This is now fixed by a single shared alias table. Both sides carry a test that
+reads the *other* language's source file and fails if the two tables ever drift,
+so the mistake cannot come back quietly. Rows already written with the old
+Android spelling still load, because reads canonicalise the key first.
+
+**The lesson for the rest of this project:** the only test that proves two apps
+interoperate is one that runs both. Everything else is per-app confidence.
+
 ### 9.6 Still outstanding before a public launch
 
 - OS-level reminder notifications on Android (currently in-app dated notes).
