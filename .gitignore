@@ -11,3 +11,16 @@ dist/
 !.env.example
 playwright-report/
 test-results/
+
+# Android signing material — never commit these
+*.keystore
+*.jks
+keystore.properties
+release.keystore.txt
+firebase-service-account.json
+google-services.json
+
+# Vercel / Nitro build output
+.vercel/
+.output/
+.nitro/
