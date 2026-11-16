@@ -167,6 +167,12 @@ See [§9.2](#92-lovable-rewrote-viteconfigts).
 
 Until you do this, sign-in and email confirmation will not work.
 
+**Your project is currently set to `http://localhost:3000`.** While it stays that
+way, the "forgot password" and "confirm your email" links in the emails Supabase
+sends will point at your own computer and will not open on a phone. This is the
+single most common reason people think sign-up is broken. Fix it in the steps
+below.
+
 1. Open <https://supabase.com/dashboard> → your project → **Authentication** in
    the left sidebar → **URL Configuration**.
 2. **Site URL**: set it to your live domain, e.g. `https://finnest.vercel.app`.
@@ -177,6 +183,10 @@ Until you do this, sign-in and email confirmation will not work.
    ```
    (plus your own custom domain later, e.g. `https://finnest.in/**`).
 4. Click **Save**.
+
+> **Android note:** the Android app talks to Supabase over its API and does not
+> need a redirect URL for email/password sign-in or for password reset by code.
+> It only needs the Site URL above to be correct for the *web* links.
 
 ### Step 4.4 — Add your own domain (recommended)
 
