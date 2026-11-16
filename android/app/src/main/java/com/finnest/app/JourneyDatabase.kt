@@ -90,8 +90,13 @@ object DraftRepository {
         val app = context.applicationContext
         executor.execute {
             val pair = journey to key
-            if (runCatching { JourneyDatabase.get(app).drafts().put(DraftField(journey, key, value)) }.isSuccess) { failed.remove(pair); notifySaved(journey) }
-            else failed[pair] = value
+            if (runCatching { JourneyDatabase.get(app).drafts().put(DraftField(journey, key, value)) }.isSuccess) {
+                failed.remove(pair)
+                notifySaved(journey)
+                // Mirrored to the account after the durable local write succeeds.
+                // A guest (no session) is a no-op inside pushField.
+                DraftSync.pushField(app, journey, key, value)
+            } else failed[pair] = value
         }
     }
 }

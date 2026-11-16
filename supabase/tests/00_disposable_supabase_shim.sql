@@ -3,6 +3,9 @@
 -- Never execute this file against a real Supabase project.
 create role anon nologin;
 create role authenticated nologin;
+-- Supabase provides this role; migrations grant to it. Without it every migration
+-- that says "grant ... to service_role" aborts on a fresh database.
+create role service_role nologin;
 create schema auth;
 create table auth.users (id uuid primary key);
 create function auth.jwt() returns jsonb language sql stable as $$
@@ -25,3 +28,7 @@ grant usage on schema storage to anon, authenticated;
 grant select, insert, update, delete on storage.objects to authenticated;
 grant select on storage.objects to anon;
 grant execute on function storage.foldername(text) to anon, authenticated;
+
+-- Columns the real Supabase auth.users has and migrations reference. Kept minimal
+-- and test-only; 40_additional_boundaries.sql inserts identities by id only.
+alter table auth.users add column if not exists email text;
