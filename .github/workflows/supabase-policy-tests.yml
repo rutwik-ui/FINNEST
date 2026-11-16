@@ -36,7 +36,7 @@ jobs:
           psql -v ON_ERROR_STOP=1 -f supabase/tests/00_disposable_supabase_shim.sql
           for migration in supabase/migrations/*.sql; do psql -v ON_ERROR_STOP=1 -f "$migration"; done
           status=0
-          for test in supabase/tests/[1-5]0_*.sql; do
+          for test in supabase/tests/[1-6]0_*.sql; do
             echo "::group::$test"
             if output=$(psql -v ON_ERROR_STOP=1 -f "$test" 2>&1); then
               echo "$output" | tail -5
