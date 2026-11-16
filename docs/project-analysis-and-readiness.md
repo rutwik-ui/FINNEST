@@ -1,7 +1,12 @@
 # FINNEST — project analysis and readiness report
 
 _Date: 2026-11-16. Based on an actual read of the repository, plus real builds of
-both web applications (`web` and `web-app`) inside the deployment sandbox._
+both web applications (`web` and `web-app`), a real PostgreSQL run of every
+migration and policy test, and the Android build + emulator suites on CI._
+
+> **Update:** the gaps listed in §1 and §3 have since been implemented. See
+> [§9 Implemented since this report](#9-implemented-since-this-report) for what
+> changed, and treat §3 as the historical "before" picture.
 
 ---
 
@@ -19,12 +24,16 @@ is the shared data model.
 | Question | Answer |
 |---|---|
 | Can I deploy to Vercel today? | **Yes.** Both `web` and `web-app` build successfully. |
-| Will the admin panel work? | **Yes**, for guidance, experts, support tickets and audit log. |
-| Will admin content reach the website? | **Yes.** Both read published rows from Supabase. |
-| Will admin content reach Android? | **Yes**, for published guidance (Android reads it read-only). |
-| Will a customer's journey draft sync between web and Android? | **No. Not implemented.** |
-| Can Android users sign in? | **No. Not implemented.** |
-| Can the admin panel manage buyer data, forms, projects or experts' enquiries? | **No.** Only content + support tickets today. |
+| Will the admin panel work? | **Yes** — guidance, projects, experts, enquiries, support tickets, buyer journeys, audit log. |
+| Will admin content reach the website? | **Yes**, including project listings, with realtime updates. |
+| Will admin content reach Android? | **Yes** — guidance and the project catalogue. |
+| Will a customer's journey draft sync between web and Android? | **Yes.** Per-field sync in both apps. |
+| Can Android users sign in? | **Yes.** Email + password, sessions in the Android Keystore. |
+| Can the admin panel manage buyer data, forms, projects or enquiries? | **Yes** for projects, enquiries and a read-only buyer-journey view. |
+
+**What is still genuinely missing:** OS-level notifications on Android, the
+remaining Resale screens, expert referral/messaging, comparison detail fields,
+and the release-hardening items in §6 Phase E.
 
 ---
 
@@ -279,3 +288,93 @@ most of them will make. Be precise about what the app does:
 - ❌ Do not say "your data syncs across all your devices" — it does not yet.
 - ❌ Do not say "we are a legal/financial advisor" — the UI already carries the
   right disclaimers; keep them.
+
+---
+
+## 9. Implemented since this report
+
+This section replaces §3's "not implemented" rows. Everything here is merged on
+the `arena/408f145c-finnest` branch and verified by CI.
+
+### 9.1 The sync protocol (the important design decision)
+
+The website stored a journey draft as **one nested object** in `localStorage`.
+Android stored the same journey as **flat `Map<String, String>` keys** in Room.
+Those shapes cannot be reconciled as documents — a whole-document
+last-write-wins would silently destroy the other device's work.
+
+So the shared unit is **one answer**:
+
+```
+finnest_draft_fields(user_id, journey_type, field_key, value, client_updated_at)
+PRIMARY KEY (user_id, journey_type, field_key)
+```
+
+- Editing the budget on a phone and visit notes on a laptop keeps **both**.
+- A `BEFORE UPDATE` trigger drops any write whose `client_updated_at` is older
+  than the stored one, so a slow offline device cannot overwrite newer work.
+- Each client uploads **only the fields it actually changed**, so two devices
+  never fight over fields neither of them touched.
+- The website converts its nested draft to these keys loss-free
+  (`web-app/src/finnest/draftSync.js`, 19 unit tests), including an envelope for
+  fields it does not recognise, so a future field is never silently dropped.
+
+### 9.2 What changed, per surface
+
+| Area | Before | Now |
+|---|---|---|
+| Android sign-in | none | Email/password via Supabase Auth; tokens encrypted with an AES-256-GCM key in the Android Keystore (no extra dependency); automatic refresh; password recovery by email |
+| Android sync | read-only guidance | Per-field push on every save + reconcile on dashboard open + token-refresh retry; distinguishes offline from failure |
+| Android catalogue | none | Admin-published projects on the Projects screen, with "add to shortlist" |
+| Web sync | `localStorage` only | Debounced mirror to the account, realtime subscription for edits from other devices, flushes on tab hide, online/offline handling |
+| Web honesty | "Saved" | Status chip + Profile panel that says *this browser only* until an account exists |
+| Admin → content | guidance, experts, support | **+ projects catalogue, buyer enquiries, read-only buyer journeys** |
+| Customer → admin | support ticket | **+ enquiry with an explicit consent flag** |
+| Realtime | none | `finnest_draft_fields`, `finnest_projects`, `finnest_enquiries`, `finnest_guidance`, `finnest_experts` |
+
+### 9.3 Two pre-existing bugs found and fixed
+
+1. **Migrations could not build a fresh database.** Two migrations inserted
+   hard-coded production `auth.users` ids into `finnest_admin_roles`. On any new
+   project those rows violate the foreign key, and every later migration aborts.
+   They are now guarded inserts that are a no-op when the account does not exist.
+2. **The CI policy-test job was failing on `main`.** The disposable shim never
+   created the `service_role` that every migration grants to, so the migration
+   loop died on the fourth file. The shim now mirrors that role.
+
+A third fix was a genuine test bug: an assertion inferred "RLS blocked this
+delete" from an exception, but the policy *allows* a super admin to delete other
+people's roles and simply excludes their own — so a bare `DELETE` correctly
+affects zero rows without raising. The test now asserts that contract directly.
+
+### 9.4 Verified by CI, not by assumption
+
+| Check | Result |
+|---|---|
+| `Website checks` (lint, typecheck, unit tests, build) | ✅ |
+| `Database policy tests` (shim + 8 migrations + 5 RLS suites on PostgreSQL 15) | ✅ |
+| `Android debug APK` (Gradle compile + JVM unit tests) | ✅ |
+| `Android emulator tests` (instrumentation, incl. new catalogue/auth suites) | ✅ |
+| `web-app` local build → Vercel Build Output with `preset: "vercel"` | ✅ |
+| Every route served from the production bundle (`/`, `/projects`, `/experts`, `/profile`, `/Adminlogin`) | ✅ HTTP 200 |
+| Migration set applied to a fresh PostgreSQL 18 (PGlite) | ✅ |
+
+### 9.5 What a buyer can now do that they could not before
+
+1. Start a journey on the laptop without an account; sign in later and keep it.
+2. Sign in on Android and see the same journey they started on the web.
+3. Edit the shortlist on the phone while the laptop has the visit notes open;
+   both survive.
+4. See a project the FINNEST team published minutes ago, without reinstalling.
+5. Ask FINNEST to call them, and control whether their phone number is shared.
+6. Read, on both apps, exactly where their data lives — device or account.
+
+### 9.6 Still outstanding before a public launch
+
+- OS-level reminder notifications on Android (currently in-app dated notes).
+- The remaining Resale journey screens and comparison detail fields.
+- A real two-user MFA/isolation test against a staging Supabase project.
+- Supabase Auth production URLs, backups, and monitoring/uptime alerts.
+- Play Store listing, data-safety declaration, and a privacy policy URL.
+- **Supabase's free tier pauses after a week idle** — upgrade before sharing the
+  link with real buyers, or the whole app will look empty.

@@ -14,10 +14,31 @@ FINNEST is an Indian home-buying guidance product, delivered in small, reviewabl
 database. The native Android app is distributed as an APK/AAB — it cannot be
 hosted on Vercel.
 
-**Deployable today:** the website and the admin console (guidance, experts,
-support tickets, audit log, bulk import). **Not implemented:** Android sign-in,
-cross-device journey sync, and realtime push — see the readiness report before
-promising customers that their data follows them between devices.
+**Deployable today:** the website, the admin console (guidance, projects,
+experts, enquiries, support tickets, buyer journeys, audit log, bulk import), and
+an Android app with account sign-in.
+
+**Cross-device sync is implemented.** Journey answers are stored one row per
+field in `finnest_draft_fields`, so a phone and a laptop can edit different
+answers without overwriting each other, and a stale write is rejected by the
+database. Realtime updates arrive without a refresh.
+
+### One migration must be applied before sync works
+
+`supabase/migrations/20261116090000_finnest_cross_device_sync.sql` adds the
+sync table, the project catalogue, enquiries and the realtime publication. It is
+**not** applied to the connected project yet. Apply it with:
+
+```sh
+supabase db push          # or paste the file into the Supabase SQL editor
+```
+
+Until it runs, the website and Android app still work, but they save to the
+device only and the new admin sections show no data.
+
+**Still not implemented:** OS-level reminder notifications, the remaining Resale
+screens, expert referrals, and the release-hardening gates in
+`docs/project-analysis-and-readiness.md` §9.6.
 
 ## Current Android scope
 
