@@ -154,7 +154,7 @@ class SupabaseAuth(
         )
     }
 
-    private class HttpFailure(val code: Int, message: String) : Exception(message)
+    private class HttpFailure(val code: Int, val reason: String) : Exception(reason)
 
     private fun request(path: String, method: String, body: String, bearer: String? = null): JSONObject {
         val connection = URL(baseUrl.trimEnd('/') + path).openConnection() as HttpURLConnection
@@ -190,13 +190,13 @@ class SupabaseAuth(
 
     /** Map low-level failures to something a buyer can act on. */
     private fun messageFor(error: Throwable): String = when {
-        error is HttpFailure && error.code == 400 && error.message.contains("Invalid login", true) ->
+        error is HttpFailure && error.code == 400 && error.reason.contains("Invalid login", true) ->
             "That email and password do not match."
         error is HttpFailure && error.code == 422 ->
             "Check the email address and use a password with at least 8 characters."
         error is HttpFailure && error.code == 429 ->
             "Too many attempts. Wait a minute and try again."
-        error is HttpFailure && error.message.isNotBlank() -> error.message
+        error is HttpFailure && error.reason.isNotBlank() -> error.reason
         error is java.net.UnknownHostException || error is java.net.SocketTimeoutException ->
             "No internet connection. Check your network and try again."
         else -> "Could not reach your account. Try again in a moment."
