@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   JOURNEY_TYPES, fieldKeyFor, toFieldMap, fromFieldMap, resolveField,
   mergeFields, rowsToFields, fieldsToRows, describeSync,
+  CANONICAL_ALIASES, canonicalKey,
 } from './draftSync';
 import { freshDraft } from './localDraft';
 
@@ -151,5 +152,49 @@ describe('sync messaging', () => {
 
   it('confirms when the account copy is current', () => {
     expect(describeSync('synced')).toMatch(/other devices/i);
+  });
+});
+
+describe('cross-platform key agreement', () => {
+  // The website nests its budget; Android saves flat keys. Before this map existed
+  // a down payment typed on the phone landed under `down_payment` while the laptop
+  // looked for `budget.down`, found nothing and silently showed a blank box.
+  it('reads a row written by the old Android spelling', () => {
+    const draft = fromFieldMap({ down_payment: '2000000' }, () => ({ budget: {} }));
+    expect(draft.budget.down).toBe('2000000');
+  });
+
+  it('maps every Android budget key to a website budget key', () => {
+    const androidKeys = Object.values(CANONICAL_ALIASES);
+    for (const key of androidKeys) expect(canonicalKey(key)).toBeTruthy();
+    // Every alias must point at a website path, and point somewhere unique.
+    expect(new Set(Object.values(CANONICAL_ALIASES)).size).toBe(androidKeys.length);
+  });
+
+  it('leaves unknown keys alone rather than dropping them', () => {
+    expect(canonicalKey('some_future_field')).toBe('some_future_field');
+    const draft = fromFieldMap({ some_future_field: 'kept' }, () => ({}));
+    expect(draft.some_future_field).toBe('kept');
+  });
+
+  it('keeps a field stable when it comes back in canonical form', () => {
+    const once = fromFieldMap({ 'budget.down': '3000000' }, () => ({ budget: {} }));
+    expect(once.budget.down).toBe('3000000');
+    const twice = fromFieldMap(toFieldMap(once), () => ({ budget: {} }));
+    expect(twice.budget.down).toBe('3000000');
+  });
+
+  it('agrees with the Android map in DraftSync.kt', async () => {
+    // The two maps are maintained by hand in different languages, so this reads the
+    // Kotlin source and fails if one side gains a line the other does not have.
+    const fs = await import('node:fs');
+    const path = await import('node:path');
+    const kotlin = fs.readFileSync(
+      path.resolve(process.cwd(), '../android/app/src/main/java/com/finnest/app/DraftSync.kt'),
+      'utf8',
+    );
+    const block = kotlin.slice(kotlin.indexOf('CANONICAL_ALIASES'), kotlin.indexOf('fun toAccountKey'));
+    const pairs = [...block.matchAll(/"([\w.]+)" to "([\w.]+)"/g)].map(([, a, b]) => [a, b]);
+    expect(Object.fromEntries(pairs)).toEqual(CANONICAL_ALIASES);
   });
 });

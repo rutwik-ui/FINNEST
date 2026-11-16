@@ -45,6 +45,41 @@ object DraftSync {
         if (journey == "resale_property" || journey == "Resale Property") "resale_property" else "new_property"
 
     /**
+     * Keys the website stores for answers this app also renders.
+     *
+     * The website nests its budget (`budget.down`); this app saves flat keys
+     * (`down_payment`). Both were correct inside their own app and invisible to the
+     * other, so a down payment typed here never reached the laptop. The database
+     * stores the website spelling; this map translates at the boundary so the rest
+     * of the app can keep using its own short keys.
+     *
+     * Must stay identical to CANONICAL_ALIASES in web-app/src/finnest/draftSync.js.
+     * `DraftSyncKeyContractTest` fails if the two drift.
+     */
+    val CANONICAL_ALIASES: Map<String, String> = linkedMapOf(
+        "budget.loan" to "loan",
+        "budget.down" to "down_payment",
+        "budget.stamp" to "stamp_duty",
+        "budget.gst" to "gst",
+        "budget.brokerage" to "brokerage",
+        "budget.interiors" to "interiors",
+        "budget.contingency" to "contingency",
+        "budget.emi" to "emi",
+        "budget.maintenance" to "maintenance",
+        "budget.carpet" to "carpet_area",
+        "budget.access" to "accessibility_needs",
+    )
+
+    /** Local flat key -> the key the website uses for the same answer. */
+    fun toAccountKey(localKey: String): String {
+        for ((accountKey, local) in CANONICAL_ALIASES) if (local == localKey) return accountKey
+        return localKey
+    }
+
+    /** Website key -> this app's short key. Unknown keys pass through untouched. */
+    fun toLocalKey(accountKey: String): String = CANONICAL_ALIASES[accountKey] ?: accountKey
+
+    /**
      * Pull the account copy, merge per field, upload local-only changes, then
      * write the merged result back into Room so every screen sees it.
      */
@@ -60,18 +95,23 @@ object DraftSync {
                 val remote = fetch(app, session, type)
                 val local = JourneyDatabase.get(app).drafts().fields(journey).associate { it.fieldKey to it.value }
 
-                val changedLocally = local.filter { (k, v) -> remote[k] != v }
+                // Compare in the account's key space so a field written by this app
+                // and the same field written by the website are recognised as one.
+                val localOnAccountKeys = local.mapKeys { (k, _) -> toAccountKey(k) }
+                val changedLocally = localOnAccountKeys.filter { (k, v) -> remote[k] != v }
                 if (changedLocally.isNotEmpty()) {
                     // local_updated_at is the newest local write for this journey;
                     // using it keeps ordering honest against the other device.
                     push(app, session, type, changedLocally, LocalSyncClock.lastWrite(app, journey))
                 }
 
-                // Adopt remote values only where this device has not diverged.
+                // Adopt remote values only where this device has not diverged, and
+                // store them under this app's own key so every screen keeps working.
                 var adopted = 0
-                for ((key, value) in remote) {
-                    if (local[key] != value) {
-                        JourneyDatabase.get(app).drafts().put(DraftField(journey, key, value))
+                for ((accountKey, value) in remote) {
+                    val localKey = toLocalKey(accountKey)
+                    if (local[localKey] != value) {
+                        JourneyDatabase.get(app).drafts().put(DraftField(journey, localKey, value))
                         adopted++
                     }
                 }
@@ -95,7 +135,11 @@ object DraftSync {
         LocalSyncClock.markWrite(app, journey)
         executor.execute {
             runCatching {
-                push(app, session, journeyType(journey), mapOf(key to value), LocalSyncClock.lastWrite(app, journey))
+                push(
+                    app, session, journeyType(journey),
+                    mapOf(toAccountKey(key) to value),
+                    LocalSyncClock.lastWrite(app, journey),
+                )
             }.onSuccess { publish(SyncState.SYNCED) }
                 .onFailure { publish(if (Network.isOnline(app)) SyncState.ERROR else SyncState.OFFLINE) }
         }

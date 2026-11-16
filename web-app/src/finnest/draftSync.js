@@ -25,6 +25,38 @@ const ENVELOPE_KEY = 'web_envelope';
 const JOURNEY_KEY = 'selected_journey';
 /** Supabase limit from the migration. */
 export const MAX_FIELD_KEY = 120;
+
+/**
+ * Canonical key registry for the answers BOTH apps render.
+ *
+ * The website keeps its budget inside a nested object (`budget.down`), while
+ * Android saves the same box as a flat key (`down_payment`). Both were valid
+ * inside their own app and useless to the other: a down payment typed on the
+ * phone landed under `down_payment`, the laptop looked for `budget.down`, found
+ * nothing, and showed a blank box. Nothing errored, so nobody noticed.
+ *
+ * The map below is the single source of truth. The database stores the left-hand
+ * (web) key; Android translates at its own boundary in `DraftSync.kt`; the web
+ * already writes that shape, so this file needs no rewrite of existing rows.
+ *
+ * Adding a question that exists on both platforms means adding one line here and
+ * one line in `DraftSync.kt`. `draftSync.test.js` fails if one side drifts.
+ */
+export const CANONICAL_ALIASES = {
+  // New property -> budget
+  'budget.loan': 'loan',
+  'budget.down': 'down_payment',
+  'budget.stamp': 'stamp_duty',
+  'budget.gst': 'gst',
+  'budget.brokerage': 'brokerage',
+  'budget.interiors': 'interiors',
+  'budget.contingency': 'contingency',
+  'budget.emi': 'emi',
+  'budget.maintenance': 'maintenance',
+  'budget.carpet': 'carpet_area',
+  'budget.access': 'accessibility_needs',
+};
+
 export const MAX_FIELD_VALUE = 20000;
 
 export const fieldKeyFor = (journeyLabel) =>
@@ -82,12 +114,24 @@ export function toFieldMap(draft) {
 }
 
 /** Flat field map -> nested website draft. Tolerates partial rows. */
+/**
+ * Accept a row stored under an older/Android spelling and return the canonical key.
+ * Unknown keys pass through untouched so nothing is ever dropped.
+ */
+export function canonicalKey(key) {
+  for (const [webKey, androidKey] of Object.entries(CANONICAL_ALIASES)) {
+    if (androidKey === key) return webKey;
+  }
+  return key;
+}
+
 export function fromFieldMap(fields, fallbackDraft) {
   const base = typeof fallbackDraft === 'function' ? fallbackDraft() : { ...(fallbackDraft || {}) };
   const out = { ...base };
   let envelope = {};
 
-  for (const [key, raw] of Object.entries(fields || {})) {
+  for (const [rawKey, raw] of Object.entries(fields || {})) {
+    const key = canonicalKey(rawKey);
     if (key === ENVELOPE_KEY) {
       try {
         const parsed = JSON.parse(raw);
