@@ -8,7 +8,7 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000001","aal":"aal2"}', true);
 do $$ begin
   begin update public.finnest_admin_roles set role='content_manager'; raise exception 'client changed role'; exception when insufficient_privilege then null; end;
-  begin delete from public.finnest_admin_roles; raise exception 'client deleted role'; exception when insufficient_privilege then null; end;
+  begin delete from public.finnest_admin_roles; raise exception 'client deleted role (% rows)', (select count(*) from public.finnest_admin_roles); exception when insufficient_privilege then null; end;
   begin delete from public.finnest_guidance; raise exception 'client deleted guidance'; exception when insufficient_privilege then null; end;
   begin update public.finnest_admin_audit set action='UPDATE'; raise exception 'client modified audit'; exception when insufficient_privilege then null; end;
   begin delete from public.finnest_admin_audit; raise exception 'client deleted audit'; exception when insufficient_privilege then null; end;
