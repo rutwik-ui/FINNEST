@@ -1,11 +1,19 @@
 package com.finnest.app
 
+import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Assert.assertTrue
 import org.junit.Test
+import org.junit.runner.RunWith
 
-/** Parsing and safety rules for the admin-published project catalogue. */
+/**
+ * Parsing and safety rules for the admin-published project catalogue.
+ *
+ * Runs as an instrumentation test because org.json is stubbed out in JVM unit
+ * tests; the emulator workflow executes this.
+ */
+@RunWith(AndroidJUnit4::class)
 class ProjectCatalogueTest {
 
     private val payload = """
@@ -18,7 +26,7 @@ class ProjectCatalogueTest {
     """.trimIndent()
 
     @Test
-    fun `parses every published field`() {
+    fun parsesEveryPublishedField() {
         val rows = PublicProjectClient.parse(payload)
         assertEquals(2, rows.size)
         val first = rows.first()
@@ -30,7 +38,7 @@ class ProjectCatalogueTest {
     }
 
     @Test
-    fun `missing optional fields stay null instead of empty strings`() {
+    fun missingOptionalFieldsStayNull() {
         val second = PublicProjectClient.parse(payload)[1]
         assertEquals("Lakeview", second.name)
         assertNull(second.developer)
@@ -40,13 +48,13 @@ class ProjectCatalogueTest {
     }
 
     @Test
-    fun `rows without an id or name are dropped`() {
+    fun rowsWithoutIdOrNameAreDropped() {
         val rows = PublicProjectClient.parse("""[{"id":"","name":"No id"},{"id":"x","name":""}]""")
         assertTrue(rows.isEmpty())
     }
 
     @Test
-    fun `an empty catalogue is not an error`() {
+    fun anEmptyCatalogueIsNotAnError() {
         assertTrue(PublicProjectClient.parse("[]").isEmpty())
     }
 }

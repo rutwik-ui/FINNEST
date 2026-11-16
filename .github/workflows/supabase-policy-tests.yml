@@ -35,6 +35,12 @@ jobs:
           set -euo pipefail
           psql -v ON_ERROR_STOP=1 -f supabase/tests/00_disposable_supabase_shim.sql
           for migration in supabase/migrations/*.sql; do psql -v ON_ERROR_STOP=1 -f "$migration"; done
+          # Pin down the role behaviour test 40 depends on, so a failure names it.
+          psql -v ON_ERROR_STOP=1 <<'SQL'
+          insert into auth.users(id) values ('90000000-0000-4000-8000-000000000001');
+          insert into public.finnest_admin_roles(user_id, role)
+            values ('90000000-0000-4000-8000-000000000001','super_admin');
+          SQL
           status=0
           for test in supabase/tests/[1-5]0_*.sql; do
             echo "::group::$test"
