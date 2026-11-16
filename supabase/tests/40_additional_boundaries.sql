@@ -8,8 +8,23 @@ set local role authenticated;
 select set_config('request.jwt.claims', '{"sub":"10000000-0000-4000-8000-000000000001","aal":"aal2"}', true);
 do $$ begin
   begin update public.finnest_admin_roles set role='content_manager'; raise exception 'client changed role'; exception when insufficient_privilege then null; end;
-  raise notice 'diagnostic: super_admin sees % role row(s)', (select count(*) from public.finnest_admin_roles);
-  begin delete from public.finnest_admin_roles; raise exception 'client deleted role'; exception when insufficient_privilege then null; end;
+  -- Policy intent: a super admin may remove another person's role but never their
+  -- own, and must not be able to wipe the table. Assert the affected-row count
+  -- directly instead of inferring it from an exception.
+  begin
+    declare removed integer;
+    begin
+      delete from public.finnest_admin_roles where user_id <> '10000000-0000-4000-8000-000000000001';
+      get diagnostics removed = row_count;
+      if removed <> 0 then raise exception 'client removed % other role(s)', removed; end if;
+      delete from public.finnest_admin_roles where user_id = '10000000-0000-4000-8000-000000000001';
+      get diagnostics removed = row_count;
+      if removed <> 0 then raise exception 'client removed own role'; end if;
+      if (select count(*) from public.finnest_admin_roles) <> 1 then
+        raise exception 'role table changed by client delete';
+      end if;
+    end;
+  end;
   begin delete from public.finnest_guidance; raise exception 'client deleted guidance'; exception when insufficient_privilege then null; end;
   begin update public.finnest_admin_audit set action='UPDATE'; raise exception 'client modified audit'; exception when insufficient_privilege then null; end;
   begin delete from public.finnest_admin_audit; raise exception 'client deleted audit'; exception when insufficient_privilege then null; end;
