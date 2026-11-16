@@ -145,17 +145,35 @@ See [§9.2](#92-lovable-rewrote-viteconfigts).
 ### Step 4.2 — Add the environment variables
 
 1. In the Vercel project, go to **Settings → Environment Variables**.
-2. Click **Add Environment Variable** four times and add these
-   (tick both **Production** and **Preview** for each):
+2. Add these five (tick both **Production** and **Preview** for each):
 
-   | Key | Value |
-   |---|---|
-   | `VITE_SUPABASE_URL` | `https://wyjjzynjoorjmpffndzu.supabase.co` |
-   | `VITE_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_Nzb2UydbWvi6wJTtdt0_oA_pRuAWfWf` |
-   | `SUPABASE_URL` | `https://wyjjzynjoorjmpffndzu.supabase.co` |
-   | `SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_Nzb2UydbWvi6wJTtdt0_oA_pRuAWfWf` |
+   | Key | Value | Needed by |
+   |---|---|---|
+   | `VITE_SUPABASE_URL` | `https://wyjjzynjoorjmpffndzu.supabase.co` | browser |
+   | `VITE_SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_Nzb2UydbWvi6wJTtdt0_oA_pRuAWfWf` | browser |
+   | `SUPABASE_URL` | `https://wyjjzynjoorjmpffndzu.supabase.co` | server (bulk import) |
+   | `SUPABASE_PUBLISHABLE_KEY` | `sb_publishable_Nzb2UydbWvi6wJTtdt0_oA_pRuAWfWf` | server |
+   | `SUPABASE_SERVICE_ROLE_KEY` | **see the warning below** | server (bulk import) |
 
 3. Click **Save**.
+
+> **The fifth one is not optional if you use bulk import.**
+> The CSV/Excel bulk importer in the admin console runs on the server and bypasses
+> row-level security, so it needs the service-role key. Without it the importer
+> throws "Missing Supabase environment variable(s)" and nothing imports. Get it
+> from Supabase → **Project Settings → API Keys → secret keys**.
+>
+> **This key can read every row in your database, ignoring all RLS rules.** Two
+> rules that matter:
+> - Never put it in a `VITE_*` variable. Those are compiled into the JavaScript
+>   that every visitor downloads. A service key in a `VITE_*` variable would hand
+>   strangers full read/write access to your database.
+> - If it is ever pasted into a chat, a screenshot, an email or a public repo,
+>   rotate it in Supabase immediately. Treat it like your bank password.
+>
+> If you do not want a key that powerful in your host, skip bulk import: leave
+> this variable unset and add projects, guidance and experts through the normal
+> admin forms, which use the signed-in user's own permissions.
 4. Go to the **Deployments** tab → three dots on the top deployment →
    **Redeploy**.
 
