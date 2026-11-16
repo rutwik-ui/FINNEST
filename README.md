@@ -2,6 +2,23 @@
 
 FINNEST is an Indian home-buying guidance product, delivered in small, reviewable phases.
 
+## Deployment and product-readiness
+
+| Document | What it covers |
+|---|---|
+| [`docs/project-analysis-and-readiness.md`](docs/project-analysis-and-readiness.md) | What exists, what works, what is missing, verified build results, cost, and the recommended order of work |
+| [`docs/vercel-deployment.md`](docs/vercel-deployment.md) | Manual, beginner-friendly Vercel deployment for `web-app` (website + admin panel) and `web` |
+| [`docs/android-release.md`](docs/android-release.md) | Distributing the Android app as an APK (Firebase App Distribution / Google Play) |
+
+**Platform split:** Vercel hosts the websites only. Supabase is the single shared
+database. The native Android app is distributed as an APK/AAB — it cannot be
+hosted on Vercel.
+
+**Deployable today:** the website and the admin console (guidance, experts,
+support tickets, audit log, bulk import). **Not implemented:** Android sign-in,
+cross-device journey sync, and realtime push — see the readiness report before
+promising customers that their data follows them between devices.
+
 ## Current Android scope
 
 `android/` is a native Kotlin/XML guest application. The New Property flow currently includes a dashboard, locally saved requirements, developer checks, a shortlist of project names, visit observations, resident feedback, an illustrative loan guide, legal and financial due diligence, final review, journey summary, in-app dated reminders, an online published-guidance library, informational expert roles, a verbal-promise risk guide an About screen, a device-only profile and scoped local data deletion. Checklist status labels are provisional because the references show closed menus. These are user entries, not independently verified findings or professional advice.

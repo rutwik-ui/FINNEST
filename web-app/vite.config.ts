@@ -15,4 +15,21 @@ export default defineConfig({
     // nitro/vite builds from this
     server: { entry: "server" },
   },
+  // ------------------------------------------------------------------
+  // Vercel deployment
+  // ------------------------------------------------------------------
+  // The Lovable config defaults Nitro to the "cloudflare-module" preset, which
+  // produces a Cloudflare Worker bundle that Vercel cannot run. Pin Nitro to
+  // the "vercel" preset so `npm run build` emits the Vercel Build Output API
+  // into `.vercel/output/` (static assets + the `__server` serverless function
+  // that handles every SSR route).
+  //
+  // Vercel reads `vercel.json` -> `outputDirectory: ".vercel/output"`.
+  //
+  // NOTE FOR LOVABLE: if Lovable ever rewrites this file, re-add the `nitro`
+  // block below — without it the Vercel build produces no server function and
+  // every route returns 404.
+  nitro: {
+    preset: "vercel",
+  },
 });
