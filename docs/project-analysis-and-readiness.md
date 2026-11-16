@@ -378,3 +378,38 @@ affects zero rows without raising. The test now asserts that contract directly.
 - Play Store listing, data-safety declaration, and a privacy policy URL.
 - **Supabase's free tier pauses after a week idle** — upgrade before sharing the
   link with real buyers, or the whole app will look empty.
+
+### 9.7 Applied to the live project on 2026-11-16
+
+The sync migration was applied to `wyjjzynjoorjmpffndzu` and verified against the
+real database, not just the disposable harness:
+
+| Live check | Result |
+|---|---|
+| `finnest_draft_fields`, `finnest_projects`, `finnest_enquiries` created | ✅ all present, RLS enabled |
+| RLS policies in place (5 / 5 / 4) | ✅ |
+| Realtime publication contains all five app tables | ✅ |
+| `anon` has no privileges on any app table | ✅ |
+| A second signed-in user cannot read the first user's answers | ✅ blocked |
+| A second user cannot write a row owned by the first | ✅ blocked |
+| A newer edit wins; a stale offline write is dropped | ✅ merge guard works |
+| Test rows cleaned up afterwards | ✅ zero left |
+
+**Also fixed while touching production:** three tables (`finnest_journeys`,
+`finnest_documents`, `finnest_activity`) existed only in production, created by
+Lovable's editor on 2026-11-12 and never committed. Rebuilding from the repo
+produced a different database. They are now in
+`20261112132646_finnest_lovable_tables_reconcile.sql`, and their grants — which
+Lovable had left wide open including `TRUNCATE`, a verb that bypasses RLS — now
+match the rest of the project. Applied to production; existing rows untouched.
+
+### 9.8 What is still not proven
+
+- **No real two-device test has been run by a human yet.** The isolation and
+  merge guarantees are proven at the database level, and both clients are unit
+  tested, but nobody has signed in on a phone and a laptop and watched an answer
+  appear. That is the next thing to try.
+- The Android emulator suite runs the instrumentation tests, but they do not
+  exercise a live network round-trip to Supabase.
+- Realtime delivery is configured, not observed end-to-end in CI.
+- The app has never been used by an actual buyer.

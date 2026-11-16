@@ -23,18 +23,19 @@ field in `finnest_draft_fields`, so a phone and a laptop can edit different
 answers without overwriting each other, and a stale write is rejected by the
 database. Realtime updates arrive without a refresh.
 
-### One migration must be applied before sync works
+### Database state
 
-`supabase/migrations/20261116090000_finnest_cross_device_sync.sql` adds the
-sync table, the project catalogue, enquiries and the realtime publication. It is
-**not** applied to the connected project yet. Apply it with:
+All migrations, including the sync schema, are **already applied** to the
+connected Supabase project (`wyjjzynjoorjmpffndzu`) and verified against it. To
+apply future migrations to another project:
 
 ```sh
 supabase db push          # or paste the file into the Supabase SQL editor
 ```
 
-Until it runs, the website and Android app still work, but they save to the
-device only and the new admin sections show no data.
+If you rebuild a database from scratch, `supabase db push` replays everything in
+order and CI proves the set is complete by applying it to an empty PostgreSQL
+before running six policy suites.
 
 **Still not implemented:** OS-level reminder notifications, the remaining Resale
 screens, expert referrals, and the release-hardening gates in
