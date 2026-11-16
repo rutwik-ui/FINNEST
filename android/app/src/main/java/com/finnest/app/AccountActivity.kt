@@ -176,12 +176,12 @@ class AccountActivity : AppCompatActivity() {
             .setNegativeButton("Cancel", null)
             .setPositiveButton("Sign out") { _, _ ->
                 setBusy(true)
-                auth.signOut(this) {
+                auth.signOut(this, {
                     runOnUiThread {
                         if (isFinishing || isDestroyed) return@runOnUiThread
                         setBusy(false); render()
                     }
-                }
+                })
             }.show()
     }
 
