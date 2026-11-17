@@ -41,6 +41,9 @@ class StartupFlowTest {
             onView(withText("Continue as guest")).perform(click())
             onView(withContentDescription("New Property")).perform(click())
             onView(withId(R.id.primary)).perform(click());SystemClock.sleep(1200);capture("startup-dashboard")
+            onView(withContentDescription("Open menu")).perform(click());capture("startup-menu")
+            onView(withText("Sign Up")).check(matches(isDisplayed()));onView(withText("Log In")).check(matches(isDisplayed()))
+            onView(withContentDescription("Close menu")).perform(click())
             assertEquals(1, PublicAppSettings.completedVersion(context))
         }
         ActivityScenario.launch<Activity>(Intent(context, MainActivity::class.java)).use {

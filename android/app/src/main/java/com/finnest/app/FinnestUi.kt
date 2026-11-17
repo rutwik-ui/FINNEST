@@ -249,20 +249,31 @@ object FinnestUi {
         header.addView(menu, LinearLayout.LayoutParams(dp(activity, 44), dp(activity, 44)).apply { marginStart = dp(activity, 10) })
         menu.setOnClickListener { showMenu(activity, header, menu, scope) }
     }
-    /** The website's dropdown menu card: icon + label rows under the header. */
+    /** The website's modal drawer: scrollable links and fixed account actions. */
     private fun showMenu(activity: Activity, header: View, button: ImageButton, scope: String) {
         val items = listOf(
             Triple("home", "Home", R.drawable.journey_house), Triple("journey", "Journey", R.drawable.journey_sliders),
             Triple("projects", "Projects", R.drawable.journey_doc), Triple("experts", "Experts", R.drawable.journey_help),
-            Triple("profile", "Profile", R.drawable.journey_person), Triple("guidance", "Guidance", R.drawable.journey_bookmark),
+            Triple("guidance", "Guidance", R.drawable.journey_bookmark),
             Triple("reminders", "Reminders", R.drawable.journey_clock), Triple("about", "About FINNEST", R.drawable.journey_info),
             Triple("privacy", "Privacy & consent", R.drawable.journey_shield))
         val list = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL; background = shape(activity, Color.WHITE, LINE, 16)
-            setPadding(dp(activity, 8), dp(activity, 8), dp(activity, 8), dp(activity, 8)); elevation = dpf(activity, 10f)
+            orientation = LinearLayout.VERTICAL; setPadding(dp(activity, 20), 0, dp(activity, 20), 0)
         }
-        val popup = PopupWindow(list, activity.resources.displayMetrics.widthPixels - dp(activity, 24), ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
-            elevation = dpf(activity, 12f); setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT)); isOutsideTouchable = true
+        val dialog = android.app.Dialog(activity)
+        val panel = LinearLayout(activity).apply { orientation=LinearLayout.VERTICAL;setBackgroundColor(Color.WHITE);setPadding(0,dp(activity,20),0,dp(activity,20)) }
+        val title = LinearLayout(activity).apply { gravity=Gravity.CENTER_VERTICAL;setPadding(dp(activity,20),0,dp(activity,12),dp(activity,16)) }
+        title.addView(brand(activity),LinearLayout.LayoutParams(0,dp(activity,44),1f))
+        title.addView(ImageButton(activity).apply {
+            setImageResource(R.drawable.journey_close);contentDescription="Close menu";background=ripple(activity);setOnClickListener{dialog.dismiss()}
+        },LinearLayout.LayoutParams(dp(activity,44),dp(activity,44)))
+        panel.addView(title)
+        panel.addView(ScrollView(activity).apply{addView(list);isVerticalScrollBarEnabled=false},LinearLayout.LayoutParams(-1,0,1f))
+        val actions=LinearLayout(activity).apply{orientation=LinearLayout.VERTICAL;setPadding(dp(activity,20),dp(activity,12),dp(activity,20),0)}
+        panel.addView(actions)
+        dialog.setContentView(panel)
+        dialog.window?.apply {
+            setBackgroundDrawable(ColorDrawable(Color.WHITE));addFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND);setDimAmount(.55f)
         }
         items.forEach { (tab, title, icon) ->
             list.addView(LinearLayout(activity).apply {
@@ -271,18 +282,18 @@ object FinnestUi {
                 isClickable = true; isFocusable = true; contentDescription = title
                 addView(ImageView(activity).apply { setImageResource(icon); imageTintList = ColorStateList.valueOf(0xFF263140.toInt()) }, LinearLayout.LayoutParams(dp(activity, 18), dp(activity, 18)))
                 addView(label(activity, title, 15f, 500, 0xFF263140.toInt()), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(activity, 12) })
-                setOnClickListener { popup.dismiss(); leave(activity, scope, destination(activity, scope, tab)) }
+                setOnClickListener { dialog.dismiss(); leave(activity, scope, destination(activity, scope, tab)) }
             }, LinearLayout.LayoutParams(-1, dp(activity, 48)))
         }
-        list.addView(primaryButton(activity,if(scope=="resale_property")"Resale Property" else "New Property") { popup.dismiss();leave(activity,scope,Intent(activity,MainActivity::class.java).putExtra("change_journey",true)) },LinearLayout.LayoutParams(-1,-2))
+        actions.addView(Button(activity).apply{text=if(scope=="resale_property")"Resale Property" else "New Property";isAllCaps=false;setOnClickListener{dialog.dismiss();leave(activity,scope,Intent(activity,MainActivity::class.java).putExtra("change_journey",true))}},LinearLayout.LayoutParams(-1,-2))
         if(AccountClient.userId(activity)==null){
-            list.addView(primaryButton(activity,"Sign Up") { popup.dismiss();leave(activity,scope,Intent(activity,AccountActivity::class.java).putExtra("signup",true)) },LinearLayout.LayoutParams(-1,-2))
-            list.addView(Button(activity).apply{text="Log In";isAllCaps=false;setOnClickListener{popup.dismiss();leave(activity,scope,Intent(activity,AccountActivity::class.java))}},LinearLayout.LayoutParams(-1,-2))
-        }
-        styleTree(list)
+            actions.addView(primaryButton(activity,"Sign Up") { dialog.dismiss();leave(activity,scope,Intent(activity,AccountActivity::class.java).putExtra("signup",true)) },LinearLayout.LayoutParams(-1,-2).apply{topMargin=dp(activity,12)})
+            actions.addView(Button(activity).apply{text="Log In";isAllCaps=false;setOnClickListener{dialog.dismiss();leave(activity,scope,Intent(activity,AccountActivity::class.java))}},LinearLayout.LayoutParams(-1,-2))
+        } else actions.addView(Button(activity).apply{text="Profile & settings";isAllCaps=false;setOnClickListener{dialog.dismiss();leave(activity,scope,Intent(activity,ProfileSettingsActivity::class.java))}},LinearLayout.LayoutParams(-1,-2))
+        styleTree(panel)
         button.setImageResource(R.drawable.journey_close); button.contentDescription = "Close menu"
-        popup.setOnDismissListener { button.setImageResource(R.drawable.journey_menu); button.contentDescription = "Open menu" }
-        popup.showAsDropDown(header, dp(activity, 12), 0)
+        dialog.setOnDismissListener { button.setImageResource(R.drawable.journey_menu); button.contentDescription = "Open menu" }
+        dialog.show();dialog.window?.apply{setGravity(Gravity.END);setLayout(minOf(dp(activity,360),activity.resources.displayMetrics.widthPixels-dp(activity,32)),-1)}
     }
     /** The website's fixed bottom tabs: Home, Journey, Projects, Experts and Profile. */
     fun bottomNav(activity: Activity, root: LinearLayout, scope: String, active: String?) {
