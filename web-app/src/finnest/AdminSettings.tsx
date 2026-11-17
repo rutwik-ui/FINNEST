@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { supabase } from './supabase';
 import { settingsSchema, defaultSettings, type AppSettings } from './appSettings';
 import type { Json } from '@/integrations/supabase/types';
+import { sameJourney } from './offlineStore';
 const labels = { journey: 'Selected journey', nextAction: 'Next action', progress: 'Progress', guidance: 'Guidance' };
 export default function AdminSettings() {
   const [form, setForm] = useState<AppSettings>(defaultSettings), [revision, setRevision] = useState(0), [publishedRevision, setPublishedRevision] = useState(0);
@@ -27,11 +28,13 @@ export default function AdminSettings() {
     setBusy(true); setError(''); setMessage('');
     const state = publish ? 'published' : 'draft';
     const expected = publish ? publishedRevision : revision;
-    const result = await supabase.from('finnest_app_settings').update({ payload: parsed.data as unknown as Json }).eq('state', state).eq('revision', expected).select('payload,revision').single();
-    const returned = settingsSchema.safeParse(result.data?.payload);
-    if (result.error || !returned.success || JSON.stringify(returned.data) !== JSON.stringify(parsed.data)) setError('Settings changed elsewhere or could not be saved. Reload before retrying.');
-    else { setMessage(publish ? 'Published. Buyers receive the update on their next sync.' : 'Draft saved. The published app is unchanged.'); if (publish) setPublishedRevision(result.data.revision); else setRevision(result.data.revision); }
-    setBusy(false);
+    try {
+      const result = await supabase.from('finnest_app_settings').update({ payload: parsed.data as unknown as Json }).eq('state', state).eq('revision', expected).select('payload,revision').single();
+      const returned = settingsSchema.safeParse(result.data?.payload);
+      if (result.error || !returned.success || !sameJourney(returned.data, parsed.data)) setError('Settings changed elsewhere or could not be saved. Reload before retrying.');
+      else { setMessage(publish ? 'Published. Buyers receive the update on their next sync.' : 'Draft saved. The published app is unchanged.'); if (publish) setPublishedRevision(result.data.revision); else setRevision(result.data.revision); }
+    } catch { setError('Settings could not be saved. Check your connection and reload before retrying.'); }
+    finally { setBusy(false); }
     const audit = await supabase.from('finnest_settings_history').select('id,state,revision,occurred_at').order('occurred_at', { ascending: false }).limit(20); setHistory(audit.data || []);
   }
   return <><div className="panel-head"><div><h1>App settings</h1><p>Shared website content and access preferences. Native launcher icons require a new APK.</p></div><Button variant="outline" onClick={() => { setError(''); void load(); }}>Reload</Button></div>

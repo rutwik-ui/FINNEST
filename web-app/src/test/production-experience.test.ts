@@ -6,6 +6,12 @@ import { refuseServiceWorker } from '@/lib/pwa';
 import { nextJourneyAction } from '@/finnest/journeyActions';
 
 describe('FINNEST production rules', () => {
+  it('confirms settings readback without depending on database object-key order', () => {
+    const submitted = { onboardingVersion: 2, onboardingSlides: [{ title: 'Plan', body: 'Keep your notes', image: 'planning' }], guestEnabled: false };
+    const readback = { guestEnabled: false, onboardingSlides: [{ image: 'planning', body: 'Keep your notes', title: 'Plan' }], onboardingVersion: 2 };
+    expect(sameJourney(submitted, readback)).toBe(true);
+    expect(sameJourney(submitted, { ...readback, onboardingVersion: 1 })).toBe(false);
+  });
   it('does not resave identical server answers when object keys are reordered', () => {
     expect(sameJourney({ budget: { down: '100', emi: '40' }, location: [] }, { location: [], budget: { emi: '40', down: '100' } })).toBe(true);
     expect(sameJourney({ down: '100' }, { down: '200' })).toBe(false);
