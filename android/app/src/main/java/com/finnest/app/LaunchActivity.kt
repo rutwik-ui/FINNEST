@@ -21,7 +21,7 @@ class LaunchActivity: AppCompatActivity(){
             val settings=PublicAppSettings.refresh(this@LaunchActivity)
             withTimeoutOrNull(5000) { runCatching {auth.awaitInitialization()};
                 val current=auth.currentSessionOrNull()
-                if(current!=null && current.expiresAt * 1000 <= System.currentTimeMillis())runCatching {auth.refreshCurrentSession()}
+                if(current!=null)runCatching {auth.refreshCurrentSession()}
             };delay((1100-(System.currentTimeMillis()-started)).coerceAtLeast(0))
             if(auth.currentSessionOrNull()!=null)AccountSync.start(this@LaunchActivity)
             val prefs=getSharedPreferences("entry",MODE_PRIVATE)
