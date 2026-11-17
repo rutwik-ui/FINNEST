@@ -30,3 +30,10 @@
 - Exercise public web navigation, auth mode switching/recovery validation, offline edits and reconnect states on desktop and mobile.
 - Verify administrator publish/readback with an authorized session when available; otherwise report the authenticated test gate as blocked.
 - Build and inspect native artifacts only through the existing Android CI; never rename an old APK as a new release.
+
+## Delivery status
+- Website branding, reusable authentication/recovery, mobile/desktop navigation, published-content cache, account-isolated offline merge/retry and the focused settings workflow are implemented.
+- 33 automated web tests pass; browser checks show no runtime errors, no 390px overflow, offline guest budget persistence, working recovery controls and password-only administrator entry. Native sign-in and cross-device authenticated readback remain unverified.
+- Native 0.5.0 source is delivered to the existing repository, with encrypted sessions, explicit payload mapping, account-scoped Room/outbox, caller-authenticated version writes and Android build/device workflows triggered. A running CI job is not a completed APK.
+- No production website exists yet. Published offline shell checks, approved Vercel deployment, full CMS expansion, native recovery deep-link completion and production signing remain separate tasks.
+- Existing backend warnings (leaked-password protection disabled and an older privileged function) predate these migrations; they are not claimed resolved.

@@ -75,3 +75,4 @@ h1,h2,h3,.eyebrow,.brand,.desk-brand,.primary{letter-spacing:0}
 }
 @media(prefers-reduced-motion:reduce){.content-skeleton{animation:none}.finnest-auth-dialog{animation:none!important}}
 .home-order-0{order:0}.home-order-1{order:1}.home-order-2{order:2}.home-order-3{order:3}
+.brand-loading{min-height:70svh;display:grid;place-items:center;background:var(--f-card)}
