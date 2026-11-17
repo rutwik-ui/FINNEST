@@ -2,7 +2,7 @@ import React, { useCallback, useEffect, useState } from 'react';
 import { LayoutDashboard, FileText, Users, UserRound, LifeBuoy, ExternalLink, ChevronRight, Home, RefreshCw, LogOut, Plus, Trash2 } from 'lucide-react';
 import { supabase } from './supabase';
 import Admin from './Admin';
-import { BrandMark } from './BrandMark';
+import { Wordmark } from './BrandMark';
 import BulkImport from './AdminBulkImport';
 import BuyerProgress from './AdminBuyers';
 import { ACCESS_ROLES, canAccessAdmin } from './admin';
@@ -51,7 +51,7 @@ export default function AdminConsole({ go, session, authLoading, navigationGuard
   const ready = !authLoading && userId && roles && canAccessAdmin(roles);
   const shell = (title, body) => <div className="desk">
     <aside className="desk-side">
-      <div className="desk-brand"><BrandMark size={26} /><span>FINNEST</span><small>Admin console</small></div>
+      <div className="desk-brand"><Wordmark size={22}/><small>Admin console</small></div>
       {ready && <><div className="desk-group">Manage</div>
         {SECTIONS.filter(([id]) => canOpen(roles, id)).map(([id, label, Icon]) => <button key={id} className={'desk-link' + (section === id ? ' active' : '')} onClick={() => setSection(id)}><Icon size={16} />{label}</button>)}</>}
       <div className="desk-foot">

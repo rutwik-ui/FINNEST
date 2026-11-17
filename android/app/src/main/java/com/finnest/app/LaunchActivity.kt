@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 class LaunchActivity: AppCompatActivity(){
     override fun onCreate(savedInstanceState: Bundle?){
         installSplashScreen();super.onCreate(savedInstanceState)
-        val logo=ImageView(this).apply {setImageResource(R.drawable.finnest_logo);scaleType=ImageView.ScaleType.CENTER_INSIDE;setBackgroundColor(FinnestUi.CREAM);alpha=0f}
+        val logo=android.widget.FrameLayout(this).apply {setBackgroundColor(FinnestUi.CREAM);alpha=0f;addView(FinnestUi.brand(this@LaunchActivity).apply{scaleX=1.5f;scaleY=1.5f},android.widget.FrameLayout.LayoutParams(-2,-2,android.view.Gravity.CENTER))}
         setContentView(logo);logo.animate().alpha(1f).setDuration(300).start()
         lifecycleScope.launch {
             val started=System.currentTimeMillis();val auth=AccountClient.get(this@LaunchActivity).auth

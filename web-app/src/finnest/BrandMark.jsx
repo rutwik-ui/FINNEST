@@ -1,3 +1,6 @@
 import React from 'react';
-import logo from '@/assets/finnest-house-logo.png.asset.json';
-export function BrandMark({size=34}){return <img className="brand-mark" src={logo.url} width={size} height={size} alt="" aria-hidden="true"/>}
+import { Home } from 'lucide-react';
+/** Original FINNEST house glyph (the uploaded app icon is used only for favicon/launcher). */
+export function BrandMark({size=30}){return <span className="brand-house" aria-hidden="true"><Home size={size}/></span>}
+/** Original FINNEST wordmark: F + red house + NNEST. */
+export function Wordmark({size=30,className=''}){return <span className={`brand-wordmark ${className}`} aria-label="FINNEST">F<BrandMark size={size}/>NNEST</span>}

@@ -3,7 +3,7 @@ import { ArrowRight, Eye, EyeOff, LoaderCircle } from 'lucide-react';
 import { supabase } from './supabase';
 import { Button } from '@/components/ui/button';
 import { Dialog, DialogContent, DialogTitle, DialogDescription } from '@/components/ui/dialog';
-import { BrandMark } from './BrandMark';
+import { Wordmark } from './BrandMark';
 import { z } from 'zod';
 
 export type AuthMode = 'signin' | 'signup' | 'reset' | 'recover';
@@ -53,5 +53,5 @@ export function AccountForm({ initialMode = 'signin', onSuccess }: { initialMode
 }
 
 export function AuthDialog({ mode, onClose, onSuccess }: { mode: AuthMode | null; onClose: () => void; onSuccess: () => void }) {
-  return <Dialog open={mode !== null} onOpenChange={open => { if (!open) onClose(); }}><DialogContent className="finnest-auth-dialog"><div className="auth-logo"><BrandMark size={56}/><strong>FINNEST</strong></div><DialogTitle>{mode === 'recover' ? 'Choose a new password' : 'Your journey, connected'}</DialogTitle><DialogDescription>Keep your plans and questions together in your FINNEST account.</DialogDescription>{mode && <AccountForm key={mode} initialMode={mode} onSuccess={onSuccess}/>}</DialogContent></Dialog>;
+  return <Dialog open={mode !== null} onOpenChange={open => { if (!open) onClose(); }}><DialogContent className="finnest-auth-dialog"><div className="auth-logo"><Wordmark size={28}/></div><DialogTitle>{mode === 'recover' ? 'Choose a new password' : 'Your journey, connected'}</DialogTitle><DialogDescription>Keep your plans and questions together in your FINNEST account.</DialogDescription>{mode && <AccountForm key={mode} initialMode={mode} onSuccess={onSuccess}/>}</DialogContent></Dialog>;
 }

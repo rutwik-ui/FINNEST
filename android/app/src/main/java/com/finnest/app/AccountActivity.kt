@@ -15,15 +15,28 @@ class AccountActivity: AppCompatActivity() {
     private var signup=false
     override fun onCreate(savedInstanceState: Bundle?){super.onCreate(savedInstanceState);render()}
     private fun render(){
-        val root=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL;setPadding(FinnestUi.dp(context,24),FinnestUi.dp(context,32),FinnestUi.dp(context,24),FinnestUi.dp(context,24));setBackgroundColor(FinnestUi.CREAM) }
-        setContentView(ScrollView(this).apply { addView(root) })
-        root.addView(FinnestUi.brand(this));root.addView(FinnestUi.h1(this,"Your journey, connected"));root.addView(FinnestUi.body(this,"Keep your plans and questions together in your FINNEST account."))
-        val tabs=LinearLayout(this)
-        for(isSignup in listOf(false,true)){tabs.addView(FinnestUi.primaryButton(this,if(isSignup)"Sign Up" else "Log In"){signup=isSignup;render()},LinearLayout.LayoutParams(0,-2,1f))};root.addView(tabs)
-        val email=EditText(this).apply { hint="Email";contentDescription="Email";inputType=InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS }
-        val password=EditText(this).apply { hint="Password";contentDescription="Password";inputType=InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD }
-        root.addView(email);root.addView(password)
-        val message=FinnestUi.body(this,"");root.addView(message)
+        val c=this
+        val page=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL;setBackgroundColor(FinnestUi.CREAM) }
+        val header=LinearLayout(this).apply { gravity=Gravity.CENTER_VERTICAL;setPadding(FinnestUi.dp(c,16),0,FinnestUi.dp(c,16),0);background=android.graphics.drawable.LayerDrawable(arrayOf(android.graphics.drawable.ColorDrawable(FinnestUi.LINE),android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE))).apply{setLayerInset(1,0,0,0,FinnestUi.dp(c,1))} }
+        header.addView(FinnestUi.brand(this));page.addView(header,LinearLayout.LayoutParams(-1,FinnestUi.dp(c,60)))
+        val root=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL;setPadding(FinnestUi.dp(c,20),FinnestUi.dp(c,28),FinnestUi.dp(c,20),FinnestUi.dp(c,32)) }
+        page.addView(ScrollView(this).apply { addView(root) },LinearLayout.LayoutParams(-1,0,1f))
+        setContentView(page)
+        fun gap(n:Int)=LinearLayout.LayoutParams(-1,-2).apply{topMargin=FinnestUi.dp(c,n)}
+        root.addView(FinnestUi.eyebrow(this,if(signup)"Create your account" else "Welcome back"))
+        root.addView(FinnestUi.h1(this,if(signup)"Start your journey." else "Your journey, connected."),gap(10))
+        root.addView(FinnestUi.body(this,"Keep your plans and questions together in your FINNEST account — on the app and the website."),gap(10))
+        val form=FinnestUi.card(this,20);root.addView(form,gap(24))
+        val tabs=LinearLayout(this).apply{background=FinnestUi.shape(c,FinnestUi.CREAM,FinnestUi.LINE,12);setPadding(FinnestUi.dp(c,4),FinnestUi.dp(c,4),FinnestUi.dp(c,4),FinnestUi.dp(c,4))}
+        for(isSignup in listOf(false,true)){val on=isSignup==signup
+            tabs.addView(FinnestUi.label(this,if(isSignup)"Sign Up" else "Log In",15f,700,if(on)android.graphics.Color.WHITE else FinnestUi.MUTED).apply{gravity=Gravity.CENTER;background=if(on)FinnestUi.shape(c,FinnestUi.RED,null,9) else null;isClickable=true;isFocusable=true;contentDescription=text;setOnClickListener{signup=isSignup;render()}},LinearLayout.LayoutParams(0,FinnestUi.dp(c,42),1f))}
+        form.addView(tabs)
+        val email=EditText(this).apply { hint="you@example.com";contentDescription="Email";inputType=InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS }
+        val password=EditText(this).apply { hint=if(signup)"At least 8 characters" else "Your password";contentDescription="Password";inputType=InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD }
+        form.addView(FinnestUi.label(this,"Email",14f,700,FinnestUi.LABEL),gap(20));form.addView(email,gap(8))
+        form.addView(FinnestUi.label(this,"Password",14f,700,FinnestUi.LABEL),gap(16));form.addView(password,gap(8))
+        val root0=root;val formRef=form
+        val message=FinnestUi.body(this,"",13f);formRef.addView(message,gap(10))
         lateinit var submit: Button
         submit=FinnestUi.primaryButton(this,if(signup)"Create account" else "Log In"){
             val address=email.text.toString().trim();val secret=password.text.toString()
@@ -39,12 +52,13 @@ class AccountActivity: AppCompatActivity() {
                     else message.text="Account created. Email confirmation is still enabled for this service; check your inbox."
                 }catch(_:Exception){message.text="Could not continue. Check your email, password and connection, then retry."}finally{submit.isEnabled=true}
             }
-        };root.addView(submit)
-        root.addView(FinnestUi.link(this,"Forgot password?"){
+        };formRef.addView(submit,gap(14))
+        if(!signup)formRef.addView(FinnestUi.link(this,"Forgot password?"){
             val address=email.text.toString().trim();if(!android.util.Patterns.EMAIL_ADDRESS.matcher(address).matches()){email.error="Enter your email first";return@link}
             lifecycleScope.launch {try{AccountClient.get(this@AccountActivity).auth.resetPasswordForEmail(address);message.text="If an account exists, a reset link has been sent."}catch(_:Exception){message.text="Could not send reset link. Please retry online."}}
-        })
-        val guest=Button(this).apply {text="Continue as guest";isAllCaps=false;setOnClickListener {getSharedPreferences("entry",MODE_PRIVATE).edit().putBoolean("guest_session",true).apply();startActivity(Intent(this@AccountActivity,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))}}
-        root.addView(guest);FinnestUi.styleTree(root)
+        }.apply{gravity=Gravity.CENTER},gap(16))
+        root0.addView(FinnestUi.body(this,"Prefer to explore first?",13f,FinnestUi.SOFT).apply{gravity=Gravity.CENTER},gap(24))
+        val guest=com.google.android.material.button.MaterialButton(this).apply {strokeWidth=FinnestUi.dp(c,1);text="Continue as guest";isAllCaps=false;setOnClickListener {getSharedPreferences("entry",MODE_PRIVATE).edit().putBoolean("guest_session",true).apply();startActivity(Intent(this@AccountActivity,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))}}
+        root0.addView(guest,gap(8));FinnestUi.styleTree(page)
     }
 }

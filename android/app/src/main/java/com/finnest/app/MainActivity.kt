@@ -23,6 +23,12 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
+        val header = binding.root.getChildAt(0) as android.widget.LinearLayout
+        header.removeViewAt(1)
+        header.addView(FinnestUi.brand(this))
+        header.background = android.graphics.drawable.LayerDrawable(arrayOf(android.graphics.drawable.ColorDrawable(FinnestUi.LINE), android.graphics.drawable.ColorDrawable(android.graphics.Color.WHITE))).apply { setLayerInset(1, 0, 0, 0, FinnestUi.dp(this@MainActivity, 1)) }
+        binding.illustration.background = FinnestUi.shape(this, FinnestUi.BLUSH, null, 18)
+        binding.illustration.clipToOutline = true
         FinnestUi.styleTree(binding.root)
         binding.back.visibility = View.GONE
         model = ViewModelProvider(this)[EntryViewModel::class.java]
@@ -59,14 +65,35 @@ class MainActivity : AppCompatActivity() {
         }
     }
     private fun goBack() { if (model.page > 0) { model.page--; render() } }
-    private fun detail(text: String, action: (() -> Unit)? = null) {
-        val row = TextView(this).apply {
-            this.text = text; textSize = 16f; setTextColor(getColor(R.color.navy)); setPadding(20, 20, 20, 20)
-            setBackgroundResource(R.drawable.card)
-            if (action != null) { isClickable = true; isFocusable = true; setOnClickListener { action() } }
+    private fun lp(top: Int = 12) = android.widget.LinearLayout.LayoutParams(-1, -2).apply { topMargin = FinnestUi.dp(this@MainActivity, top) }
+    /** Website-style list card: a small red badge beside each line. */
+    private fun listCard(rows: List<Pair<String, String>>) {
+        val card = FinnestUi.card(this, 16)
+        rows.forEachIndexed { i, (badge, text) ->
+            val row = android.widget.LinearLayout(this).apply { gravity = android.view.Gravity.CENTER_VERTICAL; setPadding(0, FinnestUi.dp(context, 8), 0, FinnestUi.dp(context, 8)) }
+            row.addView(FinnestUi.label(this, badge, 13f, 700, FinnestUi.RED_TEXT).apply { gravity = android.view.Gravity.CENTER; background = FinnestUi.shape(context, FinnestUi.BLUSH, FinnestUi.PILL_LINE, 10) }, android.widget.LinearLayout.LayoutParams(FinnestUi.dp(this, 34), FinnestUi.dp(this, 34)))
+            row.addView(FinnestUi.label(this, text, 15f, 600, FinnestUi.NAVY), android.widget.LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = FinnestUi.dp(this@MainActivity, 14) })
+            card.addView(row)
+            if (i < rows.size - 1) card.addView(View(this).apply { setBackgroundColor(FinnestUi.LINE) }, android.widget.LinearLayout.LayoutParams(-1, FinnestUi.dp(this, 1)).apply { marginStart = FinnestUi.dp(this@MainActivity, 48) })
         }
-        val params = android.widget.LinearLayout.LayoutParams(-1, -2).apply { bottomMargin = 10 }
-        binding.details.addView(row, params)
+        binding.details.addView(card, lp(4))
+    }
+    private fun note(text: String) {
+        val card = android.widget.LinearLayout(this).apply { background = FinnestUi.shape(context, FinnestUi.NOTICE_BG, FinnestUi.NOTICE_LINE, 14); setPadding(FinnestUi.dp(context, 16), FinnestUi.dp(context, 14), FinnestUi.dp(context, 16), FinnestUi.dp(context, 14)) }
+        card.addView(FinnestUi.body(this, text, 13f, FinnestUi.INK))
+        binding.details.addView(card, lp())
+    }
+    private fun choice(title: String, text: String, selected: Boolean, action: () -> Unit) {
+        val card = FinnestUi.card(this, 18).apply {
+            background = FinnestUi.shape(context, if (selected) FinnestUi.BLUSH else android.graphics.Color.WHITE, if (selected) FinnestUi.RED else FinnestUi.LINE, 16)
+            isClickable = true; isFocusable = true; contentDescription = title; setOnClickListener { action() }
+        }
+        val top = android.widget.LinearLayout(this).apply { gravity = android.view.Gravity.CENTER_VERTICAL }
+        top.addView(FinnestUi.h2(this, title, 18f), android.widget.LinearLayout.LayoutParams(0, -2, 1f))
+        top.addView(FinnestUi.label(this, if (selected) "✓" else "→", 16f, 800, if (selected) android.graphics.Color.WHITE else FinnestUi.RED).apply { gravity = android.view.Gravity.CENTER; background = FinnestUi.shape(context, if (selected) FinnestUi.RED else FinnestUi.BLUSH, null, 14) }, android.widget.LinearLayout.LayoutParams(FinnestUi.dp(this, 28), FinnestUi.dp(this, 28)))
+        card.addView(top)
+        card.addView(FinnestUi.body(this, text), lp(6))
+        binding.details.addView(card, lp())
     }
     private fun render(): Unit = with(binding) {
         details.removeAllViews()
@@ -78,14 +105,14 @@ class MainActivity : AppCompatActivity() {
         caption.isVisible = model.page == 0
         secondary.isVisible = model.page < 3 || model.page == 4
         primary.isEnabled = model.page != 3 || model.selected != null
-        primary.text = if (model.page == 3) "Choose a journey to continue  →" else if (model.page == 4 && model.selected == "New Property") "Open requirements & budget  →" else if (model.page == 4) "Change journey" else "Continue  →"
+        primary.text = if (model.page == 3) if (model.selected == null) "Choose a journey to continue" else "Continue with ${model.selected}" else if (model.page == 4 && model.selected == "New Property") "Open requirements & budget  →" else if (model.page == 4) "Change journey" else "Continue  →"
         secondary.text = if (model.page == 4) "Back to journey selection" else "Skip"
         when (model.page) {
-            0 -> { eyebrow.text = "YOUR HOME-BUYING JOURNEY"; title.text = "Buying a home is a big decision."; description.text = "There are questions to ask, documents to understand and choices to make. You do not have to figure it all out at once."; illustration.setImageResource(R.drawable.finnest_logo); caption.text = "A calmer place to think through your next steps." }
-            1 -> { eyebrow.text = "A CLEARER WAY FORWARD"; title.text = "Know what to check, one step at a time."; description.text = "Keep your own questions and notes together, and see what still needs attention."; illustration.setImageResource(R.drawable.finnest_logo); detail("01   Organize what matters to you\n\n02   Keep track of unknowns\n\n03   Know when to seek qualified help"); detail("FINNEST supports your decision-making; it does not verify a property or replace qualified professionals.") }
-            2 -> { eyebrow.text = "YOUR DECISION, YOUR PACE"; title.text = "Move forward with more clarity."; description.text = "A checklist is a way to stay oriented—not an approval to buy."; illustration.setImageResource(R.drawable.finnest_logo); detail("✓   Checked by you\n\n▤   Information provided\n\n?   Pending / unknown\n\n♙   Professional review") }
-            3 -> { eyebrow.text = "CHOOSE YOUR JOURNEY"; title.text = "What kind of property journey are you exploring?"; description.text = "Choose one path. Each keeps its own checklist and progress."; detail("${if (model.selected == "New Property") "✓  " else ""}New Property\n\nPlan steps to explore: project and developer checks, visits, loans, and due diligence.  →") { model.selected = "New Property"; render() }; detail("${if (model.selected == "Resale Property") "✓  " else ""}Resale Property\n\nAreas to review: property condition, seller ownership, society records, dues, legal review, and handover.  →") { model.selected = "Resale Property"; render() }; detail("Not sure? New property is typically being sold for the first time; resale has a prior owner and may involve society records.") }
-            else -> { eyebrow.text = "YOUR JOURNEY"; title.text = "${model.selected} selected."; description.text = if (model.selected == "New Property") "Your choice is saved on this device. Start your requirements and budget or return later." else "Your choice is saved on this device. The resale journey is coming in a later phase."; detail("Your data stays on this device for now. Account sign-in and cloud synchronization are not yet available.") }
+            0 -> { eyebrow.text = "YOUR HOME-BUYING JOURNEY"; title.text = "Buying a home is a big decision."; description.text = "There are questions to ask, documents to understand and choices to make. You do not have to figure it all out at once."; illustration.setImageResource(R.drawable.intro_1); caption.text = "A calmer place to think through your next steps." }
+            1 -> { eyebrow.text = "A CLEARER WAY FORWARD"; title.text = "Know what to check, one step at a time."; description.text = "Keep your own questions and notes together, and see what still needs attention."; illustration.setImageResource(R.drawable.intro_2); listCard(listOf("01" to "Organize what matters to you", "02" to "Keep track of unknowns", "03" to "Know when to seek qualified help")); note("FINNEST supports your decision-making; it does not verify a property or replace qualified professionals.") }
+            2 -> { eyebrow.text = "YOUR DECISION, YOUR PACE"; title.text = "Move forward with more clarity."; description.text = "A checklist is a way to stay oriented—not an approval to buy."; illustration.setImageResource(R.drawable.intro_3); listCard(listOf("✓" to "Checked by you", "≡" to "Information provided", "?" to "Pending / unknown", "★" to "Professional review")) }
+            3 -> { eyebrow.text = "CHOOSE YOUR JOURNEY"; title.text = "What kind of property journey are you exploring?"; description.text = "Choose one path. Each keeps its own checklist and progress."; choice("New Property", "Plan steps to explore: project and developer checks, visits, loans, and due diligence.", model.selected == "New Property") { model.selected = "New Property"; render() }; choice("Resale Property", "Areas to review: property condition, seller ownership, society records, dues, legal review, and handover.", model.selected == "Resale Property") { model.selected = "Resale Property"; render() }; note("Not sure? New property is typically being sold for the first time; resale has a prior owner and may involve society records.") }
+            else -> { eyebrow.text = "YOUR JOURNEY"; title.text = "${model.selected} selected."; description.text = if (model.selected == "New Property") "Your choice is saved on this device. Start your requirements and budget or return later." else "Your choice is saved on this device. The resale journey is coming in a later phase." }
         }
         progress.progress = model.page + 1
     }
