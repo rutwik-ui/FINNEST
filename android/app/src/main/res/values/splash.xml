@@ -1,0 +1,7 @@
+<resources>
+  <style name="Theme.Finnest.Splash" parent="Theme.SplashScreen">
+    <item name="windowSplashScreenBackground">@color/cream</item>
+    <item name="windowSplashScreenAnimatedIcon">@drawable/finnest_logo</item>
+    <item name="postSplashScreenTheme">@style/Theme.Finnest</item>
+  </style>
+</resources>

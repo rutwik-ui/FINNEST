@@ -4,41 +4,51 @@ import { supabase } from './supabase';
 import Admin from './Admin';
 import { BrandMark } from './BrandMark';
 import BulkImport from './AdminBulkImport';
+import BuyerProgress from './AdminBuyers';
+import { ACCESS_ROLES, canAccessAdmin } from './admin';
+import AdminSettings from './AdminSettings';
 
-export const ADMIN_ROLES = ['super_admin', 'content_manager', 'support_manager', 'expert_manager'];
+export const ADMIN_ROLES = ACCESS_ROLES;
 export const ROLE_LABELS = { super_admin: 'Super admin', content_manager: 'Content manager', support_manager: 'Support manager', expert_manager: 'Expert manager' };
 // Which console sections each role can open; the database enforces the same rules.
 export const SECTION_ROLES = {
   overview: ADMIN_ROLES,
   guidance: ['super_admin', 'content_manager'],
+  buyers: ADMIN_ROLES,
   users: ['super_admin', 'content_manager', 'support_manager', 'expert_manager'],
   experts: ['super_admin', 'expert_manager'],
   support: ['super_admin', 'support_manager'],
+  settings: ['super_admin'],
 };
 export const canOpen = (roles, section) => roles.some(r => (SECTION_ROLES[section] || []).includes(r));
 
 const SECTIONS = [
   ['overview', 'Overview', LayoutDashboard],
   ['guidance', 'Guidance content', FileText],
+  ['buyers', 'Buyer progress', Home],
   ['users', 'Users & roles', Users],
   ['experts', 'Experts', UserRound],
   ['support', 'Support requests', LifeBuoy],
+  ['settings', 'App settings', FileText],
 ];
 const fmt = d => d ? new Date(d).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
 export default function AdminConsole({ go, session, authLoading, navigationGuardRef }) {
-  const [roles, setRoles] = useState(null), [aal, setAal] = useState(null), [section, setSection] = useState('overview');
+  const [access, setAccess] = useState(null), [section, setSection] = useState('overview');
   const userId = session?.user?.id;
-  const check = useCallback(async () => {
-    if (!userId) { setRoles(null); setAal(null); return; }
-    const [{ data: r }, { data: a }] = await Promise.all([
-      supabase.from('finnest_admin_roles').select('role').eq('user_id', userId),
-      supabase.auth.mfa.getAuthenticatorAssuranceLevel(),
-    ]);
-    setRoles((r || []).map(x => x.role)); setAal(a?.currentLevel || null);
-  }, [userId]);
-  useEffect(() => { check(); }, [check, session?.access_token]);
-  const ready = userId && roles?.length && aal === 'aal2';
+  const token = session?.access_token;
+  const roles = access && access.userId === userId && access.token === token ? access.roles : null;
+  useEffect(() => {
+    let active = true;
+    setAccess(null); setSection('overview');
+    if (!userId) return;
+    supabase.from('finnest_admin_roles').select('role').eq('user_id', userId)
+      .then(({ data, error }) => {
+        if (active) setAccess({ userId, token, roles: error ? [] : (data || []).map(row => row.role) });
+      }, () => { if (active) setAccess({ userId, token, roles: [] }); });
+    return () => { active = false; };
+  }, [userId, token]);
+  const ready = !authLoading && userId && roles && canAccessAdmin(roles);
   const shell = (title, body) => <div className="desk">
     <aside className="desk-side">
       <div className="desk-brand"><BrandMark size={26} /><span>FINNEST</span><small>Admin console</small></div>
@@ -55,14 +65,16 @@ export default function AdminConsole({ go, session, authLoading, navigationGuard
       <div className="desk-content">{body}</div>
     </div>
   </div>;
-  if (!ready) return shell('Sign in', <Admin go={go} session={session} authLoading={authLoading} navigationGuardRef={navigationGuardRef} onAccessChange={check} />);
+  if (!ready) return shell('Sign in', <Admin go={go} session={session} authLoading={authLoading} navigationGuardRef={navigationGuardRef} />);
   const label = SECTIONS.find(s => s[0] === section)?.[1];
   return shell(label, <>
     {section === 'overview' && <Overview roles={roles} open={setSection} />}
     {section === 'guidance' && <Admin go={go} session={session} authLoading={authLoading} navigationGuardRef={navigationGuardRef} />}
+    {section === 'buyers' && <BuyerProgress roles={roles} />}
     {section === 'users' && <UsersPanel roles={roles} me={userId} />}
     {section === 'experts' && <ExpertsPanel />}
     {section === 'support' && <SupportPanel />}
+    {section === 'settings' && <AdminSettings />}
   </>);
 }
 

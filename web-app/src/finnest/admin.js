@@ -1,4 +1,6 @@
 export const CONTENT_ROLES = ['super_admin', 'content_manager'];
+export const ACCESS_ROLES = ['super_admin', 'content_manager', 'support_manager', 'expert_manager'];
+export const canAccessAdmin = roles => roles.some(role => ACCESS_ROLES.includes(role));
 export const CATEGORIES = ['general', 'new_property', 'resale_property'];
 export function validateGuidance(input) {
   const title = input.title.trim();

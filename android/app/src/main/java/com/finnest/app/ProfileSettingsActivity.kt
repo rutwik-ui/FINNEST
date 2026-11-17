@@ -14,6 +14,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import com.finnest.app.databinding.ActivityDeveloperChecksBinding
+import androidx.lifecycle.lifecycleScope
+import io.github.jan.supabase.gotrue.auth
+import kotlinx.coroutines.launch
 
 /** Device-only profile and an explicit, scoped local reset. No account or cloud data is modified. */
 class ProfileSettingsActivity : AppCompatActivity() {
@@ -29,7 +32,7 @@ class ProfileSettingsActivity : AppCompatActivity() {
         FinnestUi.decorate(this, if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") "resale_property" else "new_property", roadmap = true)
         binding.stepLabel.text = "YOUR PROFILE"; binding.screenTitle.text = "Profile & settings"
         binding.screenDescription.text = "Review your device-only profile and data settings."
-        binding.screenNotice.text = "This Android app does not have account sign-in or cloud backup yet."
+        binding.screenNotice.text = if(AccountClient.userId(this)==null) "Guest answers stay on this device. Log in to connect your journey." else "Your account answers save on this device and sync when connected."
         binding.saveLater.text = "Home"; binding.next.text = "Back to dashboard"
         binding.back.setOnClickListener { leave { finish() } }; binding.backBottom.setOnClickListener { leave { finish() } }
         binding.saveLater.setOnClickListener { leave { home() } }; binding.next.setOnClickListener { leave { home() } }
@@ -65,6 +68,14 @@ class ProfileSettingsActivity : AppCompatActivity() {
         text = title; isAllCaps = false; setOnClickListener { leave(click) }; parent.addView(this, LinearLayout.LayoutParams(-1, -2))
     }
     private fun buildForm(draft: Map<String, String>) {
+        val account=card("Your account")
+        val user=AccountClient.get(this).auth.currentUserOrNull()
+        if(user==null) button(account,"Log In / Sign Up") { startActivity(Intent(this,AccountActivity::class.java)) }
+        else {
+            label(account,"Signed in as ${user.email.orEmpty()}")
+            button(account,"Sync now") { AccountSync.enqueue(this) }
+            button(account,"Sign out") { lifecycleScope.launch { runCatching { AccountClient.get(this@ProfileSettingsActivity).auth.signOut() }.onSuccess { AccountSync.stop();startActivity(Intent(this@ProfileSettingsActivity,AccountActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)) }.onFailure { AlertDialog.Builder(this@ProfileSettingsActivity).setMessage("Could not sign out. Please retry online.").setPositiveButton("OK",null).show() } } }
+        }
         val profile = card("Your profile")
         val journey = getSharedPreferences("entry", MODE_PRIVATE).getString("journey", null) ?: "Not selected"
         label(profile, "Selected journey: $journey")
@@ -87,7 +98,7 @@ class ProfileSettingsActivity : AppCompatActivity() {
         button(privacy, "About & disclaimer") { startActivity(Intent(this, CommonActivity::class.java).putExtra("screen", "about")) }
         val reset = card("Delete local data")
         label(reset, "Deletes both New Property and Resale drafts, profile fields and reminders on this device. The selected journey and onboarding preference remain. It does not delete website data, a cloud account or Supabase records. This cannot be undone.")
-        resetButton = Button(this).apply { text = "Delete local journey data"; isAllCaps = false; setOnClickListener { confirmDelete() } }
+        resetButton = Button(this).apply { text = "Delete local journey data"; isAllCaps = false;isEnabled=user==null; setOnClickListener { confirmDelete() } }
         reset.addView(resetButton, LinearLayout.LayoutParams(-1, -2))
     }
     private fun confirmDelete() {

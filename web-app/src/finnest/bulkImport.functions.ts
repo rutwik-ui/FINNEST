@@ -8,8 +8,8 @@ export const importAdminRows = createServerFn({ method: 'POST' })
   .inputValidator(input => importRequestSchema.parse(input))
   .handler(async ({ data, context }) => {
     const { data: roleRows, error } = await context.supabase.from('finnest_admin_roles').select('role').eq('user_id', context.userId);
-    if (error || !canImport((roleRows ?? []).map(row => row.role), context.claims['aal'], data.kind)) {
-      throw new Error('This import needs the correct administrator role and authenticator verification.');
+    if (error || !canImport((roleRows ?? []).map(row => row.role), data.kind)) {
+      throw new Error('This import needs the correct administrator role.');
     }
     return persistImport(context.supabase, data);
   });

@@ -35,18 +35,18 @@ describe('Bulk guidance and expert imports', () => {
     expect(previewImport('guidance', table, suggestMapping('guidance', table.headers), ids)[1]?.errors.length).toBeGreaterThan(0);
     expect(() => checkImportFile({ name: 'old.xls', size: 10 })).toThrow('.xlsx');
   });
-  it('permits guidance imports only for verified content managers and super admins', () => {
-    expect(canImport(['content_manager'], 'aal2', 'guidance')).toBe(true);
-    expect(canImport(['super_admin'], 'aal2', 'guidance')).toBe(true);
-    expect(canImport(['expert_manager'], 'aal2', 'guidance')).toBe(false);
-    expect(canImport(['support_manager'], 'aal2', 'guidance')).toBe(false);
-    expect(canImport(['super_admin'], 'aal1', 'guidance')).toBe(false);
+  it('permits guidance imports only for content managers and super admins', () => {
+    expect(canImport(['content_manager'], 'guidance')).toBe(true);
+    expect(canImport(['super_admin'], 'guidance')).toBe(true);
+    expect(canImport(['expert_manager'], 'guidance')).toBe(false);
+    expect(canImport(['support_manager'], 'guidance')).toBe(false);
+    expect(canImport([], 'guidance')).toBe(false);
   });
-  it('permits expert imports only for verified expert managers and super admins', () => {
-    expect(canImport(['expert_manager'], 'aal2', 'experts')).toBe(true);
-    expect(canImport(['super_admin'], 'aal2', 'experts')).toBe(true);
-    expect(canImport(['content_manager'], 'aal2', 'experts')).toBe(false);
-    expect(canImport([], 'aal2', 'experts')).toBe(false);
+  it('permits expert imports only for expert managers and super admins', () => {
+    expect(canImport(['expert_manager'], 'experts')).toBe(true);
+    expect(canImport(['super_admin'], 'experts')).toBe(true);
+    expect(canImport(['content_manager'], 'experts')).toBe(false);
+    expect(canImport([], 'experts')).toBe(false);
   });
   it('saves rows atomically and verifies readback with stable IDs for retries', async () => {
     const upsert = vi.fn().mockResolvedValue({ error: null });

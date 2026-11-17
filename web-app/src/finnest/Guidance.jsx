@@ -1,6 +1,8 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshCw, ShieldAlert } from 'lucide-react';
 import { supabase } from './supabase';
+import { readPublicCache, writePublicCache } from './offlineStore';
+import { Button } from '@/components/ui/button';
 
 const filters = [
   ['all', 'All topics'], ['general', 'General'],
@@ -48,14 +50,23 @@ export default function Guidance() {
     moreBusy.current = false;
     if (!supabase) { setState(empty('unconfigured')); return; }
     setState(empty('loading'));
+    const cached = await readPublicCache(`guidance:${category}`);
+    if (current !== request.current) return;
+    if (cached) setState({ ...empty('ready'), ...cached, offline: !navigator.onLine });
     try {
       const result = await loadPublishedGuidance(supabase, category);
+      await writePublicCache(`guidance:${category}`, result);
       if (current === request.current) setState({ ...empty('ready'), ...result });
     } catch {
-      if (current === request.current) setState(empty('error'));
+      if (current === request.current) setState(cached ? { ...empty('ready'), ...cached, offline: true } : empty('error'));
     }
   }, [category]);
   useEffect(() => { reload(); return () => { request.current += 1; }; }, [reload]);
+  useEffect(() => {
+    const channel = supabase.channel(`guidance-public-${crypto.randomUUID()}`).on('postgres_changes', { event: '*', schema: 'public', table: 'finnest_guidance' }, reload).subscribe();
+    window.addEventListener('online', reload);
+    return () => { supabase.removeChannel(channel); window.removeEventListener('online', reload); };
+  }, [reload]);
   const loadMore = async () => {
     if (!state.cursor || state.kind !== 'ready' || moreBusy.current) return;
     const current = request.current;
@@ -82,10 +93,11 @@ export default function Guidance() {
       <label>Category<select value={category} onChange={event => { request.current += 1; setCategory(event.target.value); }}>{filters.map(([id, title]) => <option value={id} key={id}>{title}</option>)}</select></label>
       <button type="button" className="outline-button" onClick={reload} disabled={state.kind === 'loading'}><RefreshCw size={16}/> Refresh</button>
     </section>
-    {state.kind === 'loading' && <p className="guidance-state" role="status">Loading published guidance…</p>}
+    {state.kind === 'loading' && <div className="content-skeletons" role="status" aria-label="Loading published guidance">{[0,1,2].map(i=><div className="content-skeleton" key={i}/>)}</div>}
     {state.kind === 'unconfigured' && <p className="guidance-state" role="status">Guidance is not configured for this website yet.</p>}
     {state.kind === 'error' && <div className="guidance-state" role="alert"><p>Could not load guidance. Check your connection and try again.</p><button className="outline-button" onClick={reload}>Try again</button></div>}
     {state.kind === 'ready' && <div aria-live="polite">
+      {state.offline && <p className="footnote">Showing the last saved guidance. Reconnect for updates.</p>}
       {state.items.length === 0 && !state.cursor ? <div className="card guidance-empty"><h2>No published guidance yet</h2><p>Check another category or return later.</p></div> : <div className="guidance-list">{state.items.map(item => <article className="card guidance-item" key={item.id}>
         <span className="eyebrow">{names[item.category]}</span><h2>{item.title}</h2><p className="guidance-body">{item.body}</p>
       </article>)}</div>}

@@ -39,8 +39,8 @@ export const IMPORT_FIELDS: Record<ImportKind, { key: string; label: string; req
   experts: [{ key: 'name', label: 'Name', required: true }, { key: 'specialty', label: 'Speciality', required: true }, { key: 'city', label: 'City' }, { key: 'phone', label: 'Phone' }, { key: 'email', label: 'Email' }, { key: 'bio', label: 'Bio' }, { key: 'status', label: 'Status' }],
 };
 
-export function canImport(roles: string[], aal: unknown, kind: ImportKind) {
-  return aal === 'aal2' && roles.some(role => role === 'super_admin' || role === (kind === 'guidance' ? 'content_manager' : 'expert_manager'));
+export function canImport(roles: string[], kind: ImportKind) {
+  return roles.some(role => role === 'super_admin' || role === (kind === 'guidance' ? 'content_manager' : 'expert_manager'));
 }
 
 export function checkImportFile(file: { name: string; size: number }) {

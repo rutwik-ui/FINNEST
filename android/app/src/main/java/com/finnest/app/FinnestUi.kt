@@ -205,7 +205,7 @@ object FinnestUi {
         fun word(value: String) = label(context, value, 18f, 800, 0xFF141E2A.toInt(), 0.16f).apply { setSingleLine(true) }
         addView(word("F"))
         addView(ImageView(context).apply {
-            setImageResource(R.drawable.journey_house); imageTintList = ColorStateList.valueOf(RED)
+            setImageResource(R.drawable.finnest_logo); scaleType=ImageView.ScaleType.CENTER_CROP
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
         }, LinearLayout.LayoutParams(dp(context, 22), dp(context, 22)).apply { marginStart = dp(context, 1); marginEnd = dp(context, 2) })
         addView(word("NNEST"))

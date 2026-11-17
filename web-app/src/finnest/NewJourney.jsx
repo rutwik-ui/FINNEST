@@ -4,7 +4,7 @@ import {emptyFeedback, LEGAL_CHECKS, LENDER_CHECKS, monthlyEmi, STATUSES} from '
 
 const statusChoices = value => value && !STATUSES.includes(value) ? [value,...STATUSES] : STATUSES;
 const patchObject = (data,update,key,field,value) => update({[key]:{...data[key],[field]:value}});
-function Navigation({back,next,go,nextText='Continue'}) {return <div className="step-actions"><button className="outline-button" onClick={()=>go(back)}><ArrowLeft size={17}/> Back</button><button className="outline-button" onClick={()=>go('/')}>Return home</button>{next&&<button className="primary compact" onClick={()=>go(next)}>{nextText} <ArrowRight size={18}/></button>}</div>}
+function Navigation({back,next,go,nextText='Continue'}) {return <div className="step-actions"><button className="outline-button" onClick={()=>go(back)}><ArrowLeft size={17}/> Back</button>{next&&<button className="primary compact" onClick={()=>go(next)}>{nextText} <ArrowRight size={18}/></button>}</div>}
 function Notice({children}) {return <div className="notice"><Info size={20}/><span>{children}</span></div>}
 export function Feedback({data,update,go}) {
  const form=data.feedbackForm, notes=data.feedbackNotes;

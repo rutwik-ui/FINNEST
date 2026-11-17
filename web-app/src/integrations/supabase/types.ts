@@ -14,6 +14,33 @@ export type Database = {
   }
   public: {
     Tables: {
+      finnest_activity: {
+        Row: {
+          detail: Json
+          event: string
+          id: number
+          occurred_at: string
+          platform: string
+          user_id: string
+        }
+        Insert: {
+          detail?: Json
+          event: string
+          id?: never
+          occurred_at?: string
+          platform?: string
+          user_id?: string
+        }
+        Update: {
+          detail?: Json
+          event?: string
+          id?: never
+          occurred_at?: string
+          platform?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       finnest_admin_audit: {
         Row: {
           action: string
@@ -55,6 +82,143 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      finnest_app_settings: {
+        Row: {
+          payload: Json
+          revision: number
+          state: string
+          updated_at: string
+          updated_by: string | null
+        }
+        Insert: {
+          payload: Json
+          revision?: number
+          state: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Update: {
+          payload?: Json
+          revision?: number
+          state?: string
+          updated_at?: string
+          updated_by?: string | null
+        }
+        Relationships: []
+      }
+      finnest_documents: {
+        Row: {
+          id: string
+          journey_type: string
+          name: string
+          path: string
+          uploaded_at: string
+          user_id: string
+        }
+        Insert: {
+          id?: string
+          journey_type?: string
+          name: string
+          path: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Update: {
+          id?: string
+          journey_type?: string
+          name?: string
+          path?: string
+          uploaded_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      finnest_draft_fields: {
+        Row: {
+          client_updated_at: string
+          field_key: string
+          journey_type: string
+          updated_at: string
+          user_id: string
+          value: string
+        }
+        Insert: {
+          client_updated_at: string
+          field_key: string
+          journey_type: string
+          updated_at?: string
+          user_id: string
+          value?: string
+        }
+        Update: {
+          client_updated_at?: string
+          field_key?: string
+          journey_type?: string
+          updated_at?: string
+          user_id?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      finnest_enquiries: {
+        Row: {
+          admin_note: string | null
+          consent_contact: boolean
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          message: string
+          project_id: string | null
+          status: string
+          subject: string
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note?: string | null
+          consent_contact?: boolean
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          message: string
+          project_id?: string | null
+          status?: string
+          subject: string
+          topic?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          consent_contact?: boolean
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          project_id?: string | null
+          status?: string
+          subject?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "finnest_enquiries_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "finnest_projects"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       finnest_experts: {
         Row: {
@@ -125,6 +289,42 @@ export type Database = {
         }
         Relationships: []
       }
+      finnest_journeys: {
+        Row: {
+          completed_steps: string[]
+          created_at: string
+          current_step: string | null
+          journey_type: string
+          payload: Json
+          updated_at: string
+          updated_by_device: string | null
+          user_id: string
+          version: number
+        }
+        Insert: {
+          completed_steps?: string[]
+          created_at?: string
+          current_step?: string | null
+          journey_type: string
+          payload?: Json
+          updated_at?: string
+          updated_by_device?: string | null
+          user_id: string
+          version?: number
+        }
+        Update: {
+          completed_steps?: string[]
+          created_at?: string
+          current_step?: string | null
+          journey_type?: string
+          payload?: Json
+          updated_at?: string
+          updated_by_device?: string | null
+          user_id?: string
+          version?: number
+        }
+        Relationships: []
+      }
       finnest_profiles: {
         Row: {
           created_at: string
@@ -149,6 +349,84 @@ export type Database = {
           last_seen_at?: string | null
           updated_at?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      finnest_projects: {
+        Row: {
+          approval_note: string | null
+          city: string | null
+          configuration: string | null
+          created_at: string
+          developer: string | null
+          id: string
+          locality: string | null
+          name: string
+          possession_label: string | null
+          price_from_label: string | null
+          sort_order: number
+          status: string
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          approval_note?: string | null
+          city?: string | null
+          configuration?: string | null
+          created_at?: string
+          developer?: string | null
+          id?: string
+          locality?: string | null
+          name: string
+          possession_label?: string | null
+          price_from_label?: string | null
+          sort_order?: number
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Update: {
+          approval_note?: string | null
+          city?: string | null
+          configuration?: string | null
+          created_at?: string
+          developer?: string | null
+          id?: string
+          locality?: string | null
+          name?: string
+          possession_label?: string | null
+          price_from_label?: string | null
+          sort_order?: number
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      finnest_settings_history: {
+        Row: {
+          actor_id: string | null
+          id: number
+          occurred_at: string
+          payload: Json
+          revision: number
+          state: string
+        }
+        Insert: {
+          actor_id?: string | null
+          id?: never
+          occurred_at?: string
+          payload: Json
+          revision: number
+          state: string
+        }
+        Update: {
+          actor_id?: string | null
+          id?: never
+          occurred_at?: string
+          payload?: Json
+          revision?: number
+          state?: string
         }
         Relationships: []
       }
