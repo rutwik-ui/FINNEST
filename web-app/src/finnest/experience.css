@@ -3,8 +3,8 @@
 h1,h2,h3,.eyebrow,.desk-brand,.primary{letter-spacing:0}
 .page-head h1{font-size:40px}
 .topbar{background:var(--f-header);padding-inline:32px;gap:20px}
-.brand{height:auto;min-height:44px;padding:0;flex:none;background:none!important;color:#141e2a}
-.brand-wordmark{display:inline-flex;align-items:center;gap:2px;letter-spacing:.16em;font-weight:800;font-size:25px;line-height:1;color:#141e2a}.brand-house{display:inline-flex;color:#e7353d;letter-spacing:0}.desk-brand .brand-wordmark{font-size:18px}.auth-logo .brand-wordmark{font-size:22px}.guest-gate .brand-wordmark{font-size:30px}
+.brand{height:auto;min-height:44px;padding:0;flex:none;background:none!important;color:var(--f-ink)}
+.brand-wordmark{display:inline-flex;align-items:center;font-size:25px;line-height:1;color:var(--f-ink);max-width:100%}.brand-house{display:inline-flex;color:var(--f-red);letter-spacing:0}.desk-brand .brand-wordmark{font-size:18px}.auth-logo .brand-wordmark{font-size:22px}.guest-gate .brand-wordmark{font-size:30px}
 .desktop-nav{display:flex;gap:4px;margin-left:12px}
 .desktop-nav button{color:var(--f-ink-2);height:44px;padding-inline:12px;background:none}
 .desktop-nav button[aria-current=page]{color:var(--f-red-d);background:var(--f-red-soft)}
@@ -74,5 +74,29 @@ h1,h2,h3,.eyebrow,.desk-brand,.primary{letter-spacing:0}
 @media(prefers-reduced-motion:reduce){.content-skeleton{animation:none}.finnest-auth-dialog{animation:none!important}}
 .home-order-0{order:0}.home-order-1{order:1}.home-order-2{order:2}.home-order-3{order:3}
 .brand-loading{min-height:70svh;display:grid;place-items:center;background:var(--f-card)}
-.desk-brand .brand-wordmark{color:inherit}.desk-brand .brand-house{color:#ff6b70}
-.brand-wordmark .brand-house svg{width:1.2em!important;height:1.2em!important;stroke-width:2.2}
+.desk-brand .brand-wordmark{color:inherit}
+.brand-lockup{height:1em;width:auto;max-width:100%;overflow:visible}.brand-lockup-letters{fill:currentColor}.brand-lockup-house{fill:none;stroke:var(--f-red);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.finnest-drawer,.finnest-dropdown{font-family:'Plus Jakarta Sans',system-ui,sans-serif;background:var(--f-card);color:var(--f-ink);border-color:var(--f-line)}
+.finnest-drawer{display:flex;flex-direction:column;width:min(360px,calc(100% - 32px));max-width:none;padding:28px 20px 20px;gap:16px}
+.finnest-drawer>button{min-width:44px;min-height:44px;top:12px;right:8px}
+.finnest-drawer h2{padding:4px 36px 16px 0;border-bottom:1px solid var(--f-line)}
+.drawer-links{display:flex;flex-direction:column;gap:4px;overflow:auto;flex:1;min-height:0}.drawer-links button{justify-content:flex-start;min-height:44px;color:var(--f-ink-2);font-weight:500;gap:12px;flex-shrink:0}
+.drawer-links button[aria-current=page]{background:var(--f-red-soft);color:var(--f-red-d)}
+.drawer-journey{justify-content:space-between;min-height:44px;color:var(--f-red-d);background:var(--f-red-soft);border-color:var(--f-red-line)}
+.drawer-account{display:grid;gap:10px;border-top:1px solid var(--f-line);padding-top:16px;padding-bottom:env(safe-area-inset-bottom)}.drawer-account button{min-height:48px}
+.finnest-dropdown [role=menuitem]{min-height:44px;padding:10px 12px}.finnest-dropdown{min-width:220px;border-radius:8px;box-shadow:var(--f-shadow-lg)}
+.header-search{color:var(--f-ink-2)}
+@media(min-width:1024px){.topbar{gap:12px;padding-inline:24px}.desktop-nav{margin-left:8px;gap:0}.desktop-nav button{padding-inline:10px}.header-actions{gap:6px}.journey-pill{font-size:12px;padding:8px 12px}.header-auth button{padding-inline:12px}}
+@media(min-width:768px) and (max-width:1023px){.topbar{height:72px;padding-inline:24px}.brand .brand-wordmark{font-size:23px}}
+@media(min-width:1024px) and (max-width:1150px){.header-search{display:none}.brand .brand-wordmark{font-size:21px}}
+.launch-splash{min-height:100svh;display:flex;flex-direction:column;justify-content:center;align-items:center;gap:28px;background:var(--f-bg)}.launch-splash .brand-wordmark{font-size:36px;animation:logo-arrive .3s ease-out}
+.launch-loading{width:28px;height:28px;border:2px solid var(--f-red-line);border-top-color:var(--f-red);border-radius:50%;animation:launch-spin 1s linear infinite}
+.launch-shell{min-height:100svh;background:var(--f-bg)}.launch-header{height:76px;display:flex;justify-content:space-between;align-items:center;padding:0 32px;background:var(--f-card);border-bottom:1px solid var(--f-line)}.launch-header button{min-height:44px;color:var(--f-red-d)}
+.launch-intro{max-width:640px;margin:auto;padding:32px 24px 40px;display:grid;gap:20px}.launch-photo{width:100%;height:260px;object-fit:cover;border-radius:8px}.launch-copy h1,.launch-account h1{font-size:32px;line-height:1.2;margin:12px 0;color:var(--f-ink);letter-spacing:0}.launch-copy p,.launch-account>p{font-size:15px;line-height:1.6}
+.launch-progress{display:flex;gap:8px;justify-content:center;margin-top:4px}.launch-progress span{width:8px;height:8px;border-radius:50%;background:var(--f-line)}.launch-progress span.active{width:28px;border-radius:4px;background:var(--f-red)}
+.launch-controls{display:flex;gap:12px}.launch-controls button{min-height:48px}.launch-controls button:last-child{flex:1;font-weight:700}
+.launch-account{max-width:488px;margin:auto;padding:40px 24px}.launch-account .auth-form{max-width:none}.launch-guest{width:100%;min-height:48px;margin-top:24px;color:var(--f-red-d)}
+.settings-introduction{border:0;padding:0;display:grid;gap:20px}.settings-introduction legend{font-weight:700;margin-bottom:16px}.settings-slide{display:grid;gap:12px;border-bottom:1px solid var(--f-line);padding-bottom:20px}
+@keyframes logo-arrive{from{opacity:0;transform:scale(.97)}to{opacity:1;transform:scale(1)}}@keyframes launch-spin{to{transform:rotate(360deg)}}
+@media(max-width:767px){.launch-header{height:calc(60px + env(safe-area-inset-top));padding:env(safe-area-inset-top) 16px 0}.launch-header .brand-wordmark{font-size:20px}.launch-intro{padding:24px 20px calc(24px + env(safe-area-inset-bottom));gap:18px}.launch-photo{height:220px}.launch-copy h1,.launch-account h1{font-size:30px}.launch-account{padding:28px 20px}.launch-splash .brand-wordmark{font-size:28px}}
+@media(prefers-reduced-motion:reduce){.launch-splash .brand-wordmark,.launch-loading{animation:none}}

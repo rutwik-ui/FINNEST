@@ -9,9 +9,9 @@ export const Route = createFileRoute("/_finnest/")({
       { property: "og:description", content: "Plan, organise and track every step of buying a new or resale home in India." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary_large_image" },
-      { property: 'og:url', content: '/' },
+      { property: 'og:url', content: 'https://repo-rekindle-workspace.lovable.app/' },
     ],
-    links: [{ rel: 'canonical', href: '/' }],
+    links: [{ rel: 'canonical', href: 'https://repo-rekindle-workspace.lovable.app/' }],
   }),
   component: () => null,
 });

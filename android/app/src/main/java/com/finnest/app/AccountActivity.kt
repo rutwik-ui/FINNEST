@@ -13,7 +13,7 @@ import kotlinx.coroutines.launch
 
 class AccountActivity: AppCompatActivity() {
     private var signup=false
-    override fun onCreate(savedInstanceState: Bundle?){super.onCreate(savedInstanceState);render()}
+    override fun onCreate(savedInstanceState: Bundle?){super.onCreate(savedInstanceState);signup=intent.getBooleanExtra("signup",false);render()}
     private fun render(){
         val c=this
         val page=LinearLayout(this).apply { orientation=LinearLayout.VERTICAL;setBackgroundColor(FinnestUi.CREAM) }
@@ -26,10 +26,10 @@ class AccountActivity: AppCompatActivity() {
         root.addView(FinnestUi.eyebrow(this,if(signup)"Create your account" else "Welcome back"))
         root.addView(FinnestUi.h1(this,if(signup)"Start your journey." else "Your journey, connected."),gap(10))
         root.addView(FinnestUi.body(this,"Keep your plans and questions together in your FINNEST account — on the app and the website."),gap(10))
-        val form=FinnestUi.card(this,20);root.addView(form,gap(24))
+        val form=LinearLayout(this).apply{orientation=LinearLayout.VERTICAL};root.addView(form,gap(24))
         val tabs=LinearLayout(this).apply{background=FinnestUi.shape(c,FinnestUi.CREAM,FinnestUi.LINE,12);setPadding(FinnestUi.dp(c,4),FinnestUi.dp(c,4),FinnestUi.dp(c,4),FinnestUi.dp(c,4))}
         for(isSignup in listOf(false,true)){val on=isSignup==signup
-            tabs.addView(FinnestUi.label(this,if(isSignup)"Sign Up" else "Log In",15f,700,if(on)android.graphics.Color.WHITE else FinnestUi.MUTED).apply{gravity=Gravity.CENTER;background=if(on)FinnestUi.shape(c,FinnestUi.RED,null,9) else null;isClickable=true;isFocusable=true;contentDescription=text;setOnClickListener{signup=isSignup;render()}},LinearLayout.LayoutParams(0,FinnestUi.dp(c,42),1f))}
+            tabs.addView(FinnestUi.label(this,if(isSignup)"Sign Up" else "Log In",15f,700,if(on)FinnestUi.RED_DARK else FinnestUi.MUTED).apply{gravity=Gravity.CENTER;background=if(on)FinnestUi.shape(c,FinnestUi.BLUSH,null,8) else null;isClickable=true;isFocusable=true;contentDescription=text;setOnClickListener{signup=isSignup;render()}},LinearLayout.LayoutParams(0,FinnestUi.dp(c,44),1f))}
         form.addView(tabs)
         val email=EditText(this).apply { hint="you@example.com";contentDescription="Email";inputType=InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_EMAIL_ADDRESS }
         val password=EditText(this).apply { hint=if(signup)"At least 8 characters" else "Your password";contentDescription="Password";inputType=InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_VARIATION_PASSWORD }
@@ -48,7 +48,7 @@ class AccountActivity: AppCompatActivity() {
                     val auth=AccountClient.get(this@AccountActivity).auth
                     if(signup)auth.signUpWith(Email){this.email=address;this.password=secret} else auth.signInWith(Email){this.email=address;this.password=secret}
                     password.setText("")
-                    if(auth.currentSessionOrNull()!=null){AccountSync.start(this@AccountActivity);startActivity(Intent(this@AccountActivity,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))}
+                    if(auth.currentSessionOrNull()!=null){PublicAppSettings.complete(this@AccountActivity,false);getSharedPreferences("entry",MODE_PRIVATE).edit().putBoolean("account_created",true).apply();AccountSync.start(this@AccountActivity);startActivity(Intent(this@AccountActivity,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK));finish()}
                     else message.text="Account created. Email confirmation is still enabled for this service; check your inbox."
                 }catch(_:Exception){message.text="Could not continue. Check your email, password and connection, then retry."}finally{submit.isEnabled=true}
             }
@@ -57,8 +57,9 @@ class AccountActivity: AppCompatActivity() {
             val address=email.text.toString().trim();if(!android.util.Patterns.EMAIL_ADDRESS.matcher(address).matches()){email.error="Enter your email first";return@link}
             lifecycleScope.launch {try{AccountClient.get(this@AccountActivity).auth.resetPasswordForEmail(address);message.text="If an account exists, a reset link has been sent."}catch(_:Exception){message.text="Could not send reset link. Please retry online."}}
         }.apply{gravity=Gravity.CENTER},gap(16))
-        root0.addView(FinnestUi.body(this,"Prefer to explore first?",13f,FinnestUi.SOFT).apply{gravity=Gravity.CENTER},gap(24))
-        val guest=com.google.android.material.button.MaterialButton(this).apply {strokeWidth=FinnestUi.dp(c,1);text="Continue as guest";isAllCaps=false;setOnClickListener {getSharedPreferences("entry",MODE_PRIVATE).edit().putBoolean("guest_session",true).apply();startActivity(Intent(this@AccountActivity,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK))}}
-        root0.addView(guest,gap(8));FinnestUi.styleTree(page)
+        if(PublicAppSettings.cached(this).guestEnabled){
+            val guest=com.google.android.material.button.MaterialButton(this).apply {strokeWidth=FinnestUi.dp(c,1);text="Continue as guest";isAllCaps=false;setOnClickListener {PublicAppSettings.complete(this@AccountActivity,true);startActivity(Intent(this@AccountActivity,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK));finish()}}
+            root0.addView(guest,gap(24))
+        };FinnestUi.styleTree(page)
     }
 }

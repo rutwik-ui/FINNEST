@@ -3,7 +3,7 @@ import { App } from "@/finnest/FinnestApp";
 import finnestCss from "@/finnest/finnest.css?url";
 import finnestProCss from "@/finnest/finnest-pro.css?url";
 import experienceCss from '@/finnest/experience.css?url';
-import logo from '@/assets/finnest-house-logo.png.asset.json';
+import { Wordmark } from '@/finnest/BrandMark';
 
 // The preserved FINNEST web app manages its own screens from the URL and keeps
 // drafts in this browser, so it stays mounted across all child paths.
@@ -24,7 +24,7 @@ export const Route = createFileRoute("/_finnest")({
 function FinnestLayout() {
   return (
     <>
-      <ClientOnly fallback={<div className="brand-loading" role="status" aria-label="Loading FINNEST"><img src={logo.url} width={72} height={72} alt="FINNEST"/></div>}>
+      <ClientOnly fallback={<div className="brand-loading" role="status" aria-label="Loading FINNEST"><Wordmark/></div>}>
         <App />
       </ClientOnly>
       <Outlet />

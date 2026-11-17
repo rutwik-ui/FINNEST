@@ -202,13 +202,10 @@ object FinnestUi {
 
     fun brand(context: Context): LinearLayout = LinearLayout(context).apply {
         orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; contentDescription = "FINNEST home"
-        fun word(value: String) = label(context, value, 18f, 800, 0xFF141E2A.toInt(), 0.16f).apply { setSingleLine(true) }
-        addView(word("F"))
         addView(ImageView(context).apply {
-            setImageResource(R.drawable.finnest_logo); scaleType=ImageView.ScaleType.CENTER_CROP
+            setImageResource(R.drawable.finnest_lockup); scaleType=ImageView.ScaleType.FIT_CENTER
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }, LinearLayout.LayoutParams(dp(context, 22), dp(context, 22)).apply { marginStart = dp(context, 1); marginEnd = dp(context, 2) })
-        addView(word("NNEST"))
+        }, LinearLayout.LayoutParams(dp(context, 134), dp(context, 20)))
     }
     private fun leave(activity: Activity, scope: String, intent: Intent, message: String = "Keep editing and retry saving before leaving.") {
         DraftRepository.afterPending(scope) { saved -> activity.runOnUiThread {
@@ -244,18 +241,12 @@ object FinnestUi {
         }
         header.addView(brand, LinearLayout.LayoutParams(-2, dp(activity, 44)))
         header.addView(Space(activity), LinearLayout.LayoutParams(0, 1, 1f))
-        header.addView(label(activity, if (scope == "resale_property") "Resale Property" else "New Property", 12f, 700, 0xFFD93037.toInt()).apply {
-            gravity = Gravity.CENTER; background = shape(activity, BLUSH, PILL_LINE, 30)
-            setPadding(dp(activity, 12), dp(activity, 7), dp(activity, 12), dp(activity, 7)); minHeight = dp(activity, 34)
-            isClickable = true; isFocusable = true; contentDescription = "Change journey"
-            setOnClickListener { leave(activity, scope, Intent(activity, MainActivity::class.java).putExtra("change_journey", true).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), "Keep editing and retry saving before changing journeys.") }
-        }, LinearLayout.LayoutParams(-2, -2))
         val menu = ImageButton(activity).apply {
             setImageResource(R.drawable.journey_menu); imageTintList = ColorStateList.valueOf(0xFF18212D.toInt())
             background = shape(activity, Color.WHITE, LINE, 11); scaleType = ImageView.ScaleType.CENTER_INSIDE
             contentDescription = "Open menu"; setPadding(dp(activity, 8), dp(activity, 8), dp(activity, 8), dp(activity, 8))
         }
-        header.addView(menu, LinearLayout.LayoutParams(dp(activity, 38), dp(activity, 38)).apply { marginStart = dp(activity, 10) })
+        header.addView(menu, LinearLayout.LayoutParams(dp(activity, 44), dp(activity, 44)).apply { marginStart = dp(activity, 10) })
         menu.setOnClickListener { showMenu(activity, header, menu, scope) }
     }
     /** The website's dropdown menu card: icon + label rows under the header. */
@@ -283,6 +274,12 @@ object FinnestUi {
                 setOnClickListener { popup.dismiss(); leave(activity, scope, destination(activity, scope, tab)) }
             }, LinearLayout.LayoutParams(-1, dp(activity, 48)))
         }
+        list.addView(primaryButton(activity,if(scope=="resale_property")"Resale Property" else "New Property") { popup.dismiss();leave(activity,scope,Intent(activity,MainActivity::class.java).putExtra("change_journey",true)) },LinearLayout.LayoutParams(-1,-2))
+        if(AccountClient.userId(activity)==null){
+            list.addView(primaryButton(activity,"Sign Up") { popup.dismiss();leave(activity,scope,Intent(activity,AccountActivity::class.java).putExtra("signup",true)) },LinearLayout.LayoutParams(-1,-2))
+            list.addView(Button(activity).apply{text="Log In";isAllCaps=false;setOnClickListener{popup.dismiss();leave(activity,scope,Intent(activity,AccountActivity::class.java))}},LinearLayout.LayoutParams(-1,-2))
+        }
+        styleTree(list)
         button.setImageResource(R.drawable.journey_close); button.contentDescription = "Close menu"
         popup.setOnDismissListener { button.setImageResource(R.drawable.journey_menu); button.contentDescription = "Open menu" }
         popup.showAsDropDown(header, dp(activity, 12), 0)

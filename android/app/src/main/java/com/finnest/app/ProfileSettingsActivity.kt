@@ -77,6 +77,7 @@ class ProfileSettingsActivity : AppCompatActivity() {
             button(account,"Sign out") { lifecycleScope.launch { runCatching { AccountClient.get(this@ProfileSettingsActivity).auth.signOut() }.onSuccess { AccountSync.stop();startActivity(Intent(this@ProfileSettingsActivity,AccountActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)) }.onFailure { AlertDialog.Builder(this@ProfileSettingsActivity).setMessage("Could not sign out. Please retry online.").setPositiveButton("OK",null).show() } } }
         }
         val profile = card("Your profile")
+        button(profile,"Replay introduction") { startActivity(Intent(this,MainActivity::class.java).putExtra("replay_onboarding",true)) }
         val journey = getSharedPreferences("entry", MODE_PRIVATE).getString("journey", null) ?: "Not selected"
         label(profile, "Selected journey: $journey")
         listOf("name" to "Name", "city" to "City / area").forEach { (key, title) ->
