@@ -7,12 +7,14 @@ import { Wordmark } from './BrandMark';
 import { mainNavigation, secondaryNavigation, type NavigationMode } from './navigation';
 import { supabase } from './supabase';
 import { SiteSearch, useSearchShortcut } from './SiteSearch';
+import { NotificationBell } from './NotificationBell';
+import type { NotificationsApi } from './notifications';
 
 import type { RoadmapStep as Step } from './roadmap';
-type Props = { path: string; go: (path: string) => void; mode: NavigationMode; signedIn: boolean; journey: string; chooseJourney: () => void; openAuth: (mode: 'signin' | 'signup') => void; openStep: (step: Step) => void };
+type Props = { path: string; go: (path: string) => void; mode: NavigationMode; signedIn: boolean; journey: string; chooseJourney: () => void; openAuth: (mode: 'signin' | 'signup') => void; openStep: (step: Step) => void; notify: NotificationsApi };
 const isMac = typeof navigator !== 'undefined' && /Mac|iPhone|iPad/.test(navigator.platform);
 
-export default function AppHeader({ path, go, mode, signedIn, journey, chooseJourney, openAuth, openStep }: Props) {
+export default function AppHeader({ path, go, mode, signedIn, journey, chooseJourney, openAuth, openStep, notify }: Props) {
   const [open, setOpen] = useState(false);
   const [searching, setSearching] = useState(false);
   const [scrolled, setScrolled] = useState(false);
@@ -28,6 +30,7 @@ export default function AppHeader({ path, go, mode, signedIn, journey, chooseJou
   const account = (action: 'signin' | 'signup') => { setOpen(false); openAuth(action); };
   const primary = mainNavigation.slice(0, 4);
   const moreActive = secondaryNavigation.some(item => item.path === path);
+  const bell = (compact?: boolean) => <NotificationBell api={notify} compact={compact} open={item => openStep({ label: item.title, icon: '', path: item.path, ...(item.section ? { section: item.section } : {}) })} openSettings={() => navigate('/notifications')}/>;
   const search = <SiteSearch open={searching} onOpenChange={setSearching} journey={journey} go={navigate} openStep={openStep}/>;
 
   return <header className={'topbar' + (scrolled ? ' is-scrolled' : '')}>
@@ -47,11 +50,13 @@ export default function AppHeader({ path, go, mode, signedIn, journey, chooseJou
           <span className="journey-switch-label">Journey</span><span className="journey-switch-value">{journey}</span><ChevronDown size={14} aria-hidden="true"/>
         </button>
         <span className="header-divider" aria-hidden="true"/>
+        {bell()}
         {signedIn ? <DropdownMenu><DropdownMenuTrigger asChild><Button variant="ghost" className="account-button" aria-label="Account menu"><UserRound/><ChevronDown size={15}/></Button></DropdownMenuTrigger><DropdownMenuContent className="finnest-dropdown nav-menu" align="end" sideOffset={10}><DropdownMenuItem onSelect={() => navigate('/profile')}><UserRound/>Profile & settings</DropdownMenuItem><DropdownMenuSeparator/><DropdownMenuItem onSelect={() => { void supabase.auth.signOut(); }}><LogOut/>Sign out</DropdownMenuItem></DropdownMenuContent></DropdownMenu>
           : <div className="header-auth"><Button variant="ghost" className="auth-login" onClick={() => account('signin')}>Log in</Button><Button className="auth-signup" onClick={() => account('signup')}>Sign up</Button></div>}
       </div>
       {search}
     </> : <div className="header-actions">
+      {bell(true)}
       <Button variant="ghost" className="icon-button" aria-label="Search FINNEST" onClick={() => setSearching(true)}><Search/></Button>
       <Sheet open={open} onOpenChange={setOpen}><SheetTrigger asChild><Button variant="ghost" className="icon-button" aria-label="Open menu"><Menu/></Button></SheetTrigger><SheetContent className="finnest-drawer" aria-describedby="navigation-description"><SheetTitle><Wordmark/></SheetTitle><SheetDescription id="navigation-description" className="sr-only">FINNEST navigation and account</SheetDescription>
         <nav aria-label="Website navigation" className="drawer-links">{[...mainNavigation.filter(item => item.path !== '/profile'), ...secondaryNavigation].map(item => <Button variant="ghost" key={item.path} aria-current={path === item.path ? 'page' : undefined} onClick={() => navigate(item.path)}><item.icon size={20}/>{item.label}</Button>)}</nav>

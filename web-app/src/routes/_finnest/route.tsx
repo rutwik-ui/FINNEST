@@ -5,6 +5,7 @@ import finnestProCss from "@/finnest/finnest-pro.css?url";
 import experienceCss from '@/finnest/experience.css?url';
 import headerCss from '@/finnest/header.css?url';
 import { Wordmark } from '@/finnest/BrandMark';
+import { OnlineGate } from '@/finnest/OnlineGate';
 
 // The preserved FINNEST web app manages its own screens from the URL and keeps
 // drafts in this browser, so it stays mounted across all child paths.
@@ -27,7 +28,7 @@ function FinnestLayout() {
   return (
     <>
       <ClientOnly fallback={<div className="brand-loading" role="status" aria-label="Loading FINNEST"><Wordmark/></div>}>
-        <App />
+        <OnlineGate><App /></OnlineGate>
       </ClientOnly>
       <Outlet />
     </>
