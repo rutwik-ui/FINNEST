@@ -56,13 +56,13 @@ object FinnestNotifications {
         if (Build.VERSION.SDK_INT < 26) return
         val manager = context.getSystemService(NotificationManager::class.java) ?: return
         kinds.forEach { kind ->
-            val importance = if (kind.id == SECURITY || kind.id == REMINDERS) NotificationManager.IMPORTANCE_HIGH else NotificationManager.IMPORTANCE_DEFAULT
-            manager.createNotificationChannel(NotificationChannel(kind.id, kind.title, importance).apply { description = kind.description })
+            // Default importance: sound and a status-bar icon, without a banner covering what the buyer is doing.
+            manager.createNotificationChannel(NotificationChannel(kind.id, kind.title, NotificationManager.IMPORTANCE_DEFAULT).apply { description = kind.description })
         }
     }
 
     fun schedule(context: Context) {
-        val request = PeriodicWorkRequestBuilder<NotificationWorker>(15, TimeUnit.MINUTES).build()
+        val request = PeriodicWorkRequestBuilder<NotificationWorker>(15, TimeUnit.MINUTES).setInitialDelay(15, TimeUnit.MINUTES).build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(WORK, ExistingPeriodicWorkPolicy.KEEP, request)
     }
 
@@ -83,7 +83,7 @@ object FinnestNotifications {
             .setContentTitle(title).setContentText(body).setStyle(NotificationCompat.BigTextStyle().bigText(body))
             .setAutoCancel(true).setContentIntent(pending)
             .setCategory(if (kind == REMINDERS) NotificationCompat.CATEGORY_REMINDER else NotificationCompat.CATEGORY_MESSAGE)
-            .setPriority(if (kind == SECURITY || kind == REMINDERS) NotificationCompat.PRIORITY_HIGH else NotificationCompat.PRIORITY_DEFAULT)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
             .build()
         try { NotificationManagerCompat.from(context).notify(key.hashCode(), notification) } catch (_: SecurityException) { return false }
         seen.add(key)
