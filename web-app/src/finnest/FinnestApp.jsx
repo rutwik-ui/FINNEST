@@ -11,7 +11,7 @@ import imgBuilding from '@/assets/home-building.jpg';
 import imgPlanning from '@/assets/planning-couple.jpg';
 import imgFamily from '@/assets/family-keys.jpg';
 import { Wordmark } from './BrandMark';
-import parksideCommunity from '@/assets/parkside-community.png.asset.json';
+import parksideCommunityUrl from '@/assets/parkside-community.webp';
 import { roadmapFor } from './roadmap';
 import { Button } from '@/components/ui/button';
 import {SupportForm, MyDocuments} from './LiveData';
@@ -116,7 +116,7 @@ export function App(){
     {showChoice&&<div className="modal-backdrop" onClick={()=>setShowChoice(false)}><div className="modal" role="dialog" aria-modal="true" aria-labelledby="choose-heading" onClick={e=>e.stopPropagation()}><div className="modal-head"><span className="eyebrow">YOUR JOURNEY</span><button className="plain-icon" aria-label="Close" onClick={()=>setShowChoice(false)}><X/></button></div><h2 id="choose-heading">Choose your path</h2><p>Your selection is saved in this browser. New Property and selected Resale areas are available to explore.</p>{['New Property','Resale Property'].map(j=><button className={'choice '+(data.journey===j?'selected':'')} key={j} onClick={()=>choose(j)}><span><strong>{j}</strong><small>{j==='New Property'?'For a newly built or under-construction home':'For a home with a previous owner'}</small></span>{data.journey===j?<Check size={21}/>:<ChevronRight size={21}/>}</button>)}</div></div>}
   </div>
 }
-function Roadmap({data,go,journey,path,section,setSection}){const steps=roadmapFor(journey);return <section className={'roadmap '+(journey==='Resale Property'?'roadmap-resale':'roadmap-new')} aria-label={`${journey} journey`}><img src={parksideCommunity.url} alt="A couple walking through a green residential community beside an apartment building" width={1811} height={768} fetchPriority="high"/><nav className="roadmap-steps" aria-label={`${journey} roadmap`}>{steps.map(({label,icon,path:target,section:targetSection},i)=>{
+function Roadmap({data,go,journey,path,section,setSection}){const steps=roadmapFor(journey);return <section className={'roadmap '+(journey==='Resale Property'?'roadmap-resale':'roadmap-new')} aria-label={`${journey} journey`}><img src={parksideCommunityUrl} alt="A couple walking through a green residential community beside an apartment building" width={1811} height={768} fetchPriority="high"/><nav className="roadmap-steps" aria-label={`${journey} roadmap`}>{steps.map(({label,icon,path:target,section:targetSection},i)=>{
  const Icon=ROADMAP_ICONS[icon] || FileText;
  const active=path===target && (!targetSection || section===targetSection);
  return <Button variant="ghost" key={label} type="button" aria-current={active?'step':undefined} onClick={()=>{if(targetSection)setSection(targetSection);go(target)}} className={'road-step '+(active?'active':'')}><span className="step-number">{i+1}</span><span className="step-icon"><Icon size={21}/></span><span className="step-label">{label}</span></Button>
