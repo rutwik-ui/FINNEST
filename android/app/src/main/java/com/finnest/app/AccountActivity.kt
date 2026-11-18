@@ -48,7 +48,7 @@ class AccountActivity: AppCompatActivity() {
                     val auth=AccountClient.get(this@AccountActivity).auth
                     if(signup)auth.signUpWith(Email){this.email=address;this.password=secret} else auth.signInWith(Email){this.email=address;this.password=secret}
                     password.setText("")
-                    if(auth.currentSessionOrNull()!=null){PublicAppSettings.complete(this@AccountActivity,false);getSharedPreferences("entry",MODE_PRIVATE).edit().putBoolean("account_created",true).apply();AccountSync.start(this@AccountActivity);startActivity(Intent(this@AccountActivity,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK));finish()}
+                    if(auth.currentSessionOrNull()!=null){PublicAppSettings.complete(this@AccountActivity,false);getSharedPreferences("entry",MODE_PRIVATE).edit().putBoolean("account_created",true).apply();FinnestNotifications.accountEvent(this@AccountActivity,signup);AccountSync.start(this@AccountActivity);startActivity(Intent(this@AccountActivity,MainActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK));finish()}
                     else message.text="Account created. Email confirmation is still enabled for this service; check your inbox."
                 }catch(_:Exception){message.text="Could not continue. Check your email, password and connection, then retry."}finally{submit.isEnabled=true}
             }

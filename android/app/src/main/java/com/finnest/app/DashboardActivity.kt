@@ -66,6 +66,22 @@ class DashboardActivity : AppCompatActivity() {
         journeyBody.addView(FinnestUi.body(this, "Your journey, at your own pace."), full(top = 7))
         journeyBody.addView(FinnestUi.link(this, "Change journey") { changeJourney() }, wrap(top = 11))
 
+        // Ask for phone notifications from a card the buyer chooses to act on, never a surprise system prompt.
+        if (FinnestNotifications.shouldPrompt(this)) {
+            val ask = FinnestUi.card(this)
+            ask.addView(FinnestUi.eyebrow(this, "Stay on track"), wrap())
+            ask.addView(FinnestUi.h2(this, "Get reminders on this phone"), full(top = 8))
+            ask.addView(FinnestUi.body(this, "Allow notifications for due reminders, your next journey step and account alerts. You can change this any time."), full(top = 7))
+            val actions = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL }
+            actions.addView(FinnestUi.primaryButton(this, "Turn on") { startActivity(Intent(this, NotificationSettingsActivity::class.java)) }, LinearLayout.LayoutParams(0, -2, 1f))
+            actions.addView(android.widget.Button(this).apply {
+                text = "Not now"; isAllCaps = false
+                setOnClickListener { FinnestNotifications.dismissPrompt(this@DashboardActivity); (ask.parent as? android.view.ViewGroup)?.removeView(ask) }
+            }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = dp(10) })
+            ask.addView(actions, full(top = 16))
+            page.addView(ask, full(top = 17))
+        }
+
         // .recommendation
         val rec = FinnestUi.card(this).apply { background = GradientDrawable(GradientDrawable.Orientation.TOP_BOTTOM, intArrayOf(0xFFFFF8F7.toInt(), Color.WHITE)).apply { cornerRadius = FinnestUi.dpf(this@DashboardActivity, 16f); setStroke(dp(1), FinnestUi.LINE) } }
         page.addView(rec, full(top = 17))

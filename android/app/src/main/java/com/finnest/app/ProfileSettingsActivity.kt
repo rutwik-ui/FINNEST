@@ -94,6 +94,8 @@ class ProfileSettingsActivity : AppCompatActivity() {
         val notifications = card("Notifications")
         label(notifications, "Reminders are in-app dated notes only. This version does not schedule operating-system notifications.")
         button(notifications, "Review reminders") { startActivity(Intent(this, RemindersActivity::class.java)) }
+        val alerts = card("Notifications")
+        button(alerts, "Notification settings") { startActivity(Intent(this, NotificationSettingsActivity::class.java)) }
         val privacy = card("Privacy & information")
         button(privacy, "Privacy & data use") { startActivity(Intent(this, PrivacyInfoActivity::class.java)) }
         button(privacy, "About & disclaimer") { startActivity(Intent(this, CommonActivity::class.java).putExtra("screen", "about")) }
