@@ -3,6 +3,7 @@ import { App } from "@/finnest/FinnestApp";
 import finnestCss from "@/finnest/finnest.css?url";
 import finnestProCss from "@/finnest/finnest-pro.css?url";
 import experienceCss from '@/finnest/experience.css?url';
+import headerCss from '@/finnest/header.css?url';
 import { Wordmark } from '@/finnest/BrandMark';
 
 // The preserved FINNEST web app manages its own screens from the URL and keeps
@@ -16,6 +17,7 @@ export const Route = createFileRoute("/_finnest")({
       { rel: "stylesheet", href: finnestCss },
       { rel: "stylesheet", href: finnestProCss },
       { rel: 'stylesheet', href: experienceCss },
+      { rel: 'stylesheet', href: headerCss },
     ],
   }),
   component: FinnestLayout,
