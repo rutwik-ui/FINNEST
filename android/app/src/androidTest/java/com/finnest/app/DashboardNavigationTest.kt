@@ -16,7 +16,7 @@ import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
 import org.hamcrest.Matchers.allOf
 import org.hamcrest.Matchers.startsWith
-import androidx.test.espresso.matcher.RootMatchers.isPlatformPopup
+import androidx.test.espresso.matcher.RootMatchers.isDialog
 import org.junit.Test
 import org.junit.runner.RunWith
 import java.util.concurrent.atomic.AtomicReference
@@ -61,7 +61,7 @@ class DashboardNavigationTest {
     }
     private fun openFromMenu(item: String) {
         onView(withContentDescription("Open menu")).perform(click())
-        onView(withContentDescription(item)).inRoot(isPlatformPopup()).perform(click())
+        onView(withContentDescription(item)).inRoot(isDialog()).perform(scrollTo(), click())
     }
     @Test fun bottomTabsOpenWebsiteSections() {
         ActivityScenario.launch(DashboardActivity::class.java).use {

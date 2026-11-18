@@ -19,7 +19,7 @@ import org.json.JSONObject
 import java.util.Calendar
 import java.util.UUID
 
-/** Local dated notes, not operating-system notifications. */
+/** Dated notes; NotificationWorker posts a phone notification when one is due. */
 class RemindersActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDeveloperChecksBinding
     private val scope = "local_reminders"
@@ -42,7 +42,7 @@ class RemindersActivity : AppCompatActivity() {
         binding.stepLabel.text = "A QUIETER WAY TO KEEP TRACK"
         binding.screenTitle.text = "Reminders"
         binding.screenDescription.text = "Keep dated follow-up notes on this device."
-        binding.screenNotice.text = "These are in-app notes only. No alerts or operating-system notifications are scheduled."
+        binding.screenNotice.text = "You'll get a phone notification on the day a reminder is due. Change this in Menu → Notifications."
         binding.saveLater.text = "Home"
         binding.next.text = "Back to dashboard"
         binding.backBottom.text = "Back"
