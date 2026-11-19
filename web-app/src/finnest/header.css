@@ -196,3 +196,57 @@
 .notify-guest p{margin:0;font-size:14px}
 .settings-help{margin:0 0 8px;font-size:13.5px;color:var(--f-mute)}
 .settings-date{font-weight:500;color:var(--f-mute);font-size:13px}
+
+/* Form fields: one type scale. Labels 13.5px semibold; values 15px regular.
+   Phones use 16px values so iOS Safari doesn't zoom into the field. Admin keeps its compact tables. */
+.app-shell:not(.is-admin) label:has(input:not([type=checkbox]):not([type=radio]), select, textarea){font-size:13.5px;font-weight:600;line-height:1.4;color:var(--f-ink);letter-spacing:0}
+.app-shell:not(.is-admin) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea){font-family:inherit;font-size:15px;font-weight:400;line-height:1.4;color:var(--f-ink);letter-spacing:0}
+.app-shell:not(.is-admin) :is(input, textarea)::placeholder{color:#9aa0a7;font-weight:400;opacity:1}
+.app-shell:not(.is-admin) select:invalid,.app-shell:not(.is-admin) select option[value=""]{color:#9aa0a7}
+.app-shell:not(.is-admin) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea):focus-visible{outline:none;border-color:var(--f-red)!important;box-shadow:0 0 0 3px color-mix(in oklab,var(--f-red) 16%,transparent)}
+.app-shell:not(.is-admin) input[type=date]{min-height:46px}
+@media(max-width:760px){
+  .app-shell:not(.is-admin) label:has(input:not([type=checkbox]):not([type=radio]), select, textarea){font-size:14px}
+  .app-shell:not(.is-admin) :is(input:not([type=checkbox]):not([type=radio]):not([type=range]), select, textarea){font-size:16px!important}
+}
+
+/* Roadmap strip on phones: every step gets the same round badge; the strip fades where it continues. */
+@media(max-width:760px){
+  .roadmap .roadmap-steps{-webkit-mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);mask-image:linear-gradient(to right,#000 calc(100% - 28px),transparent);scrollbar-width:none}
+  .roadmap .roadmap-steps::-webkit-scrollbar{display:none}
+  .roadmap .road-step{gap:8px;padding:4px 14px 4px 10px;border-radius:10px}
+  .roadmap .road-step .step-number{width:auto;min-width:12px;padding:0;background:none;box-shadow:none;font-size:11.5px;font-weight:700;color:var(--f-mute);text-align:center}
+  .roadmap .road-step.active .step-number{color:var(--f-red-d)}
+  .roadmap .road-step .step-icon{width:28px;height:28px;border-radius:50%;background:#f1efeb;color:var(--f-ink-2)}
+  .roadmap .road-step .step-icon svg{width:16px;height:16px}
+  .roadmap .road-step.active .step-icon{background:var(--f-red);color:#fff}
+  .roadmap .road-step .step-label{font-size:12.5px;font-weight:600;color:var(--f-ink)}
+  .roadmap .road-step.active .step-label{color:var(--f-red-d)}
+}
+
+/* Phone menu: side panel with grouped links, current page highlighted, journey and account tiles. */
+.finnest-drawer.finnest-drawer{width:min(340px,86vw);padding:0;gap:0;border-left:0;border-radius:20px 0 0 20px;box-shadow:-24px 0 60px -30px color-mix(in oklab,var(--f-ink) 45%,transparent)}
+.finnest-drawer>h2{display:flex;align-items:center;height:68px;margin:0;padding:0 64px 0 20px;border-bottom:0}
+.finnest-drawer>button:first-child{top:13px;right:12px;width:42px;height:42px;min-width:42px;min-height:42px;display:inline-flex;align-items:center;justify-content:center;border-radius:50%;background:var(--f-bg);opacity:1;color:var(--f-ink)}
+.finnest-drawer>button:first-child:focus{box-shadow:none!important;outline:none;--tw-ring-shadow:0 0 #0000;--tw-ring-offset-shadow:0 0 #0000}
+.finnest-drawer>button:first-child:focus-visible{outline:2px solid var(--h-focus);outline-offset:2px}
+.finnest-drawer>button:first-child svg{width:18px;height:18px}
+.finnest-drawer .drawer-links{padding:4px 12px 12px;gap:2px}
+.finnest-drawer .drawer-links button{min-height:48px;height:48px;padding:0 14px;border-radius:12px;font-size:15px;font-weight:500;color:var(--f-ink);gap:14px}
+.finnest-drawer .drawer-links button svg{width:20px;height:20px;color:var(--f-ink-2)}
+.finnest-drawer .drawer-links button:hover{background:var(--h-hover)}
+.finnest-drawer .drawer-links button[aria-current=page]{background:var(--f-red-soft);color:var(--f-red-d);font-weight:600}
+.finnest-drawer .drawer-links button[aria-current=page] svg{color:var(--f-red-d)}
+.drawer-group{display:block;margin:10px 14px 6px;padding-top:14px;border-top:1px solid var(--f-line);font-size:12px;font-weight:600;color:var(--f-mute);letter-spacing:.02em}
+.drawer-foot{display:grid;gap:10px;padding:14px 16px calc(16px + env(safe-area-inset-bottom));border-top:1px solid var(--f-line)}
+.drawer-tile{display:flex;align-items:center;gap:12px;width:100%;padding:10px 14px 10px 12px;border:1px solid var(--f-line);border-radius:14px;background:var(--f-card);color:inherit;font:inherit;text-align:left;cursor:pointer;transition:background-color .15s ease,border-color .15s ease}
+.drawer-tile:hover{border-color:var(--h-border-strong)}
+.drawer-tile:focus-visible{outline:2px solid var(--h-focus);outline-offset:2px}
+.drawer-tile-icon{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;flex:none;border-radius:50%;background:var(--f-red-soft);color:var(--f-red-d)}
+.drawer-tile-icon svg{width:18px;height:18px}
+.drawer-tile-text{display:flex;flex-direction:column;gap:2px;flex:1;min-width:0}
+.drawer-tile-text small{font-size:12px;color:var(--f-mute)}
+.drawer-tile-text strong{font-size:15px;font-weight:600;color:var(--f-ink);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.drawer-tile-action{font-size:13px;font-weight:600;color:var(--f-red-d)}
+.drawer-auth{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.drawer-auth button{min-height:48px;border-radius:10px;font-size:15px;font-weight:600}

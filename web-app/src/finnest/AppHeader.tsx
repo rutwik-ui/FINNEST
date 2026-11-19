@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Menu, UserRound, ChevronDown, Search, LogOut } from 'lucide-react';
+import { Menu, UserRound, ChevronDown, Search, LogOut, SlidersHorizontal } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetTrigger, SheetContent, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
@@ -59,9 +59,23 @@ export default function AppHeader({ path, go, mode, signedIn, journey, chooseJou
       {bell(true)}
       <Button variant="ghost" className="icon-button" aria-label="Search FINNEST" onClick={() => setSearching(true)}><Search/></Button>
       <Sheet open={open} onOpenChange={setOpen}><SheetTrigger asChild><Button variant="ghost" className="icon-button" aria-label="Open menu"><Menu/></Button></SheetTrigger><SheetContent className="finnest-drawer" aria-describedby="navigation-description"><SheetTitle><Wordmark/></SheetTitle><SheetDescription id="navigation-description" className="sr-only">FINNEST navigation and account</SheetDescription>
-        <nav aria-label="Website navigation" className="drawer-links">{[...mainNavigation.filter(item => item.path !== '/profile'), ...secondaryNavigation].map(item => <Button variant="ghost" key={item.path} aria-current={path === item.path ? 'page' : undefined} onClick={() => navigate(item.path)}><item.icon size={20}/>{item.label}</Button>)}</nav>
-        <Button variant="outline" className="drawer-journey" onClick={() => { setOpen(false); chooseJourney(); }}>{journey}<ChevronDown size={18}/></Button>
-        <div className="drawer-account">{signedIn ? <Button variant="outline" onClick={() => navigate('/profile')}><UserRound/>Profile & settings</Button> : <><Button onClick={() => account('signup')}>Sign up</Button><Button variant="outline" onClick={() => account('signin')}>Log in</Button></>}</div>
+        <nav aria-label="Website navigation" className="drawer-links">
+          {mainNavigation.filter(item => item.path !== '/profile').map(item => <Button variant="ghost" key={item.path} aria-current={path === item.path ? 'page' : undefined} onClick={() => navigate(item.path)}><item.icon size={20}/>{item.label}</Button>)}
+          <span className="drawer-group" aria-hidden="true">More</span>
+          {secondaryNavigation.map(item => <Button variant="ghost" key={item.path} aria-current={path === item.path ? 'page' : undefined} onClick={() => navigate(item.path)}><item.icon size={20}/>{item.label}</Button>)}
+        </nav>
+        <div className="drawer-foot">
+          <button type="button" className="drawer-tile" onClick={() => { setOpen(false); chooseJourney(); }} aria-label={`Journey: ${journey}. Change journey`}>
+            <span className="drawer-tile-icon" aria-hidden="true"><SlidersHorizontal/></span>
+            <span className="drawer-tile-text"><small>Your journey</small><strong>{journey}</strong></span>
+            <span className="drawer-tile-action">Change</span>
+          </button>
+          {signedIn ? <button type="button" className="drawer-tile" onClick={() => navigate('/profile')}>
+            <span className="drawer-tile-icon" aria-hidden="true"><UserRound/></span>
+            <span className="drawer-tile-text"><small>Signed in</small><strong>Profile & settings</strong></span>
+            <span className="drawer-tile-action">Open</span>
+          </button> : <div className="drawer-auth"><Button variant="outline" onClick={() => account('signin')}>Log in</Button><Button onClick={() => account('signup')}>Sign up</Button></div>}
+        </div>
       </SheetContent></Sheet>
       {search}
     </div>}
