@@ -48,9 +48,11 @@ class DashboardActivity : AppCompatActivity() {
         outer.addView(page, LinearLayout.LayoutParams(-1, -2))
 
         // .page-head
-        page.addView(FinnestUi.eyebrow(this, "Your home-buying journey"), wrap(top = 7))
-        page.addView(FinnestUi.h1(this, "Your home-buying journey"), full(top = 9))
-        page.addView(FinnestUi.body(this, "A clearer path to a place of your own."), full(top = 9))
+        val settings = PublicAppSettings.cached(this)
+        val signedIn = AccountClient.userId(this) != null
+        page.addView(FinnestUi.eyebrow(this, if (resale) "Resale property" else "New property"), wrap(top = 7))
+        page.addView(FinnestUi.h1(this, settings.homeTitle), full(top = 9))
+        page.addView(FinnestUi.body(this, settings.homeSubtitle), full(top = 9))
 
         // .journey-card with the photo on top (column-reverse on phones)
         val journey = FinnestUi.card(this, 0)
@@ -88,7 +90,7 @@ class DashboardActivity : AppCompatActivity() {
         rec.addView(FinnestUi.eyebrow(this, "Recommended next action"), wrap())
         rec.addView(FinnestUi.h2(this, if (resale) "Explore your journey" else "Define your requirements", 23f), full(top = 9))
         rec.addView(FinnestUi.body(this, if (resale) "Record your planning, condition and document questions in the resale areas." else "Start with what matters to you, then keep your questions and notes together."), full(top = 9))
-        rec.addView(iconLine(R.drawable.journey_info, FinnestUi.RED, "Your entries are saved on this device and are not independently verified.", 12f, 0xFF85858B.toInt(), 17), full(top = 20))
+        rec.addView(iconLine(R.drawable.journey_info, FinnestUi.RED, if (signedIn) "Your entries sync with the website. FINNEST doesn't verify them." else "Your entries are saved on this phone. FINNEST doesn't verify them.", 12f, 0xFF85858B.toInt(), 17), full(top = 20))
         rec.addView(FinnestUi.primaryButton(this, if (resale) "View journey" else "Take this step") {
             startActivity(if (resale) Intent(this, ResaleOverviewActivity::class.java) else Intent(this, RequirementsActivity::class.java))
         }, full(top = 20))
@@ -98,7 +100,7 @@ class DashboardActivity : AppCompatActivity() {
         page.addView(glance, full(top = 17))
         if (resale) {
             glance.addView(FinnestUi.h2(this, "Resale journey"), full())
-            glance.addView(FinnestUi.body(this, "Explore the six prototype areas as local notes. New Property notes are kept separately."), full(top = 7))
+            glance.addView(FinnestUi.body(this, "Work through the resale checks: condition, seller and title, society, legal and handover. These are kept separately from New Property."), full(top = 7))
             glance.addView(FinnestUi.link(this, "Open resale journey") { startActivity(Intent(this, ResaleOverviewActivity::class.java)) }, wrap(top = 11))
         } else {
             val head = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL; gravity = Gravity.BOTTOM }
@@ -130,11 +132,34 @@ class DashboardActivity : AppCompatActivity() {
         help.addView(iconLine(R.drawable.journey_shield, FinnestUi.RED, "FINNEST helps you stay organized. It does not verify a property or replace qualified advice.", 13f, FinnestUi.MUTED, 21), full(top = 13))
         help.addView(FinnestUi.link(this, "Browse guidance") { startActivity(Intent(this, GuidanceActivity::class.java)) }, wrap(top = 13))
 
-        // .local-note
-        page.addView(iconLine(R.drawable.journey_lock, FinnestUi.FAINT, "Your progress stays on this device for now.", 12f, FinnestUi.FAINT, 15).apply { setPadding(dp(7), 0, 0, 0) }, full(top = 17))
+        // Admin "App settings" decide the order of the four home sections, as on the website.
+        val blocks = mapOf("journey" to journey, "nextAction" to rec, "progress" to glance, "guidance" to help)
+        val start = page.indexOfChild(journey)
+        val prompt = page.getChildAt(start + 1)?.takeIf { it !in blocks.values }
+        blocks.values.forEach { page.removeView(it) }; prompt?.let { page.removeView(it) }
+        settings.sections.forEachIndexed { i, key -> page.addView(blocks.getValue(key), start + i, full(top = if (i == 0) 20 else 17)) }
+        prompt?.let { page.addView(it, start + 1, full(top = 17)) }
+
+        // .local-note: where progress is saved, and a way for guests to keep it on all devices.
+        if (signedIn) {
+            page.addView(iconLine(R.drawable.journey_check, FinnestUi.FAINT, "Saved to your account and synced with the website.", 12f, FinnestUi.FAINT, 15).apply { setPadding(dp(7), 0, 0, 0) }, full(top = 17))
+        } else {
+            page.addView(iconLine(R.drawable.journey_lock, FinnestUi.FAINT, "Saved on this phone only.", 12f, FinnestUi.FAINT, 15).apply { setPadding(dp(7), 0, 0, 0) }, full(top = 17))
+            page.addView(FinnestUi.link(this, "Create an account to use it on the website too") { startActivity(Intent(this, AccountActivity::class.java).putExtra("signup", true)) }, wrap(top = 6))
+        }
 
         FinnestUi.bottomNav(this, root, scope, "home")
     }
+    private val settingsSeen = AppSettingsLive.revision.get()
+    private val onSettings: () -> Unit = { if (!isFinishing && !isDestroyed) reload() }
+    /** Reloads in place, or moves to the other journey when it was switched on the website. */
+    private fun reload() {
+        val chosen = if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") "resale_property" else "new_property"
+        if (chosen != scope && AccountClient.userId(this) != null) { intent.putExtra(SCOPE, chosen) }
+        recreate()
+    }
+    private val journeySeen = AccountSync.remoteRevision.get()
+    override fun onPause() { AppSettingsLive.removeListener(onSettings); AccountSync.removeRemoteListener(onSettings); super.onPause() }
     private fun full(top: Int = 0) = LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(top) }
     private fun wrap(top: Int = 0) = LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(top) }
     private fun iconLine(icon: Int, tint: Int, value: String, size: Float, color: Int, iconSize: Int) = LinearLayout(this).apply {
@@ -182,7 +207,12 @@ class DashboardActivity : AppCompatActivity() {
         val requested = intent.getStringExtra(SCOPE)
         if (requested != null && requested != scope) { setIntent(intent); recreate() }
     }
-    override fun onResume() { super.onResume(); if (::roadmap.isInitialized) roadmap.refresh(); loadStats() }
+    override fun onResume() {
+        super.onResume(); AppSettingsLive.addListener(onSettings); AccountSync.addRemoteListener(onSettings)
+        // Reload when admins published settings or another device changed this journey while away.
+        if (AppSettingsLive.revision.get() != settingsSeen || AccountSync.remoteRevision.get() != journeySeen) { reload(); return }
+        if (::roadmap.isInitialized) roadmap.refresh(); loadStats()
+    }
     companion object {
         const val SCOPE = "dashboard_scope"
         fun show(context: Context, scope: String? = null) {

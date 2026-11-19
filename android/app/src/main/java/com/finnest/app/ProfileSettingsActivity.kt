@@ -89,13 +89,19 @@ class ProfileSettingsActivity : AppCompatActivity() {
                 doAfterTextChanged { DraftRepository.save(this@ProfileSettingsActivity, profileScope, key, it?.toString().orEmpty()) }
             }, LinearLayout.LayoutParams(-1, -2))
         }
-        val storage = card("Save on this device")
-        label(storage, "Local saving is currently always on. Your profile, journey notes and reminders stay on this device; they are not synced or backed up. Uninstalling deletes local data.")
-        val notifications = card("Notifications")
-        label(notifications, "Reminders are in-app dated notes only. This version does not schedule operating-system notifications.")
+        val storage = card(if (user != null) "Saving & sync" else "Save on this device")
+        label(storage, if (user != null) "Your journey, profile and reminders save to your account and stay in step with the website. A copy is kept on this phone so you can keep working if the connection drops for a moment."
+            else "You're using FINNEST as a guest, so your profile, journey notes and reminders stay on this phone only. Create an account to keep them safe and use them on the website too. Uninstalling deletes guest data.")
+        val notifications = card("Notifications & reminders")
+        label(notifications, "Reminders you add notify you on this phone when they're due. Choose which notifications you get in Notification settings.")
+        button(notifications, "Notification settings") { startActivity(Intent(this, NotificationSettingsActivity::class.java)) }
         button(notifications, "Review reminders") { startActivity(Intent(this, RemindersActivity::class.java)) }
-        val alerts = card("Notifications")
-        button(alerts, "Notification settings") { startActivity(Intent(this, NotificationSettingsActivity::class.java)) }
+        val files = card("Documents")
+        label(files, "Keep copies of documents with your journey. They're private to your account and also appear on the website.")
+        button(files, "My documents") { startActivity(Intent(this, DocumentsActivity::class.java)) }
+        val help = card("Help & feedback")
+        label(help, "Ask a question, report a problem or suggest an improvement. Replies appear in the app.")
+        button(help, "Contact support") { startActivity(Intent(this, SupportActivity::class.java)) }
         val privacy = card("Privacy & information")
         button(privacy, "Privacy & data use") { startActivity(Intent(this, PrivacyInfoActivity::class.java)) }
         button(privacy, "About & disclaimer") { startActivity(Intent(this, CommonActivity::class.java).putExtra("screen", "about")) }

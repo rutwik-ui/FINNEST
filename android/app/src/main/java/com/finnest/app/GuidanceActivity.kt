@@ -57,6 +57,8 @@ class GuidanceActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
             override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, itemId: Long) { index = position; fetch(true) }
         }
+        // Guidance published or edited in admin shows up here without a manual refresh.
+        LiveTable.watch(this, "finnest_guidance") { if (!loading) fetch(true) }
     }
     private fun label(parent: LinearLayout, value: String, bold: Boolean): TextView = TextView(this).apply {
         text = value; textSize = if (bold) 17f else 15f; setTextColor(getColor(R.color.navy)); setPadding(0, dp(10), 0, dp(6))
@@ -78,7 +80,7 @@ class GuidanceActivity : AppCompatActivity() {
                 result.fold(onSuccess = { page ->
                     val ids = items.map { it.id }.toMutableSet()
                     items.addAll(page.items.filter { ids.add(it.id) }); cursor = page.next
-                    status.text = if (items.isEmpty() && cursor == null) "No published guidance yet. Try another category or return later." else "Published guidance may change. Refresh to see the latest version."
+                    status.text = if (items.isEmpty() && cursor == null) "No published guidance yet. Try another category or return later." else "New and updated guidance appears here automatically."
                     render()
                 }, onFailure = {
                     status.text = if (reset) "Could not load guidance. Check your connection and select Refresh guidance to retry." else "Could not load more guidance. Your current results are still shown; try again."

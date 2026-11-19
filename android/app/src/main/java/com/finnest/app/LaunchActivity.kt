@@ -23,7 +23,7 @@ class LaunchActivity: AppCompatActivity(){
                 val current=auth.currentSessionOrNull()
                 if(current!=null)runCatching {auth.refreshCurrentSession()}
             };delay((1100-(System.currentTimeMillis()-started)).coerceAtLeast(0))
-            if(auth.currentSessionOrNull()!=null)AccountSync.start(this@LaunchActivity)
+            if(auth.currentSessionOrNull()!=null){AccountSync.start(this@LaunchActivity);AccountExtras.pullNotificationPrefs(this@LaunchActivity)}
             val prefs=getSharedPreferences("entry",MODE_PRIVATE)
             val phase=NativeLaunchRules.decide(auth.currentSessionOrNull()!=null,PublicAppSettings.completedVersion(this@LaunchActivity),settings.version,prefs.getBoolean("account_created",false),prefs.getBoolean("guest_session",false))
             val destination=if(phase==NativeLaunchPhase.ACCOUNT)AccountActivity::class.java else MainActivity::class.java

@@ -44,7 +44,8 @@ object FinnestNotifications {
     private fun prefs(context: Context) = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
 
     fun enabled(context: Context, kind: String) = prefs(context).getBoolean(kind, true)
-    fun setEnabled(context: Context, kind: String, on: Boolean) { prefs(context).edit().putBoolean(kind, on).apply() }
+    fun setEnabled(context: Context, kind: String, on: Boolean) { setLocal(context, kind, on); AccountExtras.pushNotificationPrefs(context) }
+    internal fun setLocal(context: Context, kind: String, on: Boolean) { prefs(context).edit().putBoolean(kind, on).apply() }
 
     fun permissionGranted(context: Context) = Build.VERSION.SDK_INT < 33 ||
         ContextCompat.checkSelfPermission(context, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED
@@ -67,6 +68,12 @@ object FinnestNotifications {
         if (underTest) { WorkManager.getInstance(context).cancelUniqueWork(WORK); return }
         val request = PeriodicWorkRequestBuilder<NotificationWorker>(15, TimeUnit.MINUTES).setInitialDelay(15, TimeUnit.MINUTES).build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(WORK, ExistingPeriodicWorkPolicy.KEEP, request)
+    }
+
+    /** Runs the notification check now (used when admins publish an announcement). */
+    fun checkSoon(context: Context) {
+        if (underTest) return
+        runCatching { WorkManager.getInstance(context).enqueueUniqueWork("$WORK-now", androidx.work.ExistingWorkPolicy.REPLACE, androidx.work.OneTimeWorkRequestBuilder<NotificationWorker>().build()) }
     }
 
     private fun posted(context: Context): MutableList<String> = runCatching {

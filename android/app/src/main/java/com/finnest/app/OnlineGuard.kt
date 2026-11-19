@@ -29,6 +29,7 @@ import java.util.concurrent.Executors
  */
 object OnlineGuard : Application.ActivityLifecycleCallbacks {
     private const val GATE_TAG = "finnest_offline_gate"
+    private const val MAINTENANCE_TAG = "finnest_maintenance_gate"
     private val main = Handler(Looper.getMainLooper())
     private val worker = Executors.newSingleThreadExecutor()
     private val callbacks = mutableMapOf<Activity, ConnectivityManager.NetworkCallback>()
@@ -51,9 +52,22 @@ object OnlineGuard : Application.ActivityLifecycleCallbacks {
     private fun refresh(activity: Activity) {
         worker.execute {
             val online = hasInternet(activity.applicationContext)
-            main.post { if (!activity.isFinishing && !activity.isDestroyed) { if (online) hide(activity) else show(activity) } }
+            main.post { render(activity, online) }
         }
     }
+
+    /** Offline wins over maintenance; maintenance mode is switched on by admins in App settings. */
+    private fun render(activity: Activity, online: Boolean) {
+        if (activity.isFinishing || activity.isDestroyed) return
+        when {
+            !online -> show(activity, GATE_TAG)
+            PublicAppSettings.cached(activity).maintenance -> show(activity, MAINTENANCE_TAG)
+            else -> hide(activity)
+        }
+    }
+
+    /** Re-checks every open screen, for example after admins publish new settings. */
+    fun recheckAll() { callbacks.keys.toList().forEach { refresh(it) } }
 
     override fun onActivityResumed(activity: Activity) {
         val cm = activity.getSystemService(ConnectivityManager::class.java) ?: return
@@ -64,6 +78,7 @@ object OnlineGuard : Application.ActivityLifecycleCallbacks {
         }
         runCatching { cm.registerDefaultNetworkCallback(callback); callbacks[activity] = callback }
         refresh(activity)
+        AppSettingsLive.refreshIfStale(activity)
     }
 
     override fun onActivityPaused(activity: Activity) {
@@ -75,19 +90,25 @@ object OnlineGuard : Application.ActivityLifecycleCallbacks {
 
     private fun hide(activity: Activity) {
         val root = content(activity) ?: return
-        root.findViewWithTag<View>(GATE_TAG)?.let { root.removeView(it) }
+        listOf(GATE_TAG, MAINTENANCE_TAG).forEach { tag -> root.findViewWithTag<View>(tag)?.let { root.removeView(it) } }
     }
 
-    private fun show(activity: Activity) {
+    private fun show(activity: Activity, tag: String) {
         val root = content(activity) ?: return
-        if (root.findViewWithTag<View>(GATE_TAG) != null) return
-        root.addView(gate(activity), FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
+        val other = if (tag == GATE_TAG) MAINTENANCE_TAG else GATE_TAG
+        root.findViewWithTag<View>(other)?.let { root.removeView(it) }
+        if (root.findViewWithTag<View>(tag) != null) return
+        root.addView(gate(activity, tag), FrameLayout.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT, ViewGroup.LayoutParams.MATCH_PARENT))
     }
 
-    private fun gate(activity: Activity): View {
+    private fun gate(activity: Activity, kind: String): View {
+        val maintenance = kind == MAINTENANCE_TAG
+        val title = if (maintenance) "We'll be back shortly" else "No internet connection"
+        val message = if (maintenance) PublicAppSettings.cached(activity).maintenanceMessage else "FINNEST needs the internet to work. Turn on mobile data or Wi-Fi, then try again."
+        val hint = if (maintenance) "This screen lifts by itself when FINNEST is available again." else "We'll reconnect automatically when you're back online."
         val dp = { n: Int -> FinnestUi.dp(activity, n) }
         val cover = FrameLayout(activity).apply {
-            tag = GATE_TAG
+            tag = kind
             setBackgroundColor(FinnestUi.CREAM)
             isClickable = true; isFocusable = true // swallow touches meant for the screen underneath
             elevation = FinnestUi.dpf(activity, 64f)
@@ -100,27 +121,29 @@ object OnlineGuard : Application.ActivityLifecycleCallbacks {
         }
         val badge = FrameLayout(activity).apply { background = FinnestUi.shape(activity, FinnestUi.BLUSH, null, 14) }
         badge.addView(ImageView(activity).apply {
-            setImageResource(R.drawable.journey_wifi_off); imageTintList = ColorStateList.valueOf(FinnestUi.RED_DARK)
+            setImageResource(if (maintenance) R.drawable.journey_clock else R.drawable.journey_wifi_off); imageTintList = ColorStateList.valueOf(FinnestUi.RED_DARK)
             contentDescription = null
         }, FrameLayout.LayoutParams(dp(26), dp(26), Gravity.CENTER))
         card.addView(badge, LinearLayout.LayoutParams(dp(56), dp(56)))
-        card.addView(FinnestUi.label(activity, "No internet connection", 21f, 700, FinnestUi.NAVY, -0.015f).apply { gravity = Gravity.CENTER },
+        card.addView(FinnestUi.label(activity, title, 21f, 700, FinnestUi.NAVY, -0.015f).apply { gravity = Gravity.CENTER },
             LinearLayout.LayoutParams(-2, -2).apply { topMargin = dp(16) })
-        card.addView(FinnestUi.body(activity, "FINNEST needs the internet to work. Turn on mobile data or Wi-Fi, then try again.", 14.5f).apply { gravity = Gravity.CENTER },
+        card.addView(FinnestUi.body(activity, message, 14.5f).apply { gravity = Gravity.CENTER },
             LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(10) })
         lateinit var status: TextView
         val retry = FinnestUi.primaryButton(activity, "Try again") {
             status.text = "Checking…"
-            worker.execute {
+            if (maintenance) AppSettingsLive.refreshInBackground(activity) {
+                if (PublicAppSettings.cached(activity).maintenance) status.text = "Still being updated. Please try again in a little while." else refresh(activity)
+            } else worker.execute {
                 val online = hasInternet(activity.applicationContext)
-                main.post { if (online) hide(activity) else status.text = "Still offline. We'll reconnect automatically." }
+                main.post { if (online) render(activity, true) else status.text = "Still offline. We'll reconnect automatically." }
             }
         }
         card.addView(retry, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(20) })
-        status = FinnestUi.label(activity, "We'll reconnect automatically when you're back online.", 12.5f, 400, FinnestUi.MUTED).apply { gravity = Gravity.CENTER }
+        status = FinnestUi.label(activity, hint, 12.5f, 400, FinnestUi.MUTED).apply { gravity = Gravity.CENTER }
         card.addView(status, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(14) })
         cover.addView(card, FrameLayout.LayoutParams(-1, -2, Gravity.CENTER).apply { marginStart = dp(24); marginEnd = dp(24) })
-        cover.contentDescription = "No internet connection. FINNEST needs the internet to work."
+        cover.contentDescription = "$title. $message"
         return cover
     }
 

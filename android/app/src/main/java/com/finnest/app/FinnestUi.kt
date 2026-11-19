@@ -297,6 +297,8 @@ object FinnestUi {
             "guidance" -> Intent(activity, GuidanceActivity::class.java)
             "reminders" -> Intent(activity, RemindersActivity::class.java)
             "notifications" -> Intent(activity, NotificationSettingsActivity::class.java)
+            "documents" -> Intent(activity, DocumentsActivity::class.java)
+            "support" -> Intent(activity, SupportActivity::class.java)
             "about" -> Intent(activity, CommonActivity::class.java).putExtra("screen", "about").putExtra("scope", scope)
             "privacy" -> Intent(activity, PrivacyInfoActivity::class.java)
             else -> Intent(activity, ProfileSettingsActivity::class.java)
@@ -328,6 +330,8 @@ object FinnestUi {
         is GuidanceActivity -> "guidance"
         is RemindersActivity -> "reminders"
         is NotificationSettingsActivity -> "notifications"
+        is DocumentsActivity -> "documents"
+        is SupportActivity -> "support"
         is PrivacyInfoActivity -> "privacy"
         is ProfileSettingsActivity, is MainActivity, is AccountActivity, is LaunchActivity -> null
         is CommonActivity -> activity.intent?.getStringExtra("screen")?.takeIf { it == "experts" || it == "about" }
@@ -342,7 +346,8 @@ object FinnestUi {
         val primary = listOf(Triple("home", "Home", R.drawable.journey_house), Triple("journey", "Journey", R.drawable.journey_sliders),
             Triple("projects", "Projects", R.drawable.journey_doc), Triple("experts", "Experts", R.drawable.journey_help))
         val secondary = listOf(Triple("guidance", "Guidance", R.drawable.journey_bookmark), Triple("reminders", "Reminders", R.drawable.journey_clock),
-            Triple("notifications", "Notifications", R.drawable.journey_bell), Triple("about", "About FINNEST", R.drawable.journey_info),
+            Triple("notifications", "Notifications", R.drawable.journey_bell), Triple("documents", "My documents", R.drawable.journey_file),
+            Triple("support", "Help & feedback", R.drawable.journey_help), Triple("about", "About FINNEST", R.drawable.journey_info),
             Triple("privacy", "Privacy & consent", R.drawable.journey_shield))
         val current = menuTab(activity)
         val d = { n: Int -> dp(activity, n) }

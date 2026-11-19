@@ -45,6 +45,18 @@ object AccountSync {
         remoteRevision.incrementAndGet()
         android.os.Handler(android.os.Looper.getMainLooper()).post { remoteListeners.forEach { it() } }
     }
+    /** Sends raw bytes (file uploads to storage) with the signed-in user's token. */
+    fun upload(context: Context, path: String, bytes: ByteArray, contentType: String): Pair<Int,String> {
+        val token=AccountClient.get(context).auth.currentAccessTokenOrNull() ?: return 401 to ""
+        val connection=URL(BuildConfig.GUIDANCE_URL+path).openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod="POST";connection.connectTimeout=15000;connection.readTimeout=60000;connection.doOutput=true
+            connection.setRequestProperty("apikey",BuildConfig.GUIDANCE_PUBLISHABLE_KEY);connection.setRequestProperty("Authorization","Bearer $token");connection.setRequestProperty("Content-Type",contentType);connection.setRequestProperty("x-upsert","false")
+            connection.setFixedLengthStreamingMode(bytes.size);connection.outputStream.use { it.write(bytes) }
+            val status=connection.responseCode;val stream=if(status in 200..299)connection.inputStream else connection.errorStream
+            return status to (stream?.bufferedReader()?.use { it.readText() } ?: "")
+        } finally { connection.disconnect() }
+    }
     fun request(context: Context, path: String, method: String="GET", body: String?=null): Pair<Int,String> {
         val token=AccountClient.get(context).auth.currentAccessTokenOrNull() ?: return 401 to ""
         val connection=URL(BuildConfig.GUIDANCE_URL+path).openConnection() as HttpURLConnection
@@ -101,6 +113,11 @@ class AccountSyncWorker(context: Context, params: WorkerParameters): CoroutineWo
                     val seen=app.getSharedPreferences("account_sync",Context.MODE_PRIVATE);val seenKey="seen:$user:$type"
                     val remoteVersion=remote?.optInt("version",-1) ?: -1;val writer=remote?.optString("updated_by_device").orEmpty()
                     val last=seen.getInt(seenKey,Int.MIN_VALUE)
+                    // Follow a New/Resale switch made on the website.
+                    if(type=="new"){payload.optString("journey").takeIf { it=="New Property"||it=="Resale Property" }?.let { chosen->
+                        val entry=app.getSharedPreferences("entry",Context.MODE_PRIVATE)
+                        if(entry.getString("journey",null)!=chosen&&writer.isNotEmpty()&&writer!="android-$user"){entry.edit().putString("journey",chosen).apply()}
+                    }}
                     if(last!=Int.MIN_VALUE&&remoteVersion!=last&&writer.isNotEmpty()&&writer!="android-$user")AccountSync.notifyRemoteChange()
                     seen.edit().putInt(seenKey,remoteVersion).apply()
                     synced=true;break

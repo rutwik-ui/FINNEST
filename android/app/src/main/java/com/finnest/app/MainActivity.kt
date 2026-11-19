@@ -58,6 +58,8 @@ class MainActivity : AppCompatActivity() {
             if (model.page < choicePage - 1) model.page++ else if (model.page == choicePage - 1) finishIntro()
             else if (model.page == choicePage && model.selected != null) {
                 prefs.edit().putString("journey", model.selected).apply()
+                // Share the choice with the website when signed in (guests keep it on this phone).
+                if (AccountClient.userId(this) != null) model.selected?.let { DraftRepository.save(this, "new_property", "selected_journey", it) }
                 if (model.selected == "New Property") DashboardActivity.show(this, "new_property") else DashboardActivity.show(this, "resale_property")
             }
             render()
