@@ -11,6 +11,10 @@ import android.view.Gravity
 import android.view.View
 import android.widget.*
 
+private const val DONE = 0xFF2E9A7C.toInt()
+private const val DONE_BG = 0xFFE7F5EF.toInt()
+private const val UPCOMING_BG = 0xFFF1EFEB.toInt()
+
 /** Native image, horizontal steps and durable Room-backed progress, shared by both journeys. */
 class JourneyRoadmapView(context: Context, private val scope: String, private val current: String? = null) : LinearLayout(context) {
     data class Step(val id: String, val title: String, val icon: Int)
@@ -40,6 +44,16 @@ class JourneyRoadmapView(context: Context, private val scope: String, private va
     /** Receives durable recorded-entry totals so pages can show truthful progress. */
     var onProgress: ((JourneyProgress.Count) -> Unit)? = null
     private fun dp(n: Int) = (n * resources.displayMetrics.density).toInt()
+    private val icons = mutableMapOf<String, ImageView>()
+    private fun paintIcon(view: ImageView, active: Boolean, done: Boolean) {
+        val (fill, tint) = when {
+            active -> FinnestUi.RED to android.graphics.Color.WHITE
+            done -> DONE_BG to DONE
+            else -> UPCOMING_BG to FinnestUi.INK
+        }
+        view.background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(fill) }
+        view.imageTintList = ColorStateList.valueOf(tint)
+    }
     init {
         // Website `.roadmap` on phones: 200px banner, then a white strip of 44px step chips and a 1px line.
         orientation = VERTICAL; setBackgroundColor(context.getColor(R.color.surface))
@@ -47,33 +61,38 @@ class JourneyRoadmapView(context: Context, private val scope: String, private va
             setImageResource(R.drawable.parkside_community); scaleType = ImageView.ScaleType.CENTER_CROP
             contentDescription = "A couple walking through a green residential community beside an apartment building"
         }, LayoutParams(-1, dp(200)))
-        horizontal = HorizontalScrollView(context).apply { isHorizontalScrollBarEnabled = false; isFillViewport = false; overScrollMode = OVER_SCROLL_NEVER }
-        val strip = LinearLayout(context).apply { orientation = HORIZONTAL; setPadding(dp(16), dp(12), dp(8), dp(12)) }
+        horizontal = HorizontalScrollView(context).apply {
+            isHorizontalScrollBarEnabled = false; isFillViewport = false; overScrollMode = OVER_SCROLL_NEVER
+            isHorizontalFadingEdgeEnabled = true; setFadingEdgeLength(dp(28)) // shows the strip continues off-screen
+        }
+        val strip = LinearLayout(context).apply { orientation = HORIZONTAL; setPadding(dp(16), dp(12), dp(16), dp(12)) }
         horizontal.addView(strip)
         steps.forEachIndexed { index, step ->
             val active = step.id == current
             val row = LinearLayout(context).apply {
                 orientation = HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(7), dp(4), dp(12), dp(4))
+                setPadding(dp(10), dp(4), dp(14), dp(4))
                 isClickable = true; isFocusable = true
                 background = android.graphics.drawable.RippleDrawable(ColorStateList.valueOf(0x14E7373E), GradientDrawable().apply {
-                    cornerRadius = dp(8).toFloat(); setColor(if (active) FinnestUi.BLUSH else android.graphics.Color.WHITE)
+                    cornerRadius = dp(10).toFloat(); setColor(if (active) FinnestUi.BLUSH else android.graphics.Color.WHITE)
                     setStroke(dp(1), if (active) FinnestUi.RED else FinnestUi.LINE)
                 }, null)
                 contentDescription = step.title + if (active) ". Current step" else ". Open step"
                 setOnClickListener { if (!active) open(step.id) }
             }
             strip.addView(row, LayoutParams(-2, dp(44)).apply { marginEnd = dp(8) })
-            val number = FinnestUi.label(context, (index + 1).toString(), 11f, 700, FinnestUi.INK).apply { gravity = Gravity.CENTER; minWidth = dp(12) }
+            val number = FinnestUi.label(context, (index + 1).toString(), 11.5f, 700, if (active) FinnestUi.RED_DARK else FinnestUi.MUTED).apply { gravity = Gravity.CENTER; minWidth = dp(12) }
             row.addView(number, LayoutParams(-2, -2)); numbers[step.id] = number
-            row.addView(ImageView(context).apply {
-                setImageResource(step.icon)
-                imageTintList = ColorStateList.valueOf(if (active) android.graphics.Color.WHITE else FinnestUi.INK)
-                setPadding(dp(5), dp(5), dp(5), dp(5))
-                if (active) background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(FinnestUi.RED) }
+            // Every step gets the same round badge; colour shows current, recorded or upcoming.
+            val icon = ImageView(context).apply {
+                setImageResource(step.icon); scaleType = ImageView.ScaleType.FIT_CENTER
+                setPadding(dp(6), dp(6), dp(6), dp(6))
                 importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-            }, LayoutParams(dp(26), dp(26)).apply { marginStart = dp(7); marginEnd = dp(7) })
-            row.addView(FinnestUi.label(context, step.title, 12f, 600, if (active) FinnestUi.RED_DARK else FinnestUi.INK).apply { setSingleLine(true) }, LayoutParams(-2, -2))
+            }
+            paintIcon(icon, active, done = false)
+            row.addView(icon, LayoutParams(dp(28), dp(28)).apply { marginStart = dp(8); marginEnd = dp(8) })
+            icons[step.id] = icon
+            row.addView(FinnestUi.label(context, step.title, 12.5f, 600, if (active) FinnestUi.RED_DARK else FinnestUi.NAVY).apply { setSingleLine(true) }, LayoutParams(-2, -2))
             rows[step.id] = row
         }
         addView(horizontal, LayoutParams(-1, -2))
@@ -93,7 +112,8 @@ class JourneyRoadmapView(context: Context, private val scope: String, private va
                     val count = JourneyProgress.count(scope, step.id, draft)
                     val started = count.total > 0 && count.recorded > 0
                     // A tick marks a step with recorded entries; it is not a verification or approval.
-                    numbers[step.id]?.apply { text = if (started) "✓" else (index + 1).toString(); setTextColor(if (started) 0xFF2E9A7C.toInt() else FinnestUi.INK) }
+                    numbers[step.id]?.apply { text = if (started) "✓" else (index + 1).toString(); setTextColor(if (started) DONE else if (step.id == current) FinnestUi.RED_DARK else FinnestUi.MUTED) }
+                    icons[step.id]?.let { paintIcon(it, step.id == current, started) }
                     val state = if (count.total == 0) "" else ". ${count.recorded} of ${count.total} entries recorded"
                     rows[step.id]?.contentDescription = "${step.title}$state${if (step.id == current) ". Current step" else ". Open step"}"
                 }
