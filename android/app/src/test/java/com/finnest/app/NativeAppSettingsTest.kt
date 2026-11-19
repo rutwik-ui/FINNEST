@@ -20,4 +20,17 @@ class NativeAppSettingsTest {
         val settings = PublicAppSettings.parse(payload(3))
         assertEquals(2,settings.version);assertEquals(false,settings.guestEnabled)
     }
+    @Test fun readsHomeCopyMaintenanceAndSectionOrder() {
+        val p = payload(2).put("homeTitle","Plan your home").put("homeSubtitle","Step by step.").put("maintenanceEnabled",true)
+            .put("maintenanceMessage","Back at 6 pm.").put("sections",JSONArray(listOf("guidance","journey","progress","nextAction")))
+        val s = PublicAppSettings.parse(p)
+        assertEquals("Plan your home",s.homeTitle);assertEquals("Step by step.",s.homeSubtitle)
+        assertEquals(true,s.maintenance);assertEquals("Back at 6 pm.",s.maintenanceMessage)
+        assertEquals(listOf("guidance","journey","progress","nextAction"),s.sections)
+    }
+    @Test fun fallsBackToDefaultsForMissingOrInvalidHomeSettings() {
+        val s = PublicAppSettings.parse(payload(2).put("sections",JSONArray(listOf("journey","journey"))))
+        assertEquals("Your home-buying journey",s.homeTitle);assertEquals(false,s.maintenance)
+        assertEquals(listOf("journey","nextAction","progress","guidance"),s.sections)
+    }
 }

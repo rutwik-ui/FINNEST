@@ -16,4 +16,12 @@ class NativeJourneyContractTest {
         assertEquals("Ask lawyer",payload.getJSONObject("checks").getJSONObject("title").getString("note"))
         assertEquals("Registered document",payload.getJSONObject("checks").getJSONObject("title").getString("source"))
     }
+    @Test fun sharesTheSelectedJourneyWithTheWebsite() {
+        val payload = org.json.JSONObject()
+        org.junit.Assert.assertTrue(NativeJourneyContract.apply(payload, "new_property", "selected_journey", "Resale Property"))
+        org.junit.Assert.assertEquals("Resale Property", payload.getString("journey"))
+        org.junit.Assert.assertEquals("Resale Property", NativeJourneyContract.decode(payload, "new_property")["selected_journey"])
+        NativeJourneyContract.apply(payload, "new_property", "selected_journey", "Something else")
+        org.junit.Assert.assertEquals("Resale Property", payload.getString("journey"))
+    }
 }

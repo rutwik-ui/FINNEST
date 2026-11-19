@@ -32,7 +32,7 @@ class NotificationSettingsActivity : AppCompatActivity() {
         FinnestUi.decorate(this, scope, roadmap = false)
         binding.stepLabel.text = "SETTINGS"
         binding.screenTitle.text = "Notifications"
-        binding.screenDescription.text = "Choose what FINNEST tells you about on this phone."
+        binding.screenDescription.text = if (AccountClient.userId(this) != null) "Choose what FINNEST tells you about. These choices are shared with the website." else "Choose what FINNEST tells you about on this phone."
         binding.screenNotice.visibility = View.GONE
         binding.loading.visibility = View.GONE
         binding.saveLater.text = "Home"; binding.next.text = "Done"; binding.backBottom.text = "Back"

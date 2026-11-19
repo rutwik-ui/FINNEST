@@ -26,5 +26,7 @@
         <activity android:name=".RequirementsActivity" android:exported="false" android:windowSoftInputMode="adjustResize" />
         <activity android:name=".MainActivity" android:exported="false" />
         <activity android:name=".NotificationSettingsActivity" android:exported="false" />
+        <activity android:name=".SupportActivity" android:exported="false" />
+        <activity android:name=".DocumentsActivity" android:exported="false" />
     </application>
 </manifest>

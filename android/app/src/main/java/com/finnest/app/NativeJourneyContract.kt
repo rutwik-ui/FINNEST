@@ -36,6 +36,8 @@ object NativeJourneyContract {
             for ((prefix, group) in resaleGroups) if (key.startsWith("${prefix}_")) { val m=checkField.matchEntire(key.removePrefix("${prefix}_")) ?: return false;put(payload,group,m.groupValues[1],m.groupValues[2],value);return true }
             return false
         }
+        // The selected journey (New / Resale) lives in the New Property row, exactly where the website keeps it.
+        if (key=="selected_journey") { if (value in listOf("New Property","Resale Property")) payload.put("journey",value); return true }
         budget[key]?.let { obj(payload,"budget",it,value);return true }
         if (key.startsWith("location_")) { val label=location[key.removePrefix("location_")] ?: return false;choice(payload,"location",label,value=="true");return true }
         if (key.startsWith("config_")) { val label=config[key.removePrefix("config_")] ?: return false;choice(payload,"configuration",label,value=="true");return true }
@@ -66,6 +68,7 @@ object NativeJourneyContract {
         choices("location","location_",location);choices("configuration","config_",config)
         checks("checks","developer",developer);checks("visitChecks","visit");checks("legalChecks","legal");checks("lenderChecks","loan");checks("costChecks","financial_prompt")
         fields("loan","loan_");fields("initialCosts","financial_initial_");fields("recurringCosts","financial_recurring_");fields("loanTerms","financial_comparison_")
+        payload.optString("journey").takeIf { it=="New Property"||it=="Resale Property" }?.let { out["selected_journey"]=it }
         out["shortlist_projects_v1"]=(payload.optJSONArray("projects") ?: JSONArray()).toString();out["review_next_actions"]=payload.optString("nextActions")
         val feedback=payload.optJSONArray("feedbackNotes") ?: JSONArray();for(i in 0 until feedback.length()){val r=feedback.getJSONObject(i);r.put("date",nativeDate(r.optString("date")))};out["feedback_notes"]=feedback.toString()
         return out

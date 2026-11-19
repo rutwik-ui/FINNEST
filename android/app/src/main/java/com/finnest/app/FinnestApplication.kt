@@ -9,5 +9,8 @@ class FinnestApplication : Application() {
         registerActivityLifecycleCallbacks(OnlineGuard)
         FinnestNotifications.createChannels(this)
         runCatching { FinnestNotifications.schedule(this) }
+        // Admin App settings: live updates, and every open screen re-checks maintenance mode when they change.
+        AppSettingsLive.addListener { OnlineGuard.recheckAll() }
+        runCatching { AppSettingsLive.start(this) }
     }
 }
