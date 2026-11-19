@@ -66,7 +66,7 @@ export function App(){
     setSession(next);setAuthLoading(false);if(event==='PASSWORD_RECOVERY')setAuthMode('recover');
   });return()=>{active=false;subscription.unsubscribe()}},[]);
   const applyRemote=(patch)=>{const next={...dataRef.current,...patch};dataRef.current=next;setData(next);try{const r=writeDraft(window.localStorage,rawRef.current,next,storageKeyRef.current);if(!r.issue)rawRef.current=r.raw}catch{}};
-  const syncPath=useRef(path);syncPath.current=path;
+  const syncPath=useRef(/^\/admin/i.test(path)?'/':path);if(!/^\/admin/i.test(path))syncPath.current=path /* admin pages aren't journey progress */;
   const sync=useCloudSync({session,data,applyRemote,currentPath:syncPath});
   const go=(p,replace=false)=>{if(adminGuard.current && !adminGuard.current())return;if(p!==pathRef.current){void router.navigate({to:p,replace});}setPath(p);window.scrollTo(0,0)};
   const back=()=>{if(adminGuard.current && !adminGuard.current())return;if(history.length>1)history.back();else go('/journey',true)};

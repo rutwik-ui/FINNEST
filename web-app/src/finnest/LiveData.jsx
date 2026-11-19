@@ -61,6 +61,7 @@ export function MyDocuments({ session, journey }) {
     const file = e.target.files?.[0]; e.target.value = ''; if (!file) return;
     if(!navigator.onLine)return setState('Connect to the internet to upload documents.');
     if (file.size > 10 * 1024 * 1024) return setState('Files must be 10 MB or smaller.');
+    if (!['application/pdf','image/jpeg','image/png'].includes(file.type) && !/\.(pdf|jpe?g|png)$/i.test(file.name)) return setState('Upload a PDF, JPG or PNG file.');
     setState('Uploading…');
     const path = `${userId}/${crypto.randomUUID()}-${file.name.replace(/[^\w.\-]+/g, '_').slice(-80)}`;
     const up = await supabase.storage.from('finnest-private-documents').upload(path, file);
@@ -70,8 +71,8 @@ export function MyDocuments({ session, journey }) {
     logActivity('document_uploaded', { name: file.name.slice(0, 150) }); setState('Uploaded.'); load();
   };
   const open = async d => { const { data } = await supabase.storage.from('finnest-private-documents').createSignedUrl(d.path, 120); if (data?.signedUrl) window.open(data.signedUrl, '_blank', 'noopener'); };
-  return <section className="card form-card"><h3>My documents</h3><p>Upload copies of documents you want to keep with your journey. FINNEST support staff can view them. FINNEST does not verify documents.</p>
-    <label className="outline-button upload-btn"><Upload size={16} /> Upload a file<input type="file" hidden accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" onChange={upload} /></label>
+  return <section className="card form-card"><h3>My documents</h3><p>Keep copies of your documents with your journey (PDF, JPG or PNG, up to 10 MB). FINNEST support staff can view them. FINNEST does not verify documents.</p>
+    <label className="outline-button upload-btn"><Upload size={16} /> Upload a file<input type="file" hidden accept=".pdf,.jpg,.jpeg,.png,application/pdf,image/jpeg,image/png" onChange={upload} /></label>
     {state && <p className="footnote" role="status">{state}</p>}
     {docs.length > 0 && <ul className="ticket-list">{docs.map(d => <li key={d.id}><button className="text-link" onClick={() => open(d)}><FileText size={14} /> {d.name}</button></li>)}</ul>}
   </section>;
