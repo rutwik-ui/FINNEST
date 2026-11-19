@@ -27,8 +27,6 @@ class CommonScreensTest {
             onView(withContentDescription("Expert role category")).perform(scrollTo(), click())
             onData(allOf(`is`(instanceOf(String::class.java)), `is`("Property lawyer"))).perform(click())
             onView(withText("Title, agreements, disclosures and local requirements.")).perform(scrollTo()).check(matches(isDisplayed()))
-            onView(withText("View expert detail state")).perform(scrollTo(), click())
-            onView(withText("Request a conversation · unavailable")).perform(scrollTo()).check(matches(not(isEnabled())))
         }
     }
     @Test fun selectedRiskStatusIsSavedInChosenJourneyOnly() {

@@ -35,6 +35,16 @@ object AccountSync {
         }
     }
     fun stop(){liveJob?.cancel();liveJob=null}
+
+    // Open screens refresh when another device (the website, or another phone session) changes this account's journey.
+    val remoteRevision = java.util.concurrent.atomic.AtomicInteger(0)
+    private val remoteListeners = java.util.concurrent.CopyOnWriteArraySet<() -> Unit>()
+    fun addRemoteListener(listener: () -> Unit) { remoteListeners.add(listener) }
+    fun removeRemoteListener(listener: () -> Unit) { remoteListeners.remove(listener) }
+    internal fun notifyRemoteChange() {
+        remoteRevision.incrementAndGet()
+        android.os.Handler(android.os.Looper.getMainLooper()).post { remoteListeners.forEach { it() } }
+    }
     fun request(context: Context, path: String, method: String="GET", body: String?=null): Pair<Int,String> {
         val token=AccountClient.get(context).auth.currentAccessTokenOrNull() ?: return 401 to ""
         val connection=URL(BuildConfig.GUIDANCE_URL+path).openConnection() as HttpURLConnection
@@ -61,7 +71,7 @@ class AccountSyncWorker(context: Context, params: WorkerParameters): CoroutineWo
                 for(attempt in 0..2){
                     if(AccountClient.userId(app)!=user)return Result.success()
                     val db=JourneyDatabase.get(app);val pending=db.drafts().pending(user).filter { (if(it.scope=="resale_property") "resale" else "new")==type }
-                    val (status,text)=AccountSync.request(app,"/rest/v1/finnest_journeys?user_id=eq.$user&journey_type=eq.$type&select=payload,version")
+                    val (status,text)=AccountSync.request(app,"/rest/v1/finnest_journeys?user_id=eq.$user&journey_type=eq.$type&select=payload,version,updated_by_device")
                     if(status !in 200..299)return Result.retry()
                     val rows=JSONArray(text);val remote=if(rows.length()>0)rows.getJSONObject(0) else null
                     val payload=remote?.optJSONObject("payload") ?: JSONObject()
@@ -87,6 +97,12 @@ class AccountSyncWorker(context: Context, params: WorkerParameters): CoroutineWo
                             NativeJourneyContract.decode(JSONObject(payload.toString()),localScope).forEach { (k,v)->if(k !in dirty)db.drafts().put(DraftField("account:$user:$localScope",k,v)) }
                         }
                     }
+                    // A newer version written by a different device means an open screen should show it.
+                    val seen=app.getSharedPreferences("account_sync",Context.MODE_PRIVATE);val seenKey="seen:$user:$type"
+                    val remoteVersion=remote?.optInt("version",-1) ?: -1;val writer=remote?.optString("updated_by_device").orEmpty()
+                    val last=seen.getInt(seenKey,Int.MIN_VALUE)
+                    if(last!=Int.MIN_VALUE&&remoteVersion!=last&&writer.isNotEmpty()&&writer!="android-$user")AccountSync.notifyRemoteChange()
+                    seen.edit().putInt(seenKey,remoteVersion).apply()
                     synced=true;break
                 }
                 if(!synced)return Result.retry()

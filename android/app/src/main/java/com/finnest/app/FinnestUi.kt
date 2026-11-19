@@ -568,8 +568,54 @@ object FinnestUi {
             }
         }
     }
+    /**
+     * Keeps an open screen in step with the website: when another device changes this account's
+     * journey, the screen reloads. If the buyer is typing, a bar offers the refresh instead so the
+     * text in progress isn't disturbed. Changes that arrive while the screen is in the background
+     * are applied when it comes back.
+     */
+    private fun liveRefresh(activity: Activity) {
+        val owner = activity as? androidx.lifecycle.LifecycleOwner ?: return
+        if (activity is AccountActivity || activity is LaunchActivity) return
+        if (!liveScreens.add(activity)) return // decorate() can run more than once per screen
+        val seen = AccountSync.remoteRevision.get()
+        val listener: () -> Unit = { refreshFromRemote(activity) }
+        owner.lifecycle.addObserver(object : androidx.lifecycle.DefaultLifecycleObserver {
+            override fun onResume(o: androidx.lifecycle.LifecycleOwner) {
+                AccountSync.addRemoteListener(listener)
+                if (AccountSync.remoteRevision.get() != seen) refreshFromRemote(activity)
+            }
+            override fun onPause(o: androidx.lifecycle.LifecycleOwner) { AccountSync.removeRemoteListener(listener) }
+            override fun onDestroy(o: androidx.lifecycle.LifecycleOwner) { AccountSync.removeRemoteListener(listener) }
+        })
+    }
+
+    private val liveScreens: MutableSet<Activity> = java.util.Collections.newSetFromMap(java.util.WeakHashMap())
+    private val reloading: MutableSet<Activity> = java.util.Collections.newSetFromMap(java.util.WeakHashMap())
+    private const val UPDATE_BAR = "finnest_update_bar"
+    private fun refreshFromRemote(activity: Activity) {
+        if (activity.isFinishing || activity.isDestroyed || activity in reloading) return
+        if (activity.currentFocus !is EditText) { reloading.add(activity); activity.recreate(); return }
+        val content = activity.findViewById<ViewGroup>(android.R.id.content) ?: return
+        if (content.findViewWithTag<View>(UPDATE_BAR) != null) return
+        val d = { n: Int -> dp(activity, n) }
+        val bar = LinearLayout(activity).apply {
+            tag = UPDATE_BAR; orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            setPadding(d(16), d(10), d(8), d(10)); elevation = dpf(activity, 12f)
+            background = shape(activity, NAVY, null, 14)
+            addView(label(activity, "Updated on another device", 14f, 500, Color.WHITE), LinearLayout.LayoutParams(0, -2, 1f))
+            addView(Button(activity).apply {
+                text = "Refresh"; isAllCaps = false; markStyled(this); setTextColor(Color.WHITE); typeface = font(activity, 600)
+                background = android.graphics.drawable.RippleDrawable(ColorStateList.valueOf(0x33FFFFFF), null, shape(activity, Color.WHITE, null, 10))
+                setOnClickListener { if (reloading.add(activity)) activity.recreate() }
+            }, LinearLayout.LayoutParams(-2, d(40)))
+        }
+        content.addView(bar, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply { setMargins(d(12), 0, d(12), d(92)) })
+    }
+
     fun decorate(activity: Activity, scope: String, current: String? = null, roadmap: Boolean = true) {
         val root = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as? LinearLayout ?: return
+        liveRefresh(activity)
         styleTree(root)
         val oldHeader = root.getChildAt(0) as? LinearLayout
         val home = activity.findViewById<TextView>(R.id.save_later)

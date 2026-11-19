@@ -14,7 +14,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import com.finnest.app.databinding.ActivityDeveloperChecksBinding
 
-/** Informational common screens; no expert profiles, messaging or assessment service. */
+/** Common screens: the live experts directory, about and informational pages. */
 class CommonActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDeveloperChecksBinding
     private val screen by lazy { intent.getStringExtra("screen") ?: "experts" }
@@ -66,35 +66,36 @@ class CommonActivity : AppCompatActivity() {
         parent.addView(Button(this).apply { text = title; isAllCaps = false; setOnClickListener { action() } }, LinearLayout.LayoutParams(-1, -2))
     }
     private fun open(screen: String) { startActivity(Intent(this, CommonActivity::class.java).putExtra("screen", screen).putExtra("scope", scope)) }
+    private var directory: ExpertsDirectory? = null
     private fun experts() {
         binding.stepLabel.text = "FIND THE RIGHT KIND OF HELP"; binding.screenTitle.text = "Experts directory"
-        binding.screenDescription.text = "Know what each professional can help with and when a conversation may be useful."
-        binding.screenNotice.text = "No experts are configured. No profiles, credentials, ratings, availability, prices or contact details are supplied."
-        val filters = card("Category")
-        label(filters, "Filter informational roles only; these are not available professionals. Journey-stage filters are not specified in the reference.")
-        val roleNames = listOf("All roles") + CommonContent.professionalRoles.map { it.title } + CommonContent.optionalRoles.map { it.title }
+        binding.screenDescription.text = "Professionals listed by FINNEST, and what each kind of expert can help with."
+        binding.screenNotice.text = "FINNEST lists these professionals for convenience. Check credentials yourself before engaging anyone."
+        val roles = CommonContent.professionalRoles + CommonContent.optionalRoles
+        val roleNames = listOf("All roles") + roles.map { it.title }
+        var roleIndex = 0
+        val filters = card("Find an expert")
         val spinner = Spinner(this).apply { adapter = ArrayAdapter(this@CommonActivity, android.R.layout.simple_spinner_dropdown_item, roleNames); contentDescription = "Expert role category" }
+        filters.addView(TextView(this).apply { text = "Role category" }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(4) })
         filters.addView(spinner, LinearLayout.LayoutParams(-1, dp(48)))
-        val results = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }; binding.form.addView(results)
+        val listed = directory ?: ExpertsDirectory(this, filters) { roleNames.getOrNull(roleIndex)?.takeIf { roleIndex > 0 } }.also { directory = it }
+        val guide = card("What each expert helps with")
+        val results = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL }; guide.addView(results)
         fun render(index: Int) {
             results.removeAllViews()
-            val roles = CommonContent.professionalRoles + CommonContent.optionalRoles
             val visible = if (index == 0) roles else roles.filter { it.title == roleNames[index] }
             visible.forEach { role ->
-                val block = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(8), dp(16), dp(16)); setBackgroundResource(R.drawable.card) }
-                results.addView(block, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
-                label(block, role.title, true); label(block, role.description)
-                if (role in CommonContent.optionalRoles) label(block, "Optional personal preference—not legal, financial or technical due diligence.")
+                label(results, role.title, true); label(results, role.description)
+                if (role in CommonContent.optionalRoles) label(results, "Optional personal preference—not legal, financial or technical due diligence.")
             }
         }
         spinner.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onNothingSelected(parent: AdapterView<*>?) = Unit
-            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) { render(position) }
+            override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) { roleIndex = position; render(position); listed.refilter() }
         }
-        val detail = card("Expert detail & contact")
-        label(detail, "No individual expert profiles or contact services are configured.")
-        button(detail, "View expert detail state") { open("expert_detail") }
+        listed.start()
     }
+    override fun onDestroy() { directory?.stop(); super.onDestroy() }
     private fun expertDetail() {
         binding.stepLabel.text = "EXPERT DETAIL"; binding.screenTitle.text = "A clearer way to ask for help"
         binding.screenDescription.text = "Professional help can support informed decisions."
