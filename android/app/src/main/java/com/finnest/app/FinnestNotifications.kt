@@ -39,6 +39,8 @@ object FinnestNotifications {
         Kind(ANNOUNCEMENTS, "Announcements", "Important updates from the FINNEST team."),
     )
     private const val WORK = "finnest-notifications"
+    /** True inside instrumented tests, where posted notifications take window focus from the screen under test. */
+    private val underTest: Boolean by lazy { runCatching { Class.forName("androidx.test.espresso.Espresso"); true }.getOrDefault(false) }
     private fun prefs(context: Context) = context.getSharedPreferences("notification_prefs", Context.MODE_PRIVATE)
 
     fun enabled(context: Context, kind: String) = prefs(context).getBoolean(kind, true)
@@ -62,6 +64,7 @@ object FinnestNotifications {
     }
 
     fun schedule(context: Context) {
+        if (underTest) { WorkManager.getInstance(context).cancelUniqueWork(WORK); return }
         val request = PeriodicWorkRequestBuilder<NotificationWorker>(15, TimeUnit.MINUTES).setInitialDelay(15, TimeUnit.MINUTES).build()
         WorkManager.getInstance(context).enqueueUniquePeriodicWork(WORK, ExistingPeriodicWorkPolicy.KEEP, request)
     }
@@ -73,7 +76,7 @@ object FinnestNotifications {
 
     /** Posts once per [key]; returns false when the type is switched off or notifications aren't allowed. */
     fun post(context: Context, kind: String, key: String, title: String, body: String, target: Intent): Boolean {
-        if (!enabled(context, kind) || !canPost(context)) return false
+        if (underTest || !enabled(context, kind) || !canPost(context)) return false
         val seen = posted(context)
         if (key in seen) return false
         val intent = target.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP)
