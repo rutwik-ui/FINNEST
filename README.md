@@ -19,14 +19,15 @@ Onboarding completion and the selected journey use private Android preferences. 
 
 ## Website foundation
 
-`web/` contains a responsive React/Vite user website, with a guest dashboard, New Property requirements, developer-check, and visit-observation forms, a locally saved shortlist of up to five project names, expert-category guidance, and a profile page. Run it with:
+`web-app/` is the website and admin console (TanStack Start, edited through Lovable). Run it with:
 
 ```sh
-cd web
-npm install
-cp .env.example .env.local
-npm run dev
+cd web-app
+bun install
+bun run dev
 ```
+
+Set `VITE_SUPABASE_URL`, `VITE_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL` and `SUPABASE_PUBLISHABLE_KEY` in `.env.local` (publishable values only). To deploy on Vercel, import the `web-app` folder as a single project and add the same variables.
 
 The website supports Supabase email/password sign-in and registration on the Profile page. Guest data still stays only in browser localStorage: signing in does not upload or sync it, and clearing browser data removes it. The connected project requires email confirmation and currently has its Auth Site URL set to localhost. Configure the real site URL and allowed redirect URLs in Supabase Auth before testing email confirmation; do not set a production URL to a temporary preview. The client configuration in `.env.example` is a publishable key, not a service-role key. Project comparison details and cross-device synchronization are not implemented. The `/guidance` route displays published guidance from Supabase, with a category filter and 50-item pages ordered by update time and ID. It does not show drafts, and renders content as plain text. Refresh to see content that changed while browsing; live PostgREST pagination and authorization still require end-to-end testing. The `/Adminlogin` route now provides an early role-restricted guidance editor (details below). It does not yet manage users, buyer data, Android forms, experts or projects; do not use it for production operations. The web frontend is React/Vite; the master brief's proposed Laravel backend/admin and a shared API remain future work. The roadmap artwork is AI-generated, based on the supplied dashboard reference.
 
@@ -52,7 +53,7 @@ No account has automatically been made an administrator. To bootstrap a trusted 
 
 See `docs/requirements-traceability.md` for the distinction between native, admin-managed and backend functionality and the remaining release gates. Administrator TOTP setup is available after a trusted operator grants a content role; the code and QR are sensitive and should never be shared. If an authenticator is lost, a secure, documented recovery process must be established before production use.
 
-For the web run `npm run test:unit`, `npm run test:ui`, and `npm run build` from `web/`. The MFA UI tests mock Supabase; they do not prove live enrollment or RLS behavior. Migration `20261109095719_finnest_admin_require_mfa.sql` enforces AAL2 for admin draft reads, content writes and audit reads; published guidance remains public.
+For the website run `bun run test` and `bun run build` from `web-app/`. The MFA UI tests mock Supabase; they do not prove live enrollment or RLS behavior. Migration `20261109095719_finnest_admin_require_mfa.sql` enforces AAL2 for admin draft reads, content writes and audit reads; published guidance remains public.
 
 ### Android profile and local deletion
 
@@ -82,4 +83,3 @@ The website expert directory is informational: no professionals, booking, contac
 
 Profile offers an unencrypted website draft download and a confirmed local replacement from a compatible recovery file. It is not Android interchange or cloud sync. Keep files private, and download the current saved draft before replacing it; unsaved edits are not included in the download. Validation is structural, not proof of origin, and cross-tab checks are best-effort.
 
-Website browser smoke tests: from `web`, install dependencies with `npm ci`, install Playwright Chromium with `npx playwright install chromium`, then run `npm run test:e2e`. These run with Supabase configuration disabled and use test-only browser data.
