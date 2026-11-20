@@ -106,7 +106,7 @@ class FinancialDueDiligenceActivity : AppCompatActivity() {
         refresh()
         val promptCard = card()
         label(promptCard, "Cost and document prompts", true)
-        label(promptCard, "Status choices are provisional; these are your notes, not verified findings.")
+        label(promptCard, "These statuses are your own notes, not verified findings.")
         val statuses = listOf("Not checked", "Checked by you", "Information provided", "Pending / unknown", "Professional review")
         FinancialCosts.initial.drop(1).forEach { (id, title) ->
             label(promptCard, title, true)

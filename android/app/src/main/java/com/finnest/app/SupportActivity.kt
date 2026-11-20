@@ -79,7 +79,7 @@ class SupportActivity : AppCompatActivity() {
             lifecycleScope.launch {
                 val ok = withContext(Dispatchers.IO) { runCatching { submit(category, title, text) }.getOrDefault(false) }
                 send.isEnabled = true
-                if (ok) { subject.setText(""); message.setText(""); status.text = "Sent. We'll reply here and by email."; load() }
+                if (ok) { subject.setText(""); message.setText(""); status.text = "Sent. Our reply will appear below."; load() }
                 else status.text = "Couldn't send your message. Check your connection and try again."
             }
         }
