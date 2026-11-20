@@ -139,7 +139,23 @@ export function useNotifications({ session, data, announcements }: { session: Se
   useEffect(() => { const id = setInterval(() => setNow(Date.now()), 60_000); return () => clearInterval(id); }, []);
   useEffect(() => { const sync = () => setPermission(permissionState()); window.addEventListener('focus', sync); return () => window.removeEventListener('focus', sync); }, []);
 
-  const items = useMemo(() => buildFeed({ data, announcements, security, prefs, signedIn: Boolean(session), now }), [data, announcements, security, prefs, session, now]);
+  // Replies from the FINNEST team to this account's support requests (sent from the website or the Android app).
+  const [replies, setReplies] = useState<FeedItem[]>([]);
+  const userId = session?.user?.id;
+  useEffect(() => {
+    setReplies([]);
+    if (!userId) return;
+    const load = () => supabase.from('finnest_support_tickets').select('id,subject,admin_note,updated_at').eq('user_id', userId).not('admin_note', 'is', null).order('updated_at', { ascending: false }).limit(10)
+      .then(({ data: rows }) => setReplies((rows ?? []).filter(r => r.admin_note).map(r => ({ id: `reply:${r.id}:${r.updated_at}`, kind: 'security' as const, title: 'FINNEST replied to your request', body: `${r.subject}: ${r.admin_note}`.slice(0, 240), time: Date.parse(r.updated_at), path: '/help' }))));
+    load();
+    const channel = supabase.channel(`notify-support-${userId}-${crypto.randomUUID()}`).on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'finnest_support_tickets', filter: `user_id=eq.${userId}` }, load).subscribe();
+    return () => { supabase.removeChannel(channel); };
+  }, [userId]);
+
+  const items = useMemo(() => {
+    const feed = buildFeed({ data, announcements, security, prefs, signedIn: Boolean(session), now });
+    return prefs.security ? [...feed, ...replies].sort((a, b) => b.time - a.time) : feed;
+  }, [data, announcements, security, prefs, session, now, replies]);
   const readSet = useMemo(() => new Set(read), [read]);
   const unread = items.filter(i => !readSet.has(i.id)).length;
 

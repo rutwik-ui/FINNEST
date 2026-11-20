@@ -1,4 +1,5 @@
-import React,{useState} from 'react';
+import React,{useEffect,useState} from 'react';
+import {onSearchFocus,revealElement} from './searchFocus';
 import {ArrowRight,Info,UserRound} from 'lucide-react';
 import {PublishedExperts} from './LiveData';
 import { Button } from '@/components/ui/button';
@@ -12,7 +13,10 @@ export const ROLES=[
  ['Valuation expert','Independent valuation within their professional scope.']
 ];
 export function Experts({go}) {
- const [role,setRole]=useState('all'),[search,setSearch]=useState('');const visible=role==='all'?ROLES:ROLES.filter(([name])=>name===role);
+ const [role,setRole]=useState('all'),[search,setSearch]=useState('');
+ // A person picked in site search: show just them and bring their card into view.
+ useEffect(()=>onSearchFocus('expert',t=>{setRole('all');setSearch(t.label);revealElement(`expert-${t.id}`)}),[]);
+ const visible=role==='all'?ROLES:ROLES.filter(([name])=>name===role);
  return <><div className="page-head"><span className="eyebrow">FIND THE RIGHT KIND OF HELP</span><h1>Experts directory<span className="red-dot">.</span></h1><p>Know what each professional can help with and when a conversation may be useful.</p></div>
  <div className="directory-filters"><label>Search experts<input type="search" value={search} onChange={e=>setSearch(e.target.value)} placeholder="Name, city or specialty"/></label><label>Role category<select value={role} onChange={e=>setRole(e.target.value)}><option value="all">All roles</option>{ROLES.map(([name])=><option key={name}>{name}</option>)}</select></label></div>
  <PublishedExperts role={role} search={search}/><h2 className="admin-space">Professional guidance</h2><div className="expert-grid">{visible.map(([name,description])=><article className="card expert-card" key={name}><div className="project-icon"><UserRound/></div><h3>{name}</h3><p>{description}</p></article>)}</div>

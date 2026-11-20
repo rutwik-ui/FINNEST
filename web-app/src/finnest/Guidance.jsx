@@ -1,3 +1,4 @@
+import { onSearchFocus, revealElement } from './searchFocus';
 import React, { useCallback, useEffect, useRef, useState } from 'react';
 import { RefreshCw, ShieldAlert } from 'lucide-react';
 import { supabase } from './supabase';
@@ -42,6 +43,12 @@ export async function loadPublishedGuidance(client, category, cursor = null) {
 
 export default function Guidance() {
   const [category, setCategory] = useState('all');
+  const [pinned, setPinned] = useState(null);
+  // An article picked in site search opens here even if it isn't on the first page.
+  useEffect(() => onSearchFocus('guide', async target => {
+    const { data } = await supabase.from('finnest_guidance').select('id,title,body,category,status').eq('id', target.id).eq('status', 'published').maybeSingle();
+    if (data && names[data.category]) { setPinned(data); revealElement(`guide-${data.id}`); }
+  }), []);
   const [state, setState] = useState(() => empty('loading'));
   const request = useRef(0);
   const moreBusy = useRef(false);
@@ -96,14 +103,16 @@ export default function Guidance() {
     {state.kind === 'loading' && <div className="content-skeletons" role="status" aria-label="Loading published guidance">{[0,1,2].map(i=><div className="content-skeleton" key={i}/>)}</div>}
     {state.kind === 'unconfigured' && <p className="guidance-state" role="status">Guidance is not configured for this website yet.</p>}
     {state.kind === 'error' && <div className="guidance-state" role="alert"><p>Could not load guidance. Check your connection and try again.</p><button className="outline-button" onClick={reload}>Try again</button></div>}
+    {pinned && <section className="guidance-pinned" aria-label="From your search"><div className="section-heading"><span className="eyebrow">FROM YOUR SEARCH</span><button type="button" className="text-link" onClick={() => setPinned(null)}>Clear</button></div>
+      <article className="card guidance-item" id={`guide-${pinned.id}`}><span className="eyebrow">{names[pinned.category]}</span><h2>{pinned.title}</h2><p className="guidance-body">{pinned.body}</p></article></section>}
     {state.kind === 'ready' && <div aria-live="polite">
       {state.offline && <p className="footnote">Showing the last saved guidance. Reconnect for updates.</p>}
-      {state.items.length === 0 && !state.cursor ? <div className="card guidance-empty"><h2>No published guidance yet</h2><p>Check another category or return later.</p></div> : <div className="guidance-list">{state.items.map(item => <article className="card guidance-item" key={item.id}>
+      {state.items.length === 0 && !state.cursor ? <div className="card guidance-empty"><h2>No published guidance yet</h2><p>Check another category or return later.</p></div> : <div className="guidance-list">{state.items.filter(item => item.id !== pinned?.id).map(item => <article className="card guidance-item" id={`guide-${item.id}`} key={item.id}>
         <span className="eyebrow">{names[item.category]}</span><h2>{item.title}</h2><p className="guidance-body">{item.body}</p>
       </article>)}</div>}
       {state.moreError && <p className="auth-error" role="alert">Could not load more guidance. Your current results are still shown.</p>}
       {state.cursor && <div className="guidance-more"><button className="outline-button" type="button" onClick={loadMore} disabled={state.loadingMore}>{state.loadingMore ? 'Loading…' : state.moreError ? 'Retry loading more' : 'Load more guidance'}</button></div>}
-      <p className="footnote guidance-limit">Published guidance may change; refresh to see the latest version.</p>
+      <p className="footnote guidance-limit">New and updated guidance appears here automatically.</p>
     </div>}
   </>;
 }

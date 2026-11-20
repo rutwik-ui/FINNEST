@@ -6,9 +6,12 @@ import { mainNavigation, secondaryNavigation } from './navigation';
 import { roadmapFor, type RoadmapStep } from './roadmap';
 import { ROLES } from './Experts';
 import { supabase } from './supabase';
+import { setSearchFocus } from './searchFocus';
 
 type Step = RoadmapStep;
 type Article = { id: string; title: string; category: string | null };
+type Person = { id: string; name: string; specialty: string | null; city: string | null };
+const CATEGORY_NAMES: Record<string, string> = { general: 'General', new_property: 'New property', resale_property: 'Resale property' };
 type Props = {
   open: boolean;
   onOpenChange: (open: boolean) => void;
@@ -27,9 +30,11 @@ const PAGE_HINTS: Record<string, string> = {
   '/reminders': 'Notes for things to follow up',
   '/about': 'What FINNEST does',
   '/privacy': 'How your data is used',
+  '/help': 'Questions, problems and feedback',
 };
 
 let articleCache: Article[] | null = null;
+let peopleCache: Person[] | null = null;
 
 // Every typed word must appear in the item's title or description; title matches rank first.
 function matchScore(_value: string, search: string, keywords?: string[]) {
@@ -47,6 +52,7 @@ function matchScore(_value: string, search: string, keywords?: string[]) {
 export function SiteSearch({ open, onOpenChange, journey, go, openStep }: Props) {
   const [query, setQuery] = useState('');
   const [articles, setArticles] = useState<Article[]>(articleCache ?? []);
+  const [people, setPeople] = useState<Person[]>(peopleCache ?? []);
   const steps = useMemo(() => roadmapFor(journey), [journey]);
 
   useEffect(() => { if (!open) setQuery(''); }, [open]);
@@ -65,6 +71,25 @@ export function SiteSearch({ open, onOpenChange, journey, go, openStep }: Props)
     return () => { active = false; };
   }, [open]);
 
+  // Published experts, by name, so people can be found directly (shown once two letters are typed).
+  useEffect(() => {
+    if (!open || peopleCache) return;
+    let active = true;
+    supabase.from('finnest_experts').select('id,name,specialty,city').eq('status', 'published').order('name').limit(1000)
+      .then(({ data, error }) => {
+        if (error || !Array.isArray(data)) return;
+        peopleCache = data as Person[];
+        if (active) setPeople(peopleCache);
+      });
+    return () => { active = false; };
+  }, [open]);
+  const matchedPeople = useMemo(() => {
+    const q = query.trim().toLowerCase();
+    if (q.length < 2) return [];
+    const terms = q.split(/\s+/);
+    return people.filter(p => terms.every(t => `${p.name} ${p.specialty ?? ''} ${p.city ?? ''}`.toLowerCase().includes(t))).slice(0, 8);
+  }, [people, query]);
+
   const run = (action: () => void) => { onOpenChange(false); action(); };
   const pages = [...mainNavigation, ...secondaryNavigation];
 
@@ -82,7 +107,7 @@ export function SiteSearch({ open, onOpenChange, journey, go, openStep }: Props)
           <Command.List className="site-search-list">
             <Command.Empty className="site-search-empty">
               <strong>No results for “{query}”</strong>
-              <span>Try a step name like “loan”, “legal” or “visit”.</span>
+              <span>Try a step like “loan” or “legal”, an expert’s name, or a guidance topic.</span>
             </Command.Empty>
 
             <Command.Group heading={`Your journey · ${journey}`}>
@@ -97,12 +122,16 @@ export function SiteSearch({ open, onOpenChange, journey, go, openStep }: Props)
               {pages.map(page => <Item key={page.path} value={`page ${page.label}`} keywords={[page.label, PAGE_HINTS[page.path] ?? '']} icon={page.icon} title={page.label} hint={PAGE_HINTS[page.path] ?? page.label} onSelect={() => run(() => go(page.path))}/>)}
             </Command.Group>
 
-            <Command.Group heading="Experts">
+            {matchedPeople.length > 0 && <Command.Group heading="Experts">
+              {matchedPeople.map(person => <Item key={person.id} value={`person ${person.name} ${person.id}`} keywords={[person.name, person.specialty ?? '', person.city ?? '', 'expert']} icon={UserRound} title={person.name} hint={[person.specialty, person.city].filter(Boolean).join(' · ') || 'Expert'} onSelect={() => run(() => { setSearchFocus({ kind: 'expert', id: person.id, label: person.name }); go('/experts'); })}/>)}
+            </Command.Group>}
+
+            <Command.Group heading="Types of expert">
               {ROLES.map(([role, about]) => <Item key={role} value={`expert ${role}`} keywords={[role, about, 'expert']} icon={UserRound} title={role} hint={about} onSelect={() => run(() => go('/experts'))}/>)}
             </Command.Group>
 
             {articles.length > 0 && <Command.Group heading="Guidance">
-              {articles.map(article => <Item key={article.id} value={`guide ${article.title} ${article.id}`} keywords={[article.title, article.category ?? '', 'guidance']} icon={BookOpen} title={article.title} hint={article.category ?? 'Guidance'} onSelect={() => run(() => go('/guidance'))}/>)}
+              {articles.map(article => <Item key={article.id} value={`guide ${article.title} ${article.id}`} keywords={[article.title, article.category ?? '', 'guidance']} icon={BookOpen} title={article.title} hint={CATEGORY_NAMES[article.category ?? ''] ?? 'Guidance'} onSelect={() => run(() => { setSearchFocus({ kind: 'guide', id: article.id, label: article.title }); go('/guidance'); })}/>)}
             </Command.Group>}
           </Command.List>
           <div className="site-search-foot" aria-hidden="true">

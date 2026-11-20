@@ -6,7 +6,7 @@ import type { NotificationKind, NotificationsApi } from './notifications';
 const KINDS: { key: NotificationKind; title: string; body: string; icon: typeof BellRing }[] = [
   { key: 'reminders', title: 'Reminders', body: 'When a reminder you added is due, and if it becomes overdue.', icon: CalendarClock },
   { key: 'nudges', title: 'Journey progress', body: 'A weekly prompt about your next unfinished step.', icon: Route },
-  { key: 'security', title: 'Account & security', body: 'New sign-ins, password resets and account changes.', icon: ShieldCheck },
+  { key: 'security', title: 'Account & support', body: 'New sign-ins, password resets, account changes and replies to your support requests.', icon: ShieldCheck },
   { key: 'announcements', title: 'Announcements', body: 'Important updates from the FINNEST team.', icon: Megaphone },
 ];
 
