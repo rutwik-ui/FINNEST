@@ -35,7 +35,7 @@ object FinnestNotifications {
     val kinds = listOf(
         Kind(REMINDERS, "Reminders", "When a reminder you added is due, and if it becomes overdue."),
         Kind(NUDGES, "Journey progress", "A weekly prompt about your next unfinished step."),
-        Kind(SECURITY, "Account & security", "New sign-ins and account changes."),
+        Kind(SECURITY, "Account & support", "New sign-ins, account changes and replies to your support requests."),
         Kind(ANNOUNCEMENTS, "Announcements", "Important updates from the FINNEST team."),
     )
     private const val WORK = "finnest-notifications"
@@ -115,6 +115,7 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Coroutine
         runCatching { reminders() }
         runCatching { nudge() }
         runCatching { announcements() }
+        runCatching { supportReplies() }
         return Result.success()
     }
 
@@ -156,6 +157,20 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Coroutine
         FinnestNotifications.post(applicationContext, FinnestNotifications.NUDGES, "nudge:$scope:$next:$week",
             "Next step: $next", "Pick up your $journey journey where you left off.",
             Intent(applicationContext, DashboardActivity::class.java).putExtra(DashboardActivity.SCOPE, scope))
+    }
+
+    /** A reply from the FINNEST team to one of this account's support requests (recent ones only). */
+    private fun supportReplies() {
+        val user = AccountClient.userId(applicationContext) ?: return
+        val since = SimpleDateFormat("yyyy-MM-dd'T'HH:mm:ss'Z'", Locale.US).apply { timeZone = TimeZone.getTimeZone("UTC") }.format(java.util.Date(System.currentTimeMillis() - 7 * 86_400_000L))
+        val (code, body) = AccountSync.request(applicationContext, "/rest/v1/finnest_support_tickets?select=id,subject,admin_note,updated_at&user_id=eq.$user&admin_note=not.is.null&updated_at=gte.$since&order=updated_at.desc&limit=5")
+        if (code !in 200..299) return
+        val rows = JSONArray(body)
+        for (i in 0 until rows.length()) {
+            val row = rows.getJSONObject(i); val note = row.optString("admin_note").takeIf { it.isNotBlank() && it != "null" } ?: continue
+            post(applicationContext, SECURITY, "reply:${row.optString("id")}:${row.optString("updated_at")}", "FINNEST replied to your request",
+                "${row.optString("subject")}: $note", Intent(applicationContext, SupportActivity::class.java))
+        }
     }
 
     private fun announcements() {

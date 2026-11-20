@@ -123,7 +123,7 @@ class MainActivity : AppCompatActivity() {
         secondary.text = "Skip"
         if(model.page<choicePage) {
             val slide=settings.slides[model.page];eyebrow.text="YOUR HOME-BUYING JOURNEY";title.text=slide.title;description.text=slide.body
-            illustration.setImageResource(when(slide.image){"building"->R.drawable.intro_1;"family"->R.drawable.intro_3;else->R.drawable.intro_2})
+            illustration.setImageResource(when(slide.image){"building"->R.drawable.onboarding_choose;"family"->R.drawable.onboarding_check;else->R.drawable.onboarding_steps})
             val dots=android.widget.LinearLayout(this@MainActivity).apply{gravity=android.view.Gravity.CENTER}
             settings.slides.forEachIndexed { i,_ -> dots.addView(View(this@MainActivity).apply{background=FinnestUi.shape(context,if(i==model.page)FinnestUi.RED else FinnestUi.LINE,null,4)},android.widget.LinearLayout.LayoutParams(FinnestUi.dp(this@MainActivity,if(i==model.page)28 else 8),FinnestUi.dp(this@MainActivity,8)).apply{marginStart=FinnestUi.dp(this@MainActivity,4);marginEnd=FinnestUi.dp(this@MainActivity,4)}) }
             details.addView(dots,lp(8))

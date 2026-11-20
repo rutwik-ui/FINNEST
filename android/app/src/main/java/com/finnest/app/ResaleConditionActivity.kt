@@ -35,7 +35,7 @@ class ResaleConditionActivity : AppCompatActivity() {
         binding.screenTitle.text = current.title
         binding.screenDescription.text = current.description
         binding.screenNotice.text = if (current.freeTextStatus) "Keep observations, seller statements and professional advice distinct. Status is free text because the reference choices are not visible."
-            else "Keep observations, seller statements and professional advice distinct. Status choices are provisional."
+            else "Keep observations, seller statements and professional advice distinct. Statuses are your own notes."
         binding.back.setOnClickListener { leave { finish() } }; binding.backBottom.setOnClickListener { leave { finish() } }
         binding.saveLater.setOnClickListener { leave { DashboardActivity.show(this, "resale_property") } }
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) { override fun handleOnBackPressed() { leave { finish() } } })

@@ -128,7 +128,7 @@ class FinalReviewActivity : AppCompatActivity() {
         label(pending, "${pendingChecks.size} items are not checked or pending, including items with no selected status. Review them in their journey steps.")
         pendingChecks.forEach { label(pending, "${it.group} · ${it.title}: ${it.status ?: "Not checked (no status selected)"}") }
         val concern = card("Potential concerns")
-        label(concern, "The current provisional checklist does not offer a Concern status. Read your notes and resident feedback above; FINNEST does not assess them automatically.")
+        label(concern, "Read back your notes and resident feedback above before deciding. FINNEST does not assess them for you.")
         val risk = card("Examples worth pausing over")
         label(risk, "Pressure to pay, important unwritten promises, refusal to share relevant documents, unclear title or unclear payment arrangements are discussion prompts, not findings about a property. Seek qualified advice when material questions remain unresolved.")
         risk.addView(Button(this).apply { text = "Understand an illustrative concern"; isAllCaps = false; setOnClickListener { afterSaves { startActivity(Intent(this@FinalReviewActivity, CommonActivity::class.java).putExtra("screen", "risk").putExtra("scope", journey)) } } })

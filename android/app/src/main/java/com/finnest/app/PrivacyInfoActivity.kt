@@ -23,7 +23,7 @@ class PrivacyInfoActivity : AppCompatActivity() {
         binding.saveLater.text = "Back"; binding.saveLater.setOnClickListener { finish() }
         section("Stored on this device", "Profile fields, journey drafts and reminders are stored locally in the app's private storage. The app does not add its own encryption. Device saving is currently always on; no session-only mode is available. Android backup is disabled, and uninstalling removes these entries.")
         section("Network requests", "The guidance library fetches public guidance from Supabase when opened. It does not upload your journey drafts. Android sign-in, backup and synchronization are not implemented.")
-        section("Optional services", "This version does not provide expert contact sharing, marketing messages or analytics integrations. No consent switches are presented for services that do not exist. Notification alerts are not scheduled.")
+        section("Optional services", "FINNEST doesn't share your details with experts, send marketing messages or use advertising trackers. Notifications are optional; choose them in Notification settings.")
         section("Deleting local data", "Use Delete local journey data in Profile & settings to delete both local journey drafts, profile fields and reminders. The chosen journey and onboarding preference remain; website data and Supabase records are not affected.")
     }
     private fun section(title: String, body: String) {

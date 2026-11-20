@@ -112,7 +112,7 @@ class LoanGuideActivity : AppCompatActivity() {
         listOf("What is the effective rate and how can it change?", "Which processing, legal or other fees apply?", "What are the prepayment and late-payment terms?", "What happens if disbursement timing changes?").forEach { label(questions, it) }
         val documents = card()
         label(documents, "Documents to ask the lender about", true)
-        label(documents, "Requirements vary by lender and location. Track the conversation without uploading personal documents here. Status choices are provisional.")
+        label(documents, "Requirements vary by lender and location. Track what each lender asks for. To keep copies of documents, use My documents in your profile.")
         val statuses = listOf("Not checked", "Checked by you", "Information provided", "Pending / unknown", "Professional review")
         ReviewData.lenderChecks.forEach { (id, title) ->
             label(documents, title, true)
