@@ -168,7 +168,7 @@ class NotificationWorker(context: Context, params: WorkerParameters) : Coroutine
         val rows = JSONArray(body)
         for (i in 0 until rows.length()) {
             val row = rows.getJSONObject(i); val note = row.optString("admin_note").takeIf { it.isNotBlank() && it != "null" } ?: continue
-            post(applicationContext, SECURITY, "reply:${row.optString("id")}:${row.optString("updated_at")}", "FINNEST replied to your request",
+            FinnestNotifications.post(applicationContext, FinnestNotifications.SECURITY, "reply:${row.optString("id")}:${row.optString("updated_at")}", "FINNEST replied to your request",
                 "${row.optString("subject")}: $note", Intent(applicationContext, SupportActivity::class.java))
         }
     }
