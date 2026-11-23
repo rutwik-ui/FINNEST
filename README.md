@@ -2,6 +2,45 @@
 
 FINNEST is an Indian home-buying guidance product, delivered in small, reviewable phases.
 
+## Deployment and product-readiness
+
+| Document | What it covers |
+|---|---|
+| [`docs/project-analysis-and-readiness.md`](docs/project-analysis-and-readiness.md) | What exists, what works, what is missing, verified build results, cost, and the recommended order of work |
+| [`docs/vercel-deployment.md`](docs/vercel-deployment.md) | Manual, beginner-friendly Vercel deployment for `web-app` (website + admin panel) and `web` |
+| [`docs/android-release.md`](docs/android-release.md) | Distributing the Android app as an APK (Firebase App Distribution / Google Play) |
+
+**Platform split:** Vercel hosts the websites only. Supabase is the single shared
+database. The native Android app is distributed as an APK/AAB — it cannot be
+hosted on Vercel.
+
+**Deployable today:** the website, the admin console (guidance, projects,
+experts, enquiries, support tickets, buyer journeys, audit log, bulk import), and
+an Android app with account sign-in.
+
+**Cross-device sync is implemented.** Journey answers are stored one row per
+field in `finnest_draft_fields`, so a phone and a laptop can edit different
+answers without overwriting each other, and a stale write is rejected by the
+database. Realtime updates arrive without a refresh.
+
+### Database state
+
+All migrations, including the sync schema, are **already applied** to the
+connected Supabase project (`wyjjzynjoorjmpffndzu`) and verified against it. To
+apply future migrations to another project:
+
+```sh
+supabase db push          # or paste the file into the Supabase SQL editor
+```
+
+If you rebuild a database from scratch, `supabase db push` replays everything in
+order and CI proves the set is complete by applying it to an empty PostgreSQL
+before running six policy suites.
+
+**Still not implemented:** OS-level reminder notifications, the remaining Resale
+screens, expert referrals, and the release-hardening gates in
+`docs/project-analysis-and-readiness.md` §9.6.
+
 ## Current Android scope
 
 `android/` is a native Kotlin/XML guest application. The New Property flow currently includes a dashboard, locally saved requirements, developer checks, a shortlist of project names, visit observations, resident feedback, an illustrative loan guide, legal and financial due diligence, final review, journey summary, in-app dated reminders, an online published-guidance library, informational expert roles, a verbal-promise risk guide an About screen, a device-only profile and scoped local data deletion. Checklist status labels are provisional because the references show closed menus. These are user entries, not independently verified findings or professional advice.

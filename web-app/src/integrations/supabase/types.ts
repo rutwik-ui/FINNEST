@@ -491,6 +491,135 @@ export type Database = {
         Relationships: []
       }
     }
+      finnest_draft_fields: {
+        Row: {
+          client_updated_at: string
+          field_key: string
+          journey_type: string
+          updated_at: string
+          user_id: string
+          value: string
+        }
+        Insert: {
+          client_updated_at: string
+          field_key: string
+          journey_type: string
+          updated_at?: string
+          user_id: string
+          value: string
+        }
+        Update: {
+          client_updated_at?: string
+          field_key?: string
+          journey_type?: string
+          updated_at?: string
+          user_id?: string
+          value?: string
+        }
+        Relationships: []
+      }
+      finnest_enquiries: {
+        Row: {
+          admin_note: string | null
+          consent_contact: boolean
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at: string
+          id: string
+          message: string
+          project_id: string | null
+          status: string
+          subject: string
+          topic: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          admin_note: string | null
+          consent_contact: boolean
+          contact_email: string | null
+          contact_name: string | null
+          contact_phone: string | null
+          created_at?: string
+          id?: string
+          message: string
+          project_id: string | null
+          status: string
+          subject: string
+          topic: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          admin_note?: string | null
+          consent_contact?: boolean
+          contact_email?: string | null
+          contact_name?: string | null
+          contact_phone?: string | null
+          created_at?: string
+          id?: string
+          message?: string
+          project_id?: string | null
+          status?: string
+          subject?: string
+          topic?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      finnest_projects: {
+        Row: {
+          approval_note: string | null
+          city: string | null
+          configuration: string | null
+          created_at: string
+          developer: string | null
+          id: string
+          locality: string | null
+          name: string
+          possession_label: string | null
+          price_from_label: string | null
+          sort_order: number
+          status: string
+          summary: string | null
+          updated_at: string
+        }
+        Insert: {
+          approval_note: string | null
+          city: string | null
+          configuration: string | null
+          created_at?: string
+          developer: string | null
+          id?: string
+          locality: string | null
+          name: string
+          possession_label: string | null
+          price_from_label: string | null
+          sort_order: number
+          status: string
+          summary: string | null
+          updated_at?: string
+        }
+        Update: {
+          approval_note?: string | null
+          city?: string | null
+          configuration?: string | null
+          created_at?: string
+          developer?: string | null
+          id?: string
+          locality?: string | null
+          name?: string
+          possession_label?: string | null
+          price_from_label?: string | null
+          sort_order?: number
+          status?: string
+          summary?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
     Views: {
       [_ in never]: never
     }

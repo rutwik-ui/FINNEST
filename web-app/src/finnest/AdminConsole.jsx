@@ -1,14 +1,12 @@
-import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { LayoutDashboard, FileText, Users, UserRound, LifeBuoy, ExternalLink, ChevronRight, Home, RefreshCw, LogOut, Plus, Trash2 } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { LayoutDashboard, FileText, Users, UserRound, LifeBuoy, ExternalLink, ChevronRight, Home, RefreshCw, LogOut, Plus, Trash2, Building2, Inbox, FolderSearch } from 'lucide-react';
 import { supabase } from './supabase';
 import Admin from './Admin';
 import { Wordmark } from './BrandMark';
 import BulkImport from './AdminBulkImport';
-import BuyerProgress from './AdminBuyers';
-import { ACCESS_ROLES, canAccessAdmin } from './admin';
-import AdminSettings from './AdminSettings';
-import { AdminInsights } from './AdminInsights';
-import { useTableView, SortTh, TableTools, exportCsv } from './adminTable';
+import AdminProjects from './AdminProjects';
+import AdminEnquiries from './AdminEnquiries';
+import AdminJourneys from './AdminJourneys';
 
 export const ADMIN_ROLES = ACCESS_ROLES;
 export const ROLE_LABELS = { super_admin: 'Super admin', content_manager: 'Content manager', support_manager: 'Support manager', expert_manager: 'Expert manager' };
@@ -16,22 +14,24 @@ export const ROLE_LABELS = { super_admin: 'Super admin', content_manager: 'Conte
 export const SECTION_ROLES = {
   overview: ADMIN_ROLES,
   guidance: ['super_admin', 'content_manager'],
-  buyers: ADMIN_ROLES,
+  projects: ['super_admin', 'content_manager'],
   users: ['super_admin', 'content_manager', 'support_manager', 'expert_manager'],
   experts: ['super_admin', 'expert_manager'],
+  enquiries: ['super_admin', 'support_manager'],
   support: ['super_admin', 'support_manager'],
-  settings: ['super_admin'],
+  journeys: ['super_admin'],
 };
 export const canOpen = (roles, section) => roles.some(r => (SECTION_ROLES[section] || []).includes(r));
 
 const SECTIONS = [
   ['overview', 'Overview', LayoutDashboard],
   ['guidance', 'Guidance content', FileText],
-  ['buyers', 'Buyer progress', Home],
+  ['projects', 'Projects', Building2],
+  ['enquiries', 'Buyer enquiries', Inbox],
+  ['support', 'Support requests', LifeBuoy],
+  ['journeys', 'Buyer journeys', FolderSearch],
   ['users', 'Users & roles', Users],
   ['experts', 'Experts', UserRound],
-  ['support', 'Support requests', LifeBuoy],
-  ['settings', 'App settings', FileText],
 ];
 const fmt = d => d ? new Date(d).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' }) : '—';
 
@@ -72,7 +72,9 @@ export default function AdminConsole({ go, session, authLoading, navigationGuard
   return shell(label, <>
     {section === 'overview' && <Overview roles={roles} open={setSection} />}
     {section === 'guidance' && <Admin go={go} session={session} authLoading={authLoading} navigationGuardRef={navigationGuardRef} />}
-    {section === 'buyers' && <BuyerProgress roles={roles} />}
+    {section === 'projects' && <AdminProjects />}
+    {section === 'enquiries' && <AdminEnquiries />}
+    {section === 'journeys' && <AdminJourneys />}
     {section === 'users' && <UsersPanel roles={roles} me={userId} />}
     {section === 'experts' && <ExpertsPanel />}
     {section === 'support' && <SupportPanel />}
@@ -104,9 +106,11 @@ function Overview({ roles, open }) {
       guidance: canOpen(roles, 'guidance') ? await count('finnest_guidance', q => q.eq('status', 'published')) : '—',
       experts: canOpen(roles, 'experts') ? await count('finnest_experts', q => q.eq('status', 'published')) : '—',
       tickets: canOpen(roles, 'support') ? await count('finnest_support_tickets', q => q.neq('status', 'resolved')) : '—',
+      projects: canOpen(roles, 'projects') ? await count('finnest_projects', q => q.eq('status', 'published')) : '—',
+      enquiries: canOpen(roles, 'enquiries') ? await count('finnest_enquiries', q => q.eq('status', 'new')) : '—',
     }))();
   }, [roles]);
-  const tiles = [['users', 'Registered users', stats.users], ['guidance', 'Published guidance', stats.guidance], ['experts', 'Published experts', stats.experts], ['support', 'Open support requests', stats.tickets]];
+  const tiles = [['users', 'Registered users', stats.users], ['guidance', 'Published guidance', stats.guidance], ['projects', 'Published projects', stats.projects], ['enquiries', 'New enquiries', stats.enquiries], ['experts', 'Published experts', stats.experts], ['support', 'Open support requests', stats.tickets]];
   return <><PanelHead title="Overview" sub="Live figures from the shared database used by the website and the Android app." onRefresh={() => open('overview')} />
     <div className="kpi-grid">{tiles.map(([id, l, v]) => <button key={id} className="kpi" disabled={!canOpen(roles, id)} onClick={() => open(id)}><span>{l}</span><strong>{v ?? '…'}</strong></button>)}</div>
     <AdminInsights/></>;
