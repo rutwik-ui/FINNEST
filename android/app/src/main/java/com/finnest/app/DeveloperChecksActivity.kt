@@ -41,7 +41,7 @@ class DeveloperChecksActivity : AppCompatActivity() {
             binding.stepLabel.text = "STEP 6 OF 8 · NEW PROPERTY"
             binding.screenTitle.text = "Legal due diligence"
             binding.screenDescription.text = "Questions for an appropriately qualified local lawyer. Document relevance and requirements vary by location."
-            binding.screenNotice.text = "FINNEST does not determine title, legal clearance or whether a property is safe to buy. Status choices are provisional."
+            binding.screenNotice.text = "Statuses record your own progress. FINNEST does not determine title, legal clearance or whether a property is safe to buy."
         } else if (isFeedback) {
             binding.stepLabel.text = "STEP 4B · NEW PROPERTY"
             binding.screenTitle.text = "Resident feedback notes"

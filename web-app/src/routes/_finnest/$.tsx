@@ -14,7 +14,10 @@ export const Route = createFileRoute("/_finnest/$")({
       { property: "og:description", content: description },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
+      { property: 'og:url', content: `https://repo-rekindle-workspace.lovable.app/${slug}` },
+      ...(slug.toLowerCase().startsWith('admin') ? [{ name: 'robots', content: 'noindex,nofollow' }] : []),
     ],
+    links: [{ rel: 'canonical', href: `https://repo-rekindle-workspace.lovable.app/${slug}` }],
   };
   },
   component: () => null,

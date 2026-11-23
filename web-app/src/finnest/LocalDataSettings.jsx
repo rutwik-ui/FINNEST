@@ -1,7 +1,7 @@
 import React, {useEffect,useRef,useState} from 'react';
 import {DRAFT_KEY,decodeRecovery} from './localDraft';
 
-export default function LocalDataSettings({onDelete,onRestore}) {
+export default function LocalDataSettings({onDelete,onRestore,storageKey=DRAFT_KEY,signedIn=false}) {
  const [open,setOpen]=useState(false),[confirmation,setConfirmation]=useState(''),[message,setMessage]=useState('');
  const [restoreOpen,setRestoreOpen]=useState(false),[restoreConfirmation,setRestoreConfirmation]=useState(''),[recovery,setRecovery]=useState(null),[fileMessage,setFileMessage]=useState('');
  const readVersion=useRef(0);
@@ -24,7 +24,7 @@ export default function LocalDataSettings({onDelete,onRestore}) {
  function exportSaved(){
   let url;
   try {
-   const raw=window.localStorage.getItem(DRAFT_KEY);
+   const raw=window.localStorage.getItem(storageKey);
    if(raw===null){setMessage('No saved browser draft to export.');return}
    url=URL.createObjectURL(new Blob([raw],{type:'application/json'}));
    const link=document.createElement('a');link.href=url;link.download='finnest-browser-draft.json';
@@ -40,10 +40,10 @@ export default function LocalDataSettings({onDelete,onRestore}) {
   else setMessage('Could not delete local data. Check the storage warning above.');
  }
  return <section className="card form-card profile-card"><h3>Local browser data</h3>
-  <p>Requirements, developer checks, shortlist, visit and resident feedback notes, loan guide, legal and financial notes, and next actions, as well as Resale planning and checklist notes, local profile and reminder notes, are saved in this browser. Clearing site data or using another browser can remove or hide them. They are not synced or backed up by FINNEST.</p>
+  <p>Your journey answers are saved on this browser. Signed-in answers also sync to your account; guest drafts stay separate. Downloads may contain personal information, so keep them private.</p>
   <p>Download a copy of the currently saved browser draft, including both journeys, profile and reminder notes. It may contain sensitive personal information and is not encrypted. Keep it private and delete unwanted copies. Unsaved changes in this tab are not included. This is a raw website recovery copy, not an Android or cloud backup.</p>
   <button type="button" className="outline-button" onClick={exportSaved}>Download saved browser draft</button>
-  {!restoreOpen?<button type="button" className="outline-button admin-space" onClick={()=>{setMessage('');setRestoreOpen(true)}}>Restore browser draft</button>:<form className="auth-form" onSubmit={restore}>
+  {signedIn?<p>Sign out to restore or delete a guest browser draft. Your account answers will not be erased.</p>:!restoreOpen?<button type="button" className="outline-button admin-space" onClick={()=>{setMessage('');setRestoreOpen(true)}}>Restore browser draft</button>:<form className="auth-form" onSubmit={restore}>
    <p>Restoring replaces the entire current browser draft, including both journeys, profile, reminders and any unsaved changes in this tab. It cannot be undone. Download the current saved draft first if you may need it. This does not change Android, account or cloud data.</p>
    <label>Choose a FINNEST browser draft file<input type="file" accept=".json,application/json" onChange={chooseRecovery}/></label>
    {fileMessage&&<p role="status">{fileMessage}</p>}
@@ -51,10 +51,10 @@ export default function LocalDataSettings({onDelete,onRestore}) {
    <div className="admin-actions"><button type="submit" className="outline-button" disabled={!recovery || restoreConfirmation!=='RESTORE'}>Replace browser draft</button><button type="button" className="text-link" onClick={()=>{readVersion.current++;setRestoreOpen(false);setRecovery(null);setRestoreConfirmation('');setFileMessage('');setMessage('')}}>Cancel restore</button></div>
   </form>}
   <p>Delete removes this browser’s FINNEST journey draft, journey selection, local profile and reminder notes. It does not sign you out, delete your account, website authentication data, cloud records, or Android data. This cannot be undone.</p>
-  {!open?<button className="outline-button" onClick={()=>{setMessage('');setOpen(true)}}>Delete local browser data</button>:<form className="auth-form" onSubmit={remove}>
+  {!signedIn&&(!open?<button className="outline-button" onClick={()=>{setMessage('');setOpen(true)}}>Delete local browser data</button>:<form className="auth-form" onSubmit={remove}>
    <label>Type DELETE to confirm<input value={confirmation} autoComplete="off" onChange={e=>setConfirmation(e.target.value)}/></label>
    <div className="admin-actions"><button type="submit" className="outline-button" disabled={confirmation!=='DELETE'}>Delete browser data</button><button type="button" className="text-link" onClick={()=>{setOpen(false);setConfirmation('');setMessage('')}}>Cancel</button></div>
-  </form>}
+  </form>)}
   {message&&<p role="status">{message}</p>}
  </section>
 }

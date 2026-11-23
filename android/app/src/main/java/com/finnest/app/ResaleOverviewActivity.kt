@@ -21,7 +21,7 @@ class ResaleOverviewActivity : AppCompatActivity() {
         binding.stepLabel.text = "A SEPARATE HOME-BUYING JOURNEY"
         binding.screenTitle.text = "Resale Property Journey"
         binding.screenDescription.text = "Explore key areas when considering a resale home, at your own pace."
-        binding.screenNotice.text = "These are the subject areas defined in the prototype. They are saved as local notes on this device and are not a complete resale journey."
+        binding.screenNotice.text = "Work through each area at your own pace. Your notes save as you go and are kept separately from New Property."
         binding.loading.visibility = View.GONE
         binding.back.setOnClickListener { changeJourney() }
         binding.backBottom.text = "Change journey"; binding.backBottom.setOnClickListener { changeJourney() }

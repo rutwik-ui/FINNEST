@@ -2,6 +2,10 @@ import { ClientOnly, Outlet, createFileRoute } from "@tanstack/react-router";
 import { App } from "@/finnest/FinnestApp";
 import finnestCss from "@/finnest/finnest.css?url";
 import finnestProCss from "@/finnest/finnest-pro.css?url";
+import experienceCss from '@/finnest/experience.css?url';
+import headerCss from '@/finnest/header.css?url';
+import { Wordmark } from '@/finnest/BrandMark';
+import { OnlineGate } from '@/finnest/OnlineGate';
 
 // The preserved FINNEST web app manages its own screens from the URL and keeps
 // drafts in this browser, so it stays mounted across all child paths.
@@ -13,6 +17,8 @@ export const Route = createFileRoute("/_finnest")({
       { rel: "stylesheet", href: "https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" },
       { rel: "stylesheet", href: finnestCss },
       { rel: "stylesheet", href: finnestProCss },
+      { rel: 'stylesheet', href: experienceCss },
+      { rel: 'stylesheet', href: headerCss },
     ],
   }),
   component: FinnestLayout,
@@ -21,8 +27,8 @@ export const Route = createFileRoute("/_finnest")({
 function FinnestLayout() {
   return (
     <>
-      <ClientOnly fallback={<p style={{ padding: 24 }}>Loading FINNEST…</p>}>
-        <App />
+      <ClientOnly fallback={<div className="brand-loading" role="status" aria-label="Loading FINNEST"><Wordmark/></div>}>
+        <OnlineGate><App /></OnlineGate>
       </ClientOnly>
       <Outlet />
     </>

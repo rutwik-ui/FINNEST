@@ -8,8 +8,22 @@
 // hosting already compresses at the edge.
 // You can pass additional config via defineConfig({ vite: { ... }, etc... }) if needed.
 import { defineConfig } from "@lovable.dev/vite-tanstack-config";
+import { VitePWA } from "vite-plugin-pwa";
 
 export default defineConfig({
+  plugins: [VitePWA({
+    strategies: 'generateSW', filename: 'sw.js', registerType: 'autoUpdate', injectRegister: null,
+    outDir: 'dist/client', manifest: false, devOptions: { enabled: false },
+    workbox: {
+      globPatterns: ['assets/**/*.{js,css,woff2,png,jpg,webp,svg}', 'favicon*.{png,ico}', '*icon*.png'],
+      globIgnores: ['**/server/**', '**/ssr/**'], maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+      navigateFallback: null, importScripts: ['/sw-notifications.js'],
+      runtimeCaching: [
+        { urlPattern: ({ request, url }) => request.mode === 'navigate' && url.origin === self.location.origin && !url.pathname.startsWith('/~oauth') && !/^\/(?:admin|api|_serverFn)/i.test(url.pathname), handler: 'NetworkFirst', options: { cacheName: 'finnest-pages', networkTimeoutSeconds: 4, expiration: { maxEntries: 35, maxAgeSeconds: 7 * 86400 }, cacheableResponse: { statuses: [200] } } },
+        { urlPattern: ({ request, url }) => url.origin === self.location.origin && /^\/assets\/.+-[a-zA-Z0-9_-]{8,}\./.test(url.pathname) && ['script', 'style', 'image', 'font'].includes(request.destination), handler: 'CacheFirst', options: { cacheName: 'finnest-assets', expiration: { maxEntries: 150, maxAgeSeconds: 30 * 86400 } } },
+      ],
+    },
+  })],
   tanstackStart: {
     // Redirect TanStack Start's bundled server entry to src/server.ts (our SSR error wrapper).
     // nitro/vite builds from this

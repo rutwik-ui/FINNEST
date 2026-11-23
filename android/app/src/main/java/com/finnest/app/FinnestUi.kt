@@ -145,12 +145,21 @@ object FinnestUi {
             if (view.id == R.id.back_bottom || view.strokeWidth > 0) styleOutline(view) else stylePrimary(view)
             return
         }
-        if (view is Button) { if (view !is CompoundButton) { styleRow(view); return } }
+        if (view is Button && view !is CompoundButton) {
+            when { isDateButton(view) -> styleDateField(view); view.text?.toString() == "Clear date" -> styleLink(view); else -> styleRow(view) }
+            return
+        }
         if (view is EditText) {
-            view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f); view.typeface = font(c, 600); view.letterSpacing = 0f
-            view.setTextColor(0xFF273341.toInt()); view.setHintTextColor(0xFFA0A6AC.toInt())
-            view.background = shape(c, Color.WHITE, 0xFFE3E2DF.toInt(), 10)
-            view.setPadding(dp(c, 13), dp(c, 11), dp(c, 13), dp(c, 11)); view.minHeight = dp(c, 46)
+            fieldText(view); view.setHintTextColor(HINT)
+            view.background = fieldBackground(c)
+            view.setPadding(dp(c, 14), dp(c, 12), dp(c, 14), dp(c, 12)); view.minHeight = dp(c, 48)
+            return
+        }
+        // The selected value shown inside a dropdown field uses the same type as typed text.
+        if (view.parent is AdapterView<*>) {
+            fieldText(view); view.setPadding(0, 0, 0, 0); view.minHeight = 0; view.minimumHeight = 0
+            view.setSingleLine(true); view.ellipsize = android.text.TextUtils.TruncateAt.END
+            (view as? CheckedTextView)?.checkMarkDrawable = null
             return
         }
         if (view is CompoundButton) {
@@ -173,13 +182,74 @@ object FinnestUi {
     private fun cardState(context: Context) = cardConstant ?: context.getDrawable(R.drawable.card)?.constantState.also { cardConstant = it }
     /** A short caption directly above an input becomes the website's 13sp/700 field label. */
     private fun fieldLabel(parent: ViewGroup, child: View) {
-        if (child !is EditText && child !is Spinner) return
+        if (child !is EditText && child !is Spinner && !(child is Button && isDateButton(child))) return
         val at = parent.indexOfChild(child); if (at < 1) return
         val prev = parent.getChildAt(at - 1) as? TextView ?: return
         if (prev is Button || prev is EditText || prev.id == R.id.screen_title || (prev.text?.length ?: 0) > 90) return
-        prev.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f); prev.typeface = font(prev.context, 700); prev.letterSpacing = 0f
-        prev.setTextColor(LABEL); spacing(prev, 1.4f)
-        (prev.layoutParams as? ViewGroup.MarginLayoutParams)?.let { if (it.bottomMargin < dp(prev.context, 7)) { it.bottomMargin = dp(prev.context, 7); prev.layoutParams = it } }
+        prev.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13.5f); prev.typeface = font(prev.context, 600); prev.letterSpacing = 0f
+        prev.setTextColor(LABEL); spacing(prev, 1.35f)
+        (prev.layoutParams as? ViewGroup.MarginLayoutParams)?.let { if (it.bottomMargin != dp(prev.context, 6)) { it.bottomMargin = dp(prev.context, 6); prev.layoutParams = it } }
+    }
+
+    // ── Form fields: one type scale for labels (13.5sp semibold) and values (15sp regular) ──
+    private const val VALUE = 0xFF1F2935.toInt(); private const val HINT = 0xFF9AA0A7.toInt(); private const val FIELD_LINE = 0xFFDCD9D3.toInt()
+    private fun fieldText(view: TextView) {
+        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f); view.typeface = font(view.context, 400); view.letterSpacing = 0f
+        view.setTextColor(VALUE); view.includeFontPadding = false
+    }
+    /** White field with a hairline border that turns red while focused or pressed. */
+    private fun fieldBackground(c: Context) = android.graphics.drawable.StateListDrawable().apply {
+        val focus = GradientDrawable().apply { setColor(Color.WHITE); cornerRadius = dpf(c, 10f); setStroke(dp(c, 1) + dp(c, 1) / 2, RED) }
+        addState(intArrayOf(android.R.attr.state_focused), focus)
+        addState(intArrayOf(android.R.attr.state_pressed), focus)
+        addState(intArrayOf(), shape(c, Color.WHITE, FIELD_LINE, 10))
+    }
+    private fun styleSpinner(view: Spinner) {
+        if (isStyled(view)) return
+        markStyled(view)
+        val c = view.context
+        val chevron = c.getDrawable(R.drawable.journey_chevron_down)?.mutate()?.apply { setTint(MUTED) }
+        view.background = if (chevron == null) fieldBackground(c) else android.graphics.drawable.LayerDrawable(arrayOf(fieldBackground(c), chevron)).apply {
+            setLayerGravity(1, Gravity.END or Gravity.CENTER_VERTICAL); setLayerSize(1, dp(c, 18), dp(c, 18)); setLayerInsetEnd(1, dp(c, 14))
+        }
+        view.setPadding(dp(c, 14), 0, dp(c, 42), 0); view.minimumHeight = dp(c, 48)
+        if (view.layoutParams != null && view.layoutParams.height == ViewGroup.LayoutParams.WRAP_CONTENT) view.layoutParams = view.layoutParams.apply { height = dp(c, 48) }
+        else view.post { view.layoutParams?.let { if (it.height == ViewGroup.LayoutParams.WRAP_CONTENT) { it.height = dp(c, 48); view.layoutParams = it } } }
+        view.setPopupBackgroundDrawable(shape(c, Color.WHITE, LINE, 12))
+        view.dropDownVerticalOffset = dp(c, 4)
+        (view.adapter as? ArrayAdapter<*>)?.setDropDownViewResource(R.layout.finnest_spinner_dropdown_item)
+    }
+    private fun isDateButton(view: Button): Boolean {
+        val text = view.text?.toString().orEmpty()
+        if (text == "Clear date") return false
+        val description = view.contentDescription?.toString().orEmpty()
+        return text.startsWith("Choose date") || description.contains("follow-up date", ignoreCase = true) || description == "Reminder date"
+    }
+    /** A date picker that looks like the other fields: calendar icon, value or placeholder. */
+    private fun styleDateField(view: Button) {
+        val c = view.context
+        view.isAllCaps = false; view.stateListAnimator = null; view.elevation = 0f
+        view.background = fieldBackground(c); view.gravity = Gravity.START or Gravity.CENTER_VERTICAL
+        view.setPadding(dp(c, 14), 0, dp(c, 14), 0); view.minHeight = dp(c, 48); view.minimumHeight = dp(c, 48)
+        fieldText(view)
+        val icon = c.getDrawable(R.drawable.journey_calendar)?.mutate()?.apply { setTint(MUTED); setBounds(0, 0, dp(c, 18), dp(c, 18)) }
+        view.setCompoundDrawablesRelative(icon, null, null, null); view.compoundDrawablePadding = dp(c, 10)
+        fun tone() { view.setTextColor(if (view.text?.toString().orEmpty().startsWith("Choose date")) HINT else VALUE) }
+        tone()
+        view.addTextChangedListener(object : android.text.TextWatcher {
+            override fun beforeTextChanged(s: CharSequence?, start: Int, count: Int, after: Int) = Unit
+            override fun onTextChanged(s: CharSequence?, start: Int, before: Int, count: Int) = Unit
+            override fun afterTextChanged(s: android.text.Editable?) = tone()
+        })
+    }
+    /** "Clear date" reads as a small text action under its field rather than a second full-width box. */
+    private fun styleLink(view: Button) {
+        val c = view.context
+        view.isAllCaps = false; view.stateListAnimator = null; view.elevation = 0f
+        view.background = android.graphics.drawable.RippleDrawable(ColorStateList.valueOf(0x14E7373E), null, shape(c, Color.WHITE, null, 8))
+        view.setTextSize(TypedValue.COMPLEX_UNIT_SP, 13.5f); view.typeface = font(c, 600); view.setTextColor(RED_DARK); view.letterSpacing = 0f
+        view.gravity = Gravity.END or Gravity.CENTER_VERTICAL; view.setPadding(dp(c, 8), 0, dp(c, 4), 0)
+        view.minHeight = dp(c, 40); view.minimumHeight = dp(c, 40); view.minWidth = 0; view.minimumWidth = 0
     }
     /** Applied to every attached view, including forms that load later. */
     fun styleTree(view: View) {
@@ -197,18 +267,16 @@ object FinnestUi {
                 view.setPadding(dp(view.context, 18), dp(view.context, 18), dp(view.context, 18), dp(view.context, 18))
             }
         }
+        if (view is Spinner) styleSpinner(view)
         if (view is TextView) text(view)
     }
 
     fun brand(context: Context): LinearLayout = LinearLayout(context).apply {
         orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; contentDescription = "FINNEST home"
-        fun word(value: String) = label(context, value, 18f, 800, 0xFF141E2A.toInt(), 0.16f).apply { setSingleLine(true) }
-        addView(word("F"))
         addView(ImageView(context).apply {
-            setImageResource(R.drawable.journey_house); imageTintList = ColorStateList.valueOf(RED)
+            setImageResource(R.drawable.finnest_lockup); scaleType=ImageView.ScaleType.FIT_CENTER
             importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
-        }, LinearLayout.LayoutParams(dp(context, 22), dp(context, 22)).apply { marginStart = dp(context, 1); marginEnd = dp(context, 2) })
-        addView(word("NNEST"))
+        }, LinearLayout.LayoutParams(dp(context, 134), dp(context, 20)))
     }
     private fun leave(activity: Activity, scope: String, intent: Intent, message: String = "Keep editing and retry saving before leaving.") {
         DraftRepository.afterPending(scope) { saved -> activity.runOnUiThread {
@@ -228,6 +296,9 @@ object FinnestUi {
             "experts" -> Intent(activity, CommonActivity::class.java).putExtra("screen", "experts").putExtra("scope", scope)
             "guidance" -> Intent(activity, GuidanceActivity::class.java)
             "reminders" -> Intent(activity, RemindersActivity::class.java)
+            "notifications" -> Intent(activity, NotificationSettingsActivity::class.java)
+            "documents" -> Intent(activity, DocumentsActivity::class.java)
+            "support" -> Intent(activity, SupportActivity::class.java)
             "about" -> Intent(activity, CommonActivity::class.java).putExtra("screen", "about").putExtra("scope", scope)
             "privacy" -> Intent(activity, PrivacyInfoActivity::class.java)
             else -> Intent(activity, ProfileSettingsActivity::class.java)
@@ -244,48 +315,165 @@ object FinnestUi {
         }
         header.addView(brand, LinearLayout.LayoutParams(-2, dp(activity, 44)))
         header.addView(Space(activity), LinearLayout.LayoutParams(0, 1, 1f))
-        header.addView(label(activity, if (scope == "resale_property") "Resale Property" else "New Property", 12f, 700, 0xFFD93037.toInt()).apply {
-            gravity = Gravity.CENTER; background = shape(activity, BLUSH, PILL_LINE, 30)
-            setPadding(dp(activity, 12), dp(activity, 7), dp(activity, 12), dp(activity, 7)); minHeight = dp(activity, 34)
-            isClickable = true; isFocusable = true; contentDescription = "Change journey"
-            setOnClickListener { leave(activity, scope, Intent(activity, MainActivity::class.java).putExtra("change_journey", true).addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP), "Keep editing and retry saving before changing journeys.") }
-        }, LinearLayout.LayoutParams(-2, -2))
         val menu = ImageButton(activity).apply {
             setImageResource(R.drawable.journey_menu); imageTintList = ColorStateList.valueOf(0xFF18212D.toInt())
             background = shape(activity, Color.WHITE, LINE, 11); scaleType = ImageView.ScaleType.CENTER_INSIDE
             contentDescription = "Open menu"; setPadding(dp(activity, 8), dp(activity, 8), dp(activity, 8), dp(activity, 8))
         }
-        header.addView(menu, LinearLayout.LayoutParams(dp(activity, 38), dp(activity, 38)).apply { marginStart = dp(activity, 10) })
+        header.addView(menu, LinearLayout.LayoutParams(dp(activity, 44), dp(activity, 44)).apply { marginStart = dp(activity, 10) })
         menu.setOnClickListener { showMenu(activity, header, menu, scope) }
     }
-    /** The website's dropdown menu card: icon + label rows under the header. */
+    /** Which drawer link matches the open screen; null when none does (profile, sign-in). */
+    private fun menuTab(activity: Activity): String? = when (activity) {
+        is DashboardActivity -> "home"
+        is ProjectsActivity -> "projects"
+        is GuidanceActivity -> "guidance"
+        is RemindersActivity -> "reminders"
+        is NotificationSettingsActivity -> "notifications"
+        is DocumentsActivity -> "documents"
+        is SupportActivity -> "support"
+        is PrivacyInfoActivity -> "privacy"
+        is ProfileSettingsActivity, is MainActivity, is AccountActivity, is LaunchActivity -> null
+        is CommonActivity -> activity.intent?.getStringExtra("screen")?.takeIf { it == "experts" || it == "about" }
+        else -> "journey"
+    }
+
+    /**
+     * The website's drawer as a native side panel: full height from the right edge (drawn behind the
+     * status and navigation bars), sliding in over a dimmed page, with the open page highlighted.
+     */
     private fun showMenu(activity: Activity, header: View, button: ImageButton, scope: String) {
-        val items = listOf(
-            Triple("home", "Home", R.drawable.journey_house), Triple("journey", "Journey", R.drawable.journey_sliders),
-            Triple("projects", "Projects", R.drawable.journey_doc), Triple("experts", "Experts", R.drawable.journey_help),
-            Triple("profile", "Profile", R.drawable.journey_person), Triple("guidance", "Guidance", R.drawable.journey_bookmark),
-            Triple("reminders", "Reminders", R.drawable.journey_clock), Triple("about", "About FINNEST", R.drawable.journey_info),
+        val primary = listOf(Triple("home", "Home", R.drawable.journey_house), Triple("journey", "Journey", R.drawable.journey_sliders),
+            Triple("projects", "Projects", R.drawable.journey_doc), Triple("experts", "Experts", R.drawable.journey_help))
+        val secondary = listOf(Triple("guidance", "Guidance", R.drawable.journey_bookmark), Triple("reminders", "Reminders", R.drawable.journey_clock),
+            Triple("notifications", "Notifications", R.drawable.journey_bell), Triple("documents", "My documents", R.drawable.journey_file),
+            Triple("support", "Help & feedback", R.drawable.journey_help), Triple("about", "About FINNEST", R.drawable.journey_info),
             Triple("privacy", "Privacy & consent", R.drawable.journey_shield))
-        val list = LinearLayout(activity).apply {
-            orientation = LinearLayout.VERTICAL; background = shape(activity, Color.WHITE, LINE, 16)
-            setPadding(dp(activity, 8), dp(activity, 8), dp(activity, 8), dp(activity, 8)); elevation = dpf(activity, 10f)
+        val current = menuTab(activity)
+        val d = { n: Int -> dp(activity, n) }
+        val width = minOf(d(320), (activity.resources.displayMetrics.widthPixels * 0.86f).toInt())
+        val dialog = android.app.Dialog(activity, android.R.style.Theme_Translucent_NoTitleBar)
+        val root = FrameLayout(activity)
+        val scrim = View(activity).apply { setBackgroundColor(0x8C141C28.toInt()); alpha = 0f; importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO }
+        val panel = LinearLayout(activity).apply {
+            orientation = LinearLayout.VERTICAL; isClickable = true; elevation = dpf(activity, 24f)
+            background = GradientDrawable().apply { setColor(Color.WHITE); val r = dpf(activity, 20f); cornerRadii = floatArrayOf(r, r, 0f, 0f, 0f, 0f, r, r) }
+            contentDescription = "Menu"
         }
-        val popup = PopupWindow(list, activity.resources.displayMetrics.widthPixels - dp(activity, 24), ViewGroup.LayoutParams.WRAP_CONTENT, true).apply {
-            elevation = dpf(activity, 12f); setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT)); isOutsideTouchable = true
+        root.addView(scrim, FrameLayout.LayoutParams(-1, -1))
+        root.addView(panel, FrameLayout.LayoutParams(width, -1, Gravity.END))
+
+        var closing = false
+        fun close(after: (() -> Unit)? = null) {
+            if (closing) return; closing = true
+            scrim.animate().alpha(0f).setDuration(180).start()
+            panel.animate().translationX(width.toFloat()).setDuration(200).setInterpolator(android.view.animation.AccelerateInterpolator(1.4f))
+                .withEndAction { dialog.dismiss(); after?.invoke() }.start()
         }
-        items.forEach { (tab, title, icon) ->
+        scrim.setOnClickListener { close() }
+        val go = { intent: Intent -> close { leave(activity, scope, intent) } }
+
+        // Header: brand and close.
+        val top = LinearLayout(activity).apply { gravity = Gravity.CENTER_VERTICAL; setPadding(d(20), 0, d(12), 0) }
+        top.addView(brand(activity), LinearLayout.LayoutParams(0, d(44), 1f))
+        top.addView(ImageButton(activity).apply {
+            setImageResource(R.drawable.journey_close); imageTintList = ColorStateList.valueOf(NAVY); contentDescription = "Close menu"
+            setPadding(d(11), d(11), d(11), d(11)); scaleType = ImageView.ScaleType.FIT_CENTER
+            background = android.graphics.drawable.RippleDrawable(ColorStateList.valueOf(0x1A141C28), GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(CREAM) }, null)
+            setOnClickListener { close() }
+        }, LinearLayout.LayoutParams(d(42), d(42)))
+        panel.addView(top, LinearLayout.LayoutParams(-1, d(64)))
+
+        // Links.
+        val list = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL; setPadding(d(12), d(4), d(12), d(12)) }
+        fun link(tab: String, title: String, icon: Int) {
+            val on = tab == current
+            val tint = if (on) RED_DARK else INK
             list.addView(LinearLayout(activity).apply {
-                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
-                setPadding(dp(activity, 12), 0, dp(activity, 12), 0); background = ripple(activity)
-                isClickable = true; isFocusable = true; contentDescription = title
-                addView(ImageView(activity).apply { setImageResource(icon); imageTintList = ColorStateList.valueOf(0xFF263140.toInt()) }, LinearLayout.LayoutParams(dp(activity, 18), dp(activity, 18)))
-                addView(label(activity, title, 15f, 500, 0xFF263140.toInt()), LinearLayout.LayoutParams(-2, -2).apply { marginStart = dp(activity, 12) })
-                setOnClickListener { popup.dismiss(); leave(activity, scope, destination(activity, scope, tab)) }
-            }, LinearLayout.LayoutParams(-1, dp(activity, 48)))
+                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(d(14), 0, d(14), 0)
+                isClickable = true; isFocusable = true; isSelected = on
+                contentDescription = title + if (on) ", current page" else ""
+                background = android.graphics.drawable.RippleDrawable(ColorStateList.valueOf(0x14E7373E), shape(activity, if (on) BLUSH else Color.WHITE, null, 12), shape(activity, Color.WHITE, null, 12))
+                addView(ImageView(activity).apply { setImageResource(icon); imageTintList = ColorStateList.valueOf(tint); importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO }, LinearLayout.LayoutParams(d(20), d(20)))
+                addView(label(activity, title, 15f, if (on) 600 else 500, if (on) RED_DARK else NAVY), LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = d(14) })
+                setOnClickListener { if (on) close() else go(destination(activity, scope, tab)) }
+            }, LinearLayout.LayoutParams(-1, d(48)).apply { bottomMargin = d(2) })
+        }
+        primary.forEach { (tab, title, icon) -> link(tab, title, icon) }
+        list.addView(View(activity).apply { setBackgroundColor(LINE) }, LinearLayout.LayoutParams(-1, d(1)).apply { topMargin = d(10); bottomMargin = d(6); marginStart = d(14); marginEnd = d(14) })
+        list.addView(label(activity, "More", 12f, 600, MUTED, 0.02f), LinearLayout.LayoutParams(-2, -2).apply { marginStart = d(14); topMargin = d(8); bottomMargin = d(6) })
+        secondary.forEach { (tab, title, icon) -> link(tab, title, icon) }
+        panel.addView(ScrollView(activity).apply { addView(list); isVerticalScrollBarEnabled = false; overScrollMode = View.OVER_SCROLL_NEVER }, LinearLayout.LayoutParams(-1, 0, 1f))
+
+        // Footer: journey and account.
+        val footer = LinearLayout(activity).apply { orientation = LinearLayout.VERTICAL; setPadding(d(16), d(14), d(16), 0) }
+        panel.addView(View(activity).apply { setBackgroundColor(LINE) }, LinearLayout.LayoutParams(-1, d(1)))
+        panel.addView(footer, LinearLayout.LayoutParams(-1, -2))
+        fun tile(icon: Int, caption: String, value: String, action: String, description: String, onClick: () -> Unit) =
+            LinearLayout(activity).apply {
+                orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL; setPadding(d(12), d(10), d(14), d(10))
+                isClickable = true; isFocusable = true; contentDescription = description
+                background = android.graphics.drawable.RippleDrawable(ColorStateList.valueOf(0x14E7373E), shape(activity, Color.WHITE, LINE, 14), null)
+                addView(FrameLayout(activity).apply {
+                    background = GradientDrawable().apply { shape = GradientDrawable.OVAL; setColor(BLUSH) }
+                    addView(ImageView(activity).apply { setImageResource(icon); imageTintList = ColorStateList.valueOf(RED_DARK) }, FrameLayout.LayoutParams(d(18), d(18), Gravity.CENTER))
+                }, LinearLayout.LayoutParams(d(36), d(36)))
+                addView(LinearLayout(activity).apply {
+                    orientation = LinearLayout.VERTICAL
+                    addView(label(activity, caption, 12f, 500, MUTED), LinearLayout.LayoutParams(-2, -2))
+                    addView(label(activity, value, 15f, 600, NAVY).apply { setSingleLine(true) }, LinearLayout.LayoutParams(-2, -2).apply { topMargin = d(2) })
+                }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = d(12) })
+                addView(label(activity, action, 13f, 600, RED_DARK), LinearLayout.LayoutParams(-2, -2))
+                setOnClickListener { onClick() }
+            }
+        val journeyName = if (scope == "resale_property") "Resale Property" else "New Property"
+        footer.addView(tile(R.drawable.journey_sliders, "Your journey", journeyName, "Change", "Journey: $journeyName. Change journey") {
+            go(Intent(activity, MainActivity::class.java).putExtra("change_journey", true))
+        }, LinearLayout.LayoutParams(-1, -2))
+        if (AccountClient.userId(activity) == null) {
+            val auth = LinearLayout(activity).apply { orientation = LinearLayout.HORIZONTAL }
+            auth.addView(MaterialButton(activity).apply {
+                text = "Log in"; styleOutline(this); markStyled(this); setTextColor(NAVY)
+                setOnClickListener { go(Intent(activity, AccountActivity::class.java)) }
+            }, LinearLayout.LayoutParams(0, -2, 1f))
+            auth.addView(MaterialButton(activity).apply {
+                text = "Sign up"; stylePrimary(this); markStyled(this); setTextSize(TypedValue.COMPLEX_UNIT_SP, 15f); minHeight = d(48); minimumHeight = d(48); setPadding(d(17), d(12), d(17), d(12))
+                setOnClickListener { go(Intent(activity, AccountActivity::class.java).putExtra("signup", true)) }
+            }, LinearLayout.LayoutParams(0, -2, 1f).apply { marginStart = d(10) })
+            footer.addView(auth, LinearLayout.LayoutParams(-1, -2).apply { topMargin = d(10) })
+        } else {
+            footer.addView(tile(R.drawable.journey_person, "Signed in", "Profile & settings", "Open", "Profile and settings") {
+                go(Intent(activity, ProfileSettingsActivity::class.java))
+            }, LinearLayout.LayoutParams(-1, -2).apply { topMargin = d(10) })
+        }
+
+        // Keep content clear of the status bar, navigation bar and display cutout.
+        androidx.core.view.ViewCompat.setOnApplyWindowInsetsListener(panel) { view, insets ->
+            val bars = insets.getInsets(androidx.core.view.WindowInsetsCompat.Type.systemBars() or androidx.core.view.WindowInsetsCompat.Type.displayCutout())
+            view.setPadding(0, bars.top + d(6), bars.right, bars.bottom + d(16)); insets
+        }
+        dialog.setContentView(root)
+        dialog.window?.apply {
+            setLayout(-1, -1); setBackgroundDrawable(ColorDrawable(Color.TRANSPARENT)); setWindowAnimations(0)
+            clearFlags(android.view.WindowManager.LayoutParams.FLAG_DIM_BEHIND)
+            addFlags(android.view.WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            androidx.core.view.WindowCompat.setDecorFitsSystemWindows(this, false)
+            @Suppress("DEPRECATION") run { statusBarColor = Color.TRANSPARENT; navigationBarColor = Color.TRANSPARENT }
+            if (android.os.Build.VERSION.SDK_INT >= 28) attributes = attributes.apply { layoutInDisplayCutoutMode = android.view.WindowManager.LayoutParams.LAYOUT_IN_DISPLAY_CUTOUT_MODE_SHORT_EDGES }
+            if (android.os.Build.VERSION.SDK_INT >= 29) { isStatusBarContrastEnforced = false; isNavigationBarContrastEnforced = false }
+            androidx.core.view.WindowInsetsControllerCompat(this, decorView).apply { isAppearanceLightStatusBars = true; isAppearanceLightNavigationBars = true }
+        }
+        dialog.setOnKeyListener { _, code, event ->
+            if (code == android.view.KeyEvent.KEYCODE_BACK) { if (event.action == android.view.KeyEvent.ACTION_UP) close(); true } else false
         }
         button.setImageResource(R.drawable.journey_close); button.contentDescription = "Close menu"
-        popup.setOnDismissListener { button.setImageResource(R.drawable.journey_menu); button.contentDescription = "Open menu" }
-        popup.showAsDropDown(header, dp(activity, 12), 0)
+        dialog.setOnDismissListener { button.setImageResource(R.drawable.journey_menu); button.contentDescription = "Open menu" }
+        dialog.show()
+        panel.translationX = width.toFloat()
+        root.post {
+            scrim.animate().alpha(1f).setDuration(220).start()
+            panel.animate().translationX(0f).setDuration(260).setInterpolator(android.view.animation.DecelerateInterpolator(1.6f)).start()
+        }
     }
     /** The website's fixed bottom tabs: Home, Journey, Projects, Experts and Profile. */
     fun bottomNav(activity: Activity, root: LinearLayout, scope: String, active: String?) {
@@ -385,8 +573,54 @@ object FinnestUi {
             }
         }
     }
+    /**
+     * Keeps an open screen in step with the website: when another device changes this account's
+     * journey, the screen reloads. If the buyer is typing, a bar offers the refresh instead so the
+     * text in progress isn't disturbed. Changes that arrive while the screen is in the background
+     * are applied when it comes back.
+     */
+    private fun liveRefresh(activity: Activity) {
+        val owner = activity as? androidx.lifecycle.LifecycleOwner ?: return
+        if (activity is AccountActivity || activity is LaunchActivity) return
+        if (!liveScreens.add(activity)) return // decorate() can run more than once per screen
+        val seen = AccountSync.remoteRevision.get()
+        val listener: () -> Unit = { refreshFromRemote(activity) }
+        owner.lifecycle.addObserver(object : androidx.lifecycle.DefaultLifecycleObserver {
+            override fun onResume(o: androidx.lifecycle.LifecycleOwner) {
+                AccountSync.addRemoteListener(listener)
+                if (AccountSync.remoteRevision.get() != seen) refreshFromRemote(activity)
+            }
+            override fun onPause(o: androidx.lifecycle.LifecycleOwner) { AccountSync.removeRemoteListener(listener) }
+            override fun onDestroy(o: androidx.lifecycle.LifecycleOwner) { AccountSync.removeRemoteListener(listener) }
+        })
+    }
+
+    private val liveScreens: MutableSet<Activity> = java.util.Collections.newSetFromMap(java.util.WeakHashMap())
+    private val reloading: MutableSet<Activity> = java.util.Collections.newSetFromMap(java.util.WeakHashMap())
+    private const val UPDATE_BAR = "finnest_update_bar"
+    private fun refreshFromRemote(activity: Activity) {
+        if (activity.isFinishing || activity.isDestroyed || activity in reloading) return
+        if (activity.currentFocus !is EditText) { reloading.add(activity); activity.recreate(); return }
+        val content = activity.findViewById<ViewGroup>(android.R.id.content) ?: return
+        if (content.findViewWithTag<View>(UPDATE_BAR) != null) return
+        val d = { n: Int -> dp(activity, n) }
+        val bar = LinearLayout(activity).apply {
+            tag = UPDATE_BAR; orientation = LinearLayout.HORIZONTAL; gravity = Gravity.CENTER_VERTICAL
+            setPadding(d(16), d(10), d(8), d(10)); elevation = dpf(activity, 12f)
+            background = shape(activity, NAVY, null, 14)
+            addView(label(activity, "Updated on another device", 14f, 500, Color.WHITE), LinearLayout.LayoutParams(0, -2, 1f))
+            addView(Button(activity).apply {
+                text = "Refresh"; isAllCaps = false; markStyled(this); setTextColor(Color.WHITE); typeface = font(activity, 600)
+                background = android.graphics.drawable.RippleDrawable(ColorStateList.valueOf(0x33FFFFFF), null, shape(activity, Color.WHITE, null, 10))
+                setOnClickListener { if (reloading.add(activity)) activity.recreate() }
+            }, LinearLayout.LayoutParams(-2, d(40)))
+        }
+        content.addView(bar, FrameLayout.LayoutParams(-1, -2, Gravity.BOTTOM).apply { setMargins(d(12), 0, d(12), d(92)) })
+    }
+
     fun decorate(activity: Activity, scope: String, current: String? = null, roadmap: Boolean = true) {
         val root = activity.findViewById<ViewGroup>(android.R.id.content).getChildAt(0) as? LinearLayout ?: return
+        liveRefresh(activity)
         styleTree(root)
         val oldHeader = root.getChildAt(0) as? LinearLayout
         val home = activity.findViewById<TextView>(R.id.save_later)

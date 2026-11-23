@@ -25,20 +25,20 @@ export function decodeDraft(raw) {
     (value.projects !== undefined && (!Array.isArray(value.projects) || !value.projects.every(p=>object(p) && typeof p.id==='string' && typeof p.name==='string')))) throw new Error('invalid');
  return {...freshDraft(),...value,feedbackForm:{...emptyFeedback(),...value.feedbackForm},reminderForm:{...emptyReminder(),...value.reminderForm}};
 }
-export function readDraft(storage) {
- try {const raw=storage.getItem(DRAFT_KEY);try{return {data:decodeDraft(raw),raw,issue:null}}catch{return {data:freshDraft(),raw,issue:'invalid'}}}
+export function readDraft(storage,key=DRAFT_KEY) {
+ try {const raw=storage.getItem(key);try{return {data:decodeDraft(raw),raw,issue:null}}catch{return {data:freshDraft(),raw,issue:'invalid'}}}
  catch{return {data:freshDraft(),raw:null,issue:'unavailable'}}
 }
 // Compare before each mutation to avoid silently overwriting changes from another tab.
 // localStorage has no atomic compare-and-swap; simultaneous writes can still race.
-export function writeDraft(storage, expected, data) {
+export function writeDraft(storage, expected, data,key=DRAFT_KEY) {
  try {
-  if(storage.getItem(DRAFT_KEY)!==expected) return {issue:'conflict'};
-  const raw=JSON.stringify(data);storage.setItem(DRAFT_KEY,raw);return {raw,issue:null};
+  if(storage.getItem(key)!==expected) return {issue:'conflict'};
+  const raw=JSON.stringify(data);storage.setItem(key,raw);return {raw,issue:null};
  } catch {return {issue:'unavailable'}}
 }
-export function deleteDraft(storage, expected) {
- try {if(storage.getItem(DRAFT_KEY)!==expected)return {issue:'conflict'};storage.removeItem(DRAFT_KEY);return {raw:null,issue:null}}
+export function deleteDraft(storage, expected,key=DRAFT_KEY) {
+ try {if(storage.getItem(key)!==expected)return {issue:'conflict'};storage.removeItem(key);return {raw:null,issue:null}}
  catch{return {issue:'unavailable'}}
 }
 
@@ -49,11 +49,11 @@ export function decodeRecovery(raw) {
  if(!object(value) || !Object.keys(freshDraft()).some(key=>Object.hasOwn(value,key))) throw new Error('invalid');
  return decodeDraft(raw);
 }
-export function restoreDraft(storage,expected,raw) {
+export function restoreDraft(storage,expected,raw,key=DRAFT_KEY) {
  let data;try{data=decodeRecovery(raw)}catch{return {issue:'invalid-file'}}
  try {
-  if(storage.getItem(DRAFT_KEY)!==expected)return {issue:'conflict'};
-  storage.setItem(DRAFT_KEY,raw);
+  if(storage.getItem(key)!==expected)return {issue:'conflict'};
+  storage.setItem(key,raw);
   return {issue:null,raw,data};
  } catch{return {issue:'unavailable'}}
 }

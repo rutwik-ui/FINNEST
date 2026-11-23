@@ -14,6 +14,9 @@ import androidx.appcompat.app.AlertDialog
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.widget.doAfterTextChanged
 import com.finnest.app.databinding.ActivityDeveloperChecksBinding
+import androidx.lifecycle.lifecycleScope
+import io.github.jan.supabase.gotrue.auth
+import kotlinx.coroutines.launch
 
 /**
  * Profile, account status and an explicit, scoped local reset.
@@ -71,7 +74,16 @@ class ProfileSettingsActivity : AppCompatActivity() {
         text = title; isAllCaps = false; setOnClickListener { leave(click) }; parent.addView(this, LinearLayout.LayoutParams(-1, -2))
     }
     private fun buildForm(draft: Map<String, String>) {
+        val account=card("Your account")
+        val user=AccountClient.get(this).auth.currentUserOrNull()
+        if(user==null) button(account,"Log In / Sign Up") { startActivity(Intent(this,AccountActivity::class.java)) }
+        else {
+            label(account,"Signed in as ${user.email.orEmpty()}")
+            button(account,"Sync now") { AccountSync.enqueue(this) }
+            button(account,"Sign out") { lifecycleScope.launch { runCatching { AccountClient.get(this@ProfileSettingsActivity).auth.signOut() }.onSuccess { AccountSync.stop();startActivity(Intent(this@ProfileSettingsActivity,AccountActivity::class.java).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)) }.onFailure { AlertDialog.Builder(this@ProfileSettingsActivity).setMessage("Could not sign out. Please retry online.").setPositiveButton("OK",null).show() } } }
+        }
         val profile = card("Your profile")
+        button(profile,"Replay introduction") { startActivity(Intent(this,MainActivity::class.java).putExtra("replay_onboarding",true)) }
         val journey = getSharedPreferences("entry", MODE_PRIVATE).getString("journey", null) ?: "Not selected"
         label(profile, "Selected journey: $journey")
         listOf("name" to "Name", "city" to "City / area").forEach { (key, title) ->
@@ -100,6 +112,12 @@ class ProfileSettingsActivity : AppCompatActivity() {
         val notifications = card("Notifications")
         label(notifications, "Reminders are in-app dated notes only. This version does not schedule operating-system notifications.")
         button(notifications, "Review reminders") { startActivity(Intent(this, RemindersActivity::class.java)) }
+        val files = card("Documents")
+        label(files, "Keep copies of documents with your journey. They're private to your account and also appear on the website.")
+        button(files, "My documents") { startActivity(Intent(this, DocumentsActivity::class.java)) }
+        val help = card("Help & feedback")
+        label(help, "Ask a question, report a problem or suggest an improvement. Replies appear in the app.")
+        button(help, "Contact support") { startActivity(Intent(this, SupportActivity::class.java)) }
         val privacy = card("Privacy & information")
         button(privacy, "Privacy & data use") { startActivity(Intent(this, PrivacyInfoActivity::class.java)) }
         button(privacy, "About & disclaimer") { startActivity(Intent(this, CommonActivity::class.java).putExtra("screen", "about")) }
