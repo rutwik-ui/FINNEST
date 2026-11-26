@@ -310,3 +310,4 @@
   .table-tools .tool-input{max-width:none}
 }
 @media (max-width:480px){.stat-row{grid-template-columns:1fr 1fr}.stat strong{font-size:20px}.recent-card li{grid-template-columns:10px 1fr}.recent-card li small{grid-column:2}}
+.project-row>div:nth-child(2){flex:1;min-width:0}.project-row h3{margin:0 0 2px}

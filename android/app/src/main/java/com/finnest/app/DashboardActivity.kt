@@ -32,12 +32,6 @@ class DashboardActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         scope = intent.getStringExtra(SCOPE) ?: if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") "resale_property" else "new_property"
-        // Pull anything edited on the website or another device before drawing
-        // progress. A guest is a no-op; nothing is blocked on the network.
-        if (savedInstanceState == null && AccountStore.isSignedIn(this)) {
-            DraftSync.reconcile(this, scope)
-            DraftSync.reconcile(this, "local_profile")
-        }
         val root = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setBackgroundColor(FinnestUi.CREAM) }
         setContentView(root)
         val heading = LinearLayout(this).apply { orientation = LinearLayout.HORIZONTAL }

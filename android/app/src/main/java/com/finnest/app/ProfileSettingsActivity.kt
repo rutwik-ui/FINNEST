@@ -18,13 +18,7 @@ import androidx.lifecycle.lifecycleScope
 import io.github.jan.supabase.gotrue.auth
 import kotlinx.coroutines.launch
 
-/**
- * Profile, account status and an explicit, scoped local reset.
- *
- * Local deletion removes the device copy only. Synced answers live in the
- * buyer's account and are removed from the website's Profile page, which is
- * stated on screen so nobody assumes "delete" reached the cloud.
- */
+/** Device-only profile and an explicit, scoped local reset. No account or cloud data is modified. */
 class ProfileSettingsActivity : AppCompatActivity() {
     private lateinit var binding: ActivityDeveloperChecksBinding
     private val profileScope = "local_profile"
@@ -38,7 +32,7 @@ class ProfileSettingsActivity : AppCompatActivity() {
         FinnestUi.decorate(this, if (getSharedPreferences("entry", MODE_PRIVATE).getString("journey", "New Property") == "Resale Property") "resale_property" else "new_property", roadmap = true)
         binding.stepLabel.text = "YOUR PROFILE"; binding.screenTitle.text = "Profile & settings"
         binding.screenDescription.text = "Review your device-only profile and data settings."
-        binding.screenNotice.text = "Sign in to keep this journey on your account and open it on the website or another device."
+        binding.screenNotice.text = if(AccountClient.userId(this)==null) "Guest answers stay on this device. Log in to connect your journey." else "Your account answers save on this device and sync when connected."
         binding.saveLater.text = "Home"; binding.next.text = "Back to dashboard"
         binding.back.setOnClickListener { leave { finish() } }; binding.backBottom.setOnClickListener { leave { finish() } }
         binding.saveLater.setOnClickListener { leave { home() } }; binding.next.setOnClickListener { leave { home() } }
@@ -95,22 +89,12 @@ class ProfileSettingsActivity : AppCompatActivity() {
                 doAfterTextChanged { DraftRepository.save(this@ProfileSettingsActivity, profileScope, key, it?.toString().orEmpty()) }
             }, LinearLayout.LayoutParams(-1, -2))
         }
-        val account = card("Your account")
-        val session = AccountStore.load(this)
-        if (session != null) {
-            label(account, "Signed in as ${session.email ?: "your account"}")
-            label(account, "Journey answers, checklist statuses, shortlist, visit notes, reminders and this profile are synced to your account.")
-            button(account, "Sync now") { syncNow() }
-            button(account, "Manage account / sign out") { startActivity(Intent(this, AccountActivity::class.java)) }
-        } else {
-            label(account, "You are using FINNEST as a guest. Everything is saved on this device only, so it will not appear on the website or on another phone.")
-            button(account, "Sign in or create an account") { startActivity(Intent(this, AccountActivity::class.java)) }
-        }
-
-        val storage = card("Save on this device")
-        label(storage, "Saving to this device is always on, so the app works without internet. Uninstalling deletes the local copy; anything synced to your account can still be opened on the website.")
-        val notifications = card("Notifications")
-        label(notifications, "Reminders are in-app dated notes only. This version does not schedule operating-system notifications.")
+        val storage = card(if (user != null) "Saving & sync" else "Save on this device")
+        label(storage, if (user != null) "Your journey, profile and reminders save to your account and stay in step with the website. A copy is kept on this phone so you can keep working if the connection drops for a moment."
+            else "You're using FINNEST as a guest, so your profile, journey notes and reminders stay on this phone only. Create an account to keep them safe and use them on the website too. Uninstalling deletes guest data.")
+        val notifications = card("Notifications & reminders")
+        label(notifications, "Reminders you add notify you on this phone when they're due. Choose which notifications you get in Notification settings.")
+        button(notifications, "Notification settings") { startActivity(Intent(this, NotificationSettingsActivity::class.java)) }
         button(notifications, "Review reminders") { startActivity(Intent(this, RemindersActivity::class.java)) }
         val files = card("Documents")
         label(files, "Keep copies of documents with your journey. They're private to your account and also appear on the website.")
@@ -122,27 +106,10 @@ class ProfileSettingsActivity : AppCompatActivity() {
         button(privacy, "Privacy & data use") { startActivity(Intent(this, PrivacyInfoActivity::class.java)) }
         button(privacy, "About & disclaimer") { startActivity(Intent(this, CommonActivity::class.java).putExtra("screen", "about")) }
         val reset = card("Delete local data")
-        label(reset, "Deletes both New Property and Resale drafts, profile fields and reminders from this device. The selected journey and onboarding preference remain. It does not delete anything already synced to your account — use the website's Profile page for that. This cannot be undone.")
-        resetButton = Button(this).apply { text = "Delete local journey data"; isAllCaps = false; setOnClickListener { confirmDelete() } }
+        label(reset, "Deletes both New Property and Resale drafts, profile fields and reminders on this device. The selected journey and onboarding preference remain. It does not delete website data, a cloud account or Supabase records. This cannot be undone.")
+        resetButton = Button(this).apply { text = "Delete local journey data"; isAllCaps = false;isEnabled=user==null; setOnClickListener { confirmDelete() } }
         reset.addView(resetButton, LinearLayout.LayoutParams(-1, -2))
     }
-    private fun syncNow() {
-        DraftSync.reconcile(this, profileScope) { }
-        DraftSync.reconcile(this, "new_property") { a ->
-            DraftSync.reconcile(this, "resale_property") { b ->
-                runOnUiThread {
-                    if (isFinishing || isDestroyed) return@runOnUiThread
-                    val ok = a.isSuccess && b.isSuccess
-                    AlertDialog.Builder(this)
-                        .setTitle(if (ok) "Sync complete" else "Could not sync")
-                        .setMessage(if (ok) "Your journey and profile are saved to your account."
-                        else "Your answers are still safe on this device. Check your internet connection and try again.")
-                        .setPositiveButton("OK", null).show()
-                }
-            }
-        }
-    }
-
     private fun confirmDelete() {
         if (deleting) return
         val input = EditText(this).apply { hint = "Type DELETE"; contentDescription = "Delete confirmation"; inputType = InputType.TYPE_CLASS_TEXT or InputType.TYPE_TEXT_FLAG_CAP_CHARACTERS }

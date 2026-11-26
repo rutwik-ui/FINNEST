@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { UserRound, Send, MapPin, Building2 } from 'lucide-react';
+import { UserRound, Send, MapPin, Upload, FileText, Building2 } from 'lucide-react';
+import { logActivity } from './cloudSync';
 import { supabase } from './supabase';
 import { readPublicCache, writePublicCache } from './offlineStore';
 import { Button } from '@/components/ui/button';
@@ -114,7 +115,7 @@ export function PublishedProjects({ onShortlist }) {
       });
     load();
     // Realtime keeps the catalogue current without a refresh when an admin publishes.
-    const channel = supabase.channel('finnest-projects')
+    const channel = supabase.channel(`finnest-projects-${crypto.randomUUID()}`)
       .on('postgres_changes', { event: '*', schema: 'public', table: 'finnest_projects' }, load)
       .subscribe();
     return () => { active = false; try { supabase.removeChannel(channel); } catch { /* closed */ } };
@@ -155,6 +156,7 @@ export function EnquiryForm({ session, projectName }) {
 
   const load = () => userId && supabase.from('finnest_enquiries')
     .select('id,subject,status,created_at')
+    .eq('user_id', userId)
     .order('created_at', { ascending: false })
     .limit(10)
     .then(({ data }) => setMine(data || []));

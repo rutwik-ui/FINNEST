@@ -109,14 +109,9 @@ object DraftRepository {
         val user=AccountClient.userId(app);val scoped=AccountClient.scoped(app,journey)
         activeUser=user
         executor.execute {
-            val pair = journey to key
-            if (runCatching { JourneyDatabase.get(app).drafts().put(DraftField(journey, key, value)) }.isSuccess) {
-                failed.remove(pair)
-                notifySaved(journey)
-                // Mirrored to the account after the durable local write succeeds.
-                // A guest (no session) is a no-op inside pushField.
-                DraftSync.pushField(app, journey, key, value)
-            } else failed[pair] = value
+            val pair = scoped to key
+            if (runCatching { val db=JourneyDatabase.get(app);db.runInTransaction { db.drafts().put(DraftField(scoped,key,value));if(user!=null && NativeJourneyContract.apply(org.json.JSONObject(),journey,key,value))db.drafts().queue(PendingAccountField(user,journey,key,value)) } }.isSuccess) { failed.remove(pair); notifySaved(journey);if(user!=null)AccountSync.enqueue(app) }
+            else failed[pair] = value
         }
     }
 }

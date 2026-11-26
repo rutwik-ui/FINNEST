@@ -34,28 +34,6 @@ class ResaleJourneyTest {
         }
         throw AssertionError("Resale draft did not load")
     }
-    /**
-     * "Save & Home" finishes the editor and returns to the dashboard. Espresso's
-     * next click can otherwise run against the closing activity, which has lost
-     * window focus, and fail with RootViewWithoutFocusException. Waiting for the
-     * destination screen makes the handover explicit instead of timing-dependent.
-     */
-    private fun waitForDashboard() {
-        val instrumentation = InstrumentationRegistry.getInstrumentation()
-        val deadline = SystemClock.elapsedRealtime() + 15000
-        while (SystemClock.elapsedRealtime() < deadline) {
-            val ready = AtomicReference(false)
-            instrumentation.runOnMainSync {
-                val activity: Activity? = ActivityLifecycleMonitorRegistry.getInstance()
-                    .getActivitiesInStage(Stage.RESUMED).firstOrNull()
-                ready.set(activity is DashboardActivity)
-            }
-            if (ready.get()) return
-            SystemClock.sleep(100)
-        }
-        throw AssertionError("Save & Home did not return to the dashboard")
-    }
-
     @Test fun conditionNotePersistsAcrossReturnToOverview() {
         val value = "Ask about leak " + System.currentTimeMillis()
         ActivityScenario.launch(ResaleOverviewActivity::class.java).use {
@@ -63,7 +41,6 @@ class ResaleJourneyTest {
             waitReady(ResaleConditionActivity::class.java)
             onView(withContentDescription("Walls / ceilings / leaks Note / observation")).perform(scrollTo(), replaceText(value), closeSoftKeyboard())
             onView(withId(R.id.save_later)).perform(scrollTo(), click())
-            waitForDashboard()
             // Save & Home returns to the resale home, as on the website; reopen through the journey.
             onView(withText("View journey")).perform(scrollTo(), click())
             onView(withText("Property condition  →")).perform(scrollTo(), click())
@@ -106,7 +83,6 @@ class ResaleJourneyTest {
             onView(withContentDescription("Resale Budget (₹)")).perform(scrollTo(), replaceText("123456"), closeSoftKeyboard())
             onView(withText("Lift")).perform(scrollTo(), click())
             onView(withId(R.id.save_later)).perform(scrollTo(), click())
-            waitForDashboard()
             // Save & Home returns to the resale home, as on the website; reopen through the journey.
             onView(withText("View journey")).perform(scrollTo(), click())
             onView(withText("Requirements & location  →")).perform(scrollTo(), click())

@@ -22,7 +22,6 @@ class ProjectsActivity : AppCompatActivity() {
     private val journey = "new_property"
     private val key = "shortlist_projects_v1"
     private val projects = mutableListOf<LocalProject>()
-    private val catalogue = mutableListOf<ListedProject>()
     private var loaded = false
     private fun dp(value: Int) = (value * resources.displayMetrics.density).toInt()
 
@@ -38,7 +37,6 @@ class ProjectsActivity : AppCompatActivity() {
             override fun handleOnBackPressed() { leaveWhenSaved() }
         })
         binding.add.setOnClickListener { editName(null) }
-        loadCatalogue()
         binding.next.setOnClickListener {
             afterSaves {
                 startActivity(Intent(this, DeveloperChecksActivity::class.java).putExtra("visit_observations", true))
@@ -63,24 +61,6 @@ class ProjectsActivity : AppCompatActivity() {
                 }, onFailure = { binding.loading.text = "Could not load your shortlist. Please return and try again." })
             }
         }
-    }
-
-    /** Admin-published projects. Failure is silent: the screen still works offline. */
-    private fun loadCatalogue() {
-        Thread {
-            val listed = runCatching { PublicProjectClient().load() }.getOrDefault(emptyList())
-            runOnUiThread {
-                if (isFinishing || isDestroyed) return@runOnUiThread
-                catalogue.clear(); catalogue.addAll(listed); render()
-            }
-        }.start()
-    }
-
-    private fun addFromCatalogue(project: ListedProject) {
-        if (projects.size >= 5) return
-        if (projects.any { it.name.equals(project.name, ignoreCase = true) }) return
-        projects.add(LocalProject(UUID.randomUUID().toString(), project.name))
-        persist()
     }
 
     private fun persist() {
@@ -128,7 +108,7 @@ class ProjectsActivity : AppCompatActivity() {
         dialog.show()
     }
     private fun render() {
-        binding.count.text = "${projects.size} / 5 projects · synced with your account when signed in"
+        binding.count.text = "${projects.size} / 5 projects · local shortlist"
         binding.add.isEnabled = loaded && projects.size < 5
         binding.list.removeAllViews()
         if (projects.isEmpty()) {
@@ -140,7 +120,7 @@ class ProjectsActivity : AppCompatActivity() {
         projects.forEach { project ->
             val card = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(16), dp(16), dp(12)); setBackgroundResource(R.drawable.card) }
             card.addView(TextView(this).apply { text = project.name; textSize = 18f; setTextColor(getColor(R.color.navy)); setTypeface(null, android.graphics.Typeface.BOLD) })
-            card.addView(TextView(this).apply { text = "Your shortlist entry"; textSize = 14f; setTextColor(getColor(R.color.muted)); setPadding(0, dp(6), 0, dp(8)) })
+            card.addView(TextView(this).apply { text = "Your entry · details not yet added"; textSize = 14f; setTextColor(getColor(R.color.muted)); setPadding(0, dp(6), 0, dp(8)) })
             val actions = LinearLayout(this)
             val rename = android.widget.Button(this).apply { text = "Rename"; isAllCaps = false; setOnClickListener { editName(project) } }
             val remove = android.widget.Button(this).apply {
@@ -157,35 +137,5 @@ class ProjectsActivity : AppCompatActivity() {
             binding.list.addView(card, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
         }
         if (projects.size >= 5) binding.count.text = "${projects.size} / 5 projects · remove one to add another"
-
-        if (catalogue.isNotEmpty()) {
-            binding.list.addView(TextView(this).apply {
-                text = "Listed projects"; textSize = 18f; setTextColor(getColor(R.color.navy))
-                setTypeface(null, android.graphics.Typeface.BOLD); setPadding(0, dp(24), 0, dp(4))
-            }, LinearLayout.LayoutParams(-1, -2))
-            binding.list.addView(TextView(this).apply {
-                text = "Added by the FINNEST team. Verify RERA registration and approvals yourself before paying anything."
-                textSize = 13f; setTextColor(getColor(R.color.muted)); setPadding(0, 0, 0, dp(4))
-            }, LinearLayout.LayoutParams(-1, -2))
-            catalogue.forEach { listed ->
-                val card = LinearLayout(this).apply { orientation = LinearLayout.VERTICAL; setPadding(dp(16), dp(14), dp(16), dp(12)); setBackgroundResource(R.drawable.card) }
-                card.addView(TextView(this).apply { text = listed.name; textSize = 17f; setTextColor(getColor(R.color.navy)); setTypeface(null, android.graphics.Typeface.BOLD) })
-                val line = listOfNotNull(listed.developer, listed.locality, listed.city).joinToString(" · ")
-                if (line.isNotBlank()) card.addView(TextView(this).apply { text = line; textSize = 13f; setTextColor(getColor(R.color.muted)); setPadding(0, dp(4), 0, 0) })
-                val detail = listOfNotNull(listed.configuration, listed.priceFrom, listed.possession).joinToString(" · ")
-                if (detail.isNotBlank()) card.addView(TextView(this).apply { text = detail; textSize = 13f; setTextColor(getColor(R.color.muted)); setPadding(0, dp(2), 0, 0) })
-                listed.approvalNote?.let { note -> card.addView(TextView(this).apply { text = note; textSize = 12f; setTextColor(getColor(R.color.muted)); setPadding(0, dp(2), 0, 0) }) }
-                listed.summary?.let { summary -> card.addView(TextView(this).apply { text = summary; textSize = 13f; setTextColor(getColor(R.color.navy)); setPadding(0, dp(6), 0, 0) }) }
-                val already = projects.any { it.name.equals(listed.name, ignoreCase = true) }
-                val addButton = android.widget.Button(this).apply {
-                    text = if (already) "In your shortlist" else "Add to shortlist"
-                    isAllCaps = false
-                    isEnabled = !already && projects.size < 5
-                    setOnClickListener { addFromCatalogue(listed) }
-                }
-                card.addView(addButton)
-                binding.list.addView(card, LinearLayout.LayoutParams(-1, -2).apply { topMargin = dp(12) })
-            }
-        }
     }
 }
